@@ -4028,10 +4028,7 @@ function draw(now) {
     scene3.fog.near = Math.max(180, cam3.position.y * 0.8);
     scene3.fog.far = Math.max(800, cam3.position.y * 3.2);
   }
-  if (offroad > 0.4 && camZoom < 0.8) {          // vibración fuera de pista
-    const shake2 = 0.5 * Math.min(1, spd / 40);
-    cam3.position.x += rnd(-shake2, shake2); cam3.position.z += rnd(-shake2, shake2);
-  }
+  // (sin vibración por bordes: la cámara no tiembla al rozar los laterales ni salir de pista)
   // Sacudida al frenar fuerte a alta velocidad — el coche "muerde" el asfalto
   if ((inBrake || keys.ArrowDown || keys.KeyS) && spd > 55 && camZoom < 0.8) {
     const sh = 0.32 * Math.min(1, (spd - 55) / 60);
