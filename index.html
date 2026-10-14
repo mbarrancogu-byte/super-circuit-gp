@@ -1749,12 +1749,12 @@ function makeDirtTex() {
   }
   const tx = tex3(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; return tx;
 }
-// Damero rojo/negro para la línea de meta (4×16 cuadros)
+// Damero rojo/blanco para la línea de meta (4×16 cuadros)
 function makeCheckTex() {
   const c = document.createElement('canvas'); c.width = 64; c.height = 256;
   const t = c.getContext('2d');
   for (let y = 0; y < 16; y++) for (let x = 0; x < 4; x++) {
-    t.fillStyle = (x + y) % 2 ? '#c81414' : '#0c0c10';
+    t.fillStyle = (x + y) % 2 ? '#c81414' : '#f2f0e8';
     t.fillRect(x * 16, y * 16, 16, 16);
   }
   return tex3(c);
