@@ -1,0 +1,80 @@
+<!DOCTYPE html><html><body>
+<canvas id="cv" width="1024" height="1024"></canvas>
+<script src="../three.min.js"></script>
+<script src="GLTFLoader.js"></script>
+<script>
+window.__state = 'loading';
+const P = new URLSearchParams(location.search);
+const ROTY = parseFloat(P.get('ry') || '0');
+const renderer = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(1024, 1024, false);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.setClearColor(0x000000, 0);
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8890b0, 1.35));
+const sun = new THREE.DirectionalLight(0xffffff, 1.35); sun.position.set(4, 10, 3); scene.add(sun);
+const fill = new THREE.DirectionalLight(0xa0b0d0, 0.45); fill.position.set(-5, 8, -4); scene.add(fill);
+
+// Texturas reales (las del GLB son placeholders de 16x16)
+const TMAP = {
+  WCWING: 'wcwing.png', WCEXTRA0: 'wcextra0.png', WCEXTRA1: 'wcextra1.png',
+  WCCARBODY: 'wccarbody.png', CARBFBD: 'carbon_flat.png', CARBFBDNOSPEC: 'carbon_flat.png',
+  tread: 'tread_flat.png', side: 'side_flat.png', REN06WHEEL: 'wheel_flat.png',
+  RENRIM: 'renrim_flat.png', RENSPOKES: 'renrim_flat.png', RENHUB: 'renhub_flat.png',
+  brake: 'brake_flat.png', disk: 'rotor_flat.png', COCKPIT: 'cockpit_flat.png'
+};
+// Piezas con color plano (sus texturas son máscaras alfa que salen blancas)
+const FLAT = {
+  calliper: 0x701818,
+  Light: 0x0c0e12, led_off: 0x101216, MIRROR: 0x0c1016, WCWINDOW: 0x0c1016,
+  COCKPITSCREWS: 0x3c4046, CHROME: 0x2a2e36,
+  argent: 0x1a1e24, susp: 0x0e1013, green: 0x18a018
+};
+const TL = new THREE.TextureLoader();
+function texFor(name) {
+  for (const k in TMAP) if (name.startsWith(k)) return TMAP[k];
+  return null;
+}
+function flatFor(name) {
+  for (const k in FLAT) if (name.startsWith(k)) return FLAT[k];
+  return null;
+}
+const texP = {};
+function getTex(f) {
+  if (!texP[f]) texP[f] = new Promise(res => TL.load('tex/' + f, t => { t.flipY = false; t.encoding = THREE.sRGBEncoding; t.anisotropy = 8; res(t); }, undefined, () => res(null)));
+  return texP[f];
+}
+
+new THREE.GLTFLoader().load('r26.glb', async g => {
+  const m = g.scene;
+  const jobs = [];
+  m.traverse(o => {
+    if (!o.isMesh || !o.material) return;
+    const nm = o.material.name || '';
+    if (/^(blur|WGLASS)/.test(nm)) { o.visible = false; return; }
+    const fc = flatFor(nm);
+    if (fc !== null) { o.material = new THREE.MeshStandardMaterial({ color: new THREE.Color(fc).convertSRGBToLinear(), roughness: 0.9, metalness: 0.05 }); return; }
+    const f = texFor(nm);
+    if (f) jobs.push(getTex(f).then(t => { if (t) { o.material.map = t; o.material.needsUpdate = true; } }));
+    if (o.material.map) { o.material.map.encoding = THREE.sRGBEncoding; }
+    if (o.material.emissiveMap) o.material.emissiveMap.encoding = THREE.sRGBEncoding;
+    o.material.metalness = 0.15; o.material.roughness = 0.55;
+    if ('specularIntensity' in o.material) o.material.specularIntensity = 0.25;
+    o.material.vertexColors = false;                    // COLOR_0 negro apagaba la librea
+    o.material.needsUpdate = true;
+  });
+  await Promise.all(jobs);
+  m.rotation.y = ROTY;
+  const bb = new THREE.Box3().setFromObject(m);
+  const size = bb.getSize(new THREE.Vector3());
+  const ctr = bb.getCenter(new THREE.Vector3());
+  m.position.sub(ctr);
+  scene.add(m);
+  window.__size = size.toArray().map(v => +v.toFixed(2));
+  const half = Math.max(size.x, size.z) / 2 * 1.04;
+  const cam = new THREE.OrthographicCamera(-half, half, half, -half, 1, 500);
+  cam.position.set(0, 120, 0); cam.up.set(0, 0, -1); cam.lookAt(0, 0, 0);
+  renderer.render(scene, cam);
+  window.__state = 'done';
+}, undefined, e => { window.__state = 'err:' + e; });
+</script></body></html>

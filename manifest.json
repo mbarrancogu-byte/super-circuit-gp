@@ -1,0 +1,14 @@
+{
+  "name": "Super Circuit GP",
+  "short_name": "CircuitGP",
+  "description": "Carreras arcade 2.5D sobre fotos aéreas — nitro, derrape, lluvia, CPU y multijugador",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#04060c",
+  "theme_color": "#04060c",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

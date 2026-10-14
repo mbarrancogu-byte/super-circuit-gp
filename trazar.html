@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>TRAZAR CIRCUITO · SUPER CIRCUIT GP</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #04060c; font-family: sans-serif; overflow: hidden;
+    -webkit-user-select: none; user-select: none; }
+  #cv { position: fixed; inset: 0; cursor: crosshair; touch-action: none; }
+  #ui { position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; z-index: 10; }
+  #ui button { padding: 10px 18px; border-radius: 999px; cursor: pointer;
+    border: 2px solid rgba(120,160,255,0.5); background: rgba(14,24,48,0.92);
+    color: #cfe0ff; font-size: 14px; font-weight: 800; letter-spacing: 1px; }
+  #ui button:active { transform: scale(0.94); }
+  #ui .go { border-color: rgba(80,255,160,0.6); color: #a0ffd0; }
+  #ui .warn { border-color: rgba(255,110,90,0.6); color: #ffb0a0; }
+  #msg { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+    color: #8fa4c8; font-size: 13px; font-weight: 600; letter-spacing: 1px;
+    background: rgba(8,14,30,0.8); padding: 6px 16px; border-radius: 999px; }
+  #toast { position: fixed; top: 18%; left: 50%; transform: translateX(-50%);
+    background: rgba(8,14,30,0.9); border: 1px solid rgba(120,255,180,0.6);
+    color: #a0ffd0; padding: 10px 26px; border-radius: 999px; font-weight: 800;
+    font-size: 16px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="ui">
+  <button id="undo">↩ DESHACER</button>
+  <button id="del" class="warn">✕ BORRAR PUNTO</button>
+  <button id="clear" class="warn">🗑 LIMPIAR</button>
+  <button id="prev">👁 VISTA PISTA</button>
+  <button id="save" class="go">💾 GUARDAR circuitos.js</button>
+</div>
+<div id="msg">Arrastra puntos para corregir · toca un hueco de la línea para insertar · toca la imagen para añadir al final</div>
+<div id="toast"></div>
+
+<script>
+const cv = document.getElementById('cv'), t = cv.getContext('2d');
+const img = new Image();
+// ?c=N en la URL elige qué circuito se edita (por defecto el 0)
+const CI = Math.max(0, parseInt(new URLSearchParams(location.search).get('c') || '0') || 0);
+let circ = null;
+let pts = [];          // puntos en coords de imagen [0..1]
+let preview = false, delMode = false;
+let iw = 0, ih = 0, ox = 0, oy = 0, sc = 1;   // encaje de la imagen
+
+// Carga el trazado actual de circuitos.js (o track1.js legado) para editarlo
+fetch('circuitos.js').then(r => r.ok ? r.text() : Promise.reject()).then(txt => {
+  (0, eval)(txt);
+  const c = window.CIRCUITOS && CIRCUITOS[CI];
+  if (c && c.pts) {
+    circ = c;
+    img.src = c.img || 'fondo.jpg';
+    pts = c.pts.map(p => [p[0], p[1]]);   // ya vienen en [0..1]
+    draw(); toast('✔ ' + (c.name || ('Circuito ' + (CI + 1))) + ' cargado (' + pts.length + ' puntos)');
+  } else img.src = 'fondo.jpg';
+}).catch(() => {
+  img.src = 'fondo.jpg';
+  fetch('track1.js').then(r => r.ok ? r.text() : Promise.reject()).then(txt => {
+    (0, eval)(txt);
+    if (window.TRACK1) { pts = TRACK1.map(p => [p[0] + 0.5, p[1] + 0.5]); draw(); toast('✔ track1.js cargado'); }
+  }).catch(() => {});
+});
+
+function fit() {
+  cv.width = innerWidth; cv.height = innerHeight;
+  if (!img.width) return;
+  sc = Math.min(cv.width / img.width, cv.height / img.height);
+  iw = img.width * sc; ih = img.height * sc;
+  ox = (cv.width - iw) / 2; oy = (cv.height - ih) / 2;
+}
+img.onload = () => { fit(); draw(); };
+addEventListener('resize', () => { fit(); draw(); });
+
+// Conversión pantalla ↔ imagen normalizada
+const toImg = (x, y) => [(x - ox) / iw, (y - oy) / ih];
+const toScr = p => [ox + p[0] * iw, oy + p[1] * ih];
+
+// Catmull-Rom cerrado (el mismo ajuste que usa el juego)
+function smooth(u) {
+  const q = [], n = u.length;
+  if (n < 3) return u.slice();
+  for (let i = 0; i < n; i++) {
+    const p0 = u[(i - 1 + n) % n], p1 = u[i], p2 = u[(i + 1) % n], p3 = u[(i + 2) % n];
+    for (let s = 0; s < 16; s++) {
+      const v = s / 16, v2 = v * v, v3 = v2 * v;
+      q.push([
+        0.5 * (2 * p1[0] + (p2[0] - p0[0]) * v + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * v2 + (3 * p1[0] - p0[0] - 3 * p2[0] + p3[0]) * v3),
+        0.5 * (2 * p1[1] + (p2[1] - p0[1]) * v + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * v2 + (3 * p1[1] - p0[1] - 3 * p2[1] + p3[1]) * v3)
+      ]);
+    }
+  }
+  return q;
+}
+
+function draw() {
+  t.fillStyle = '#04060c'; t.fillRect(0, 0, cv.width, cv.height);
+  if (img.width) t.drawImage(img, ox, oy, iw, ih);
+  if (!pts.length) return;
+  // curva suavizada
+  const sp = smooth(pts);
+  t.beginPath();
+  sp.forEach((p, i) => { const [x, y] = toScr(p); i ? t.lineTo(x, y) : t.moveTo(x, y); });
+  t.closePath();
+  if (preview) {
+    // vista "pista": banda gris con bordes
+    t.lineWidth = 15 * sc * (iw / 1024) / (iw / cv.width * 8) + 26;
+    t.lineWidth = Math.max(16, iw * 0.028);
+    t.strokeStyle = '#5a6070'; t.stroke();
+    t.lineWidth = Math.max(14, iw * 0.026); t.strokeStyle = '#2e333b'; t.stroke();
+  } else {
+    t.lineWidth = 3; t.strokeStyle = '#40e8ff'; t.stroke();
+  }
+  // puntos de control
+  pts.forEach((p, i) => {
+    const [x, y] = toScr(p);
+    t.beginPath(); t.arc(x, y, i === 0 ? 9 : 6, 0, 7);
+    t.fillStyle = delMode ? '#ff6050' : (i === 0 ? '#ffd040' : '#40e8ff'); t.fill();
+    t.lineWidth = 2; t.strokeStyle = '#04060c'; t.stroke();
+  });
+  // marcador de salida en el punto 0
+  if (pts.length > 2) {
+    const [x, y] = toScr(pts[0]);
+    t.fillStyle = '#ffd040'; t.font = 'bold 12px sans-serif';
+    t.fillText('META', x + 12, y + 4);
+  }
+}
+
+let dragI = -1;
+cv.addEventListener('pointerdown', e => {
+  const p = toImg(e.clientX, e.clientY);
+  if (p[0] < 0 || p[0] > 1 || p[1] < 0 || p[1] > 1) return;
+  // ¿click sobre un punto existente?
+  for (let i = pts.length - 1; i >= 0; i--) {
+    const [x, y] = toScr(pts[i]);
+    if (Math.hypot(x - e.clientX, y - e.clientY) < 16) {
+      if (delMode) { pts.splice(i, 1); draw(); toast('Punto ' + i + ' borrado'); }
+      else dragI = i;                                        // arrastrar
+      return;
+    }
+  }
+  if (delMode) return;
+  // ¿click cerca de la curva? → insertar punto en el segmento más próximo
+  if (pts.length >= 3) {
+    const sp = smooth(pts);
+    let bestI = -1, bestD = 18;
+    for (let i = 0; i < sp.length; i++) {
+      const [x, y] = toScr(sp[i]);
+      const d = Math.hypot(x - e.clientX, y - e.clientY);
+      if (d < bestD) { bestD = d; bestI = i; }
+    }
+    if (bestI >= 0) {
+      // El punto suavizado bestI pertenece al tramo que empieza en floor(bestI/16)
+      const seg = Math.floor(bestI / 16) % pts.length;
+      pts.splice(seg + 1, 0, p);
+      dragI = seg + 1;                                       // sigue arrastrando el nuevo
+      draw(); return;
+    }
+  }
+  pts.push(p); draw();
+});
+cv.addEventListener('pointermove', e => {
+  if (dragI < 0) return;
+  const p = toImg(e.clientX, e.clientY);
+  pts[dragI] = [Math.min(1, Math.max(0, p[0])), Math.min(1, Math.max(0, p[1]))];
+  draw();
+});
+cv.addEventListener('pointerup', () => dragI = -1);
+
+document.getElementById('undo').onclick = () => { pts.pop(); draw(); };
+document.getElementById('del').onclick = function () {
+  delMode = !delMode;
+  this.style.borderColor = delMode ? '#ff5040' : '';
+  this.style.color = delMode ? '#ff8070' : '';
+  toast(delMode ? '✕ Modo borrar: toca un punto para eliminarlo' : 'Modo borrar desactivado');
+};
+document.getElementById('clear').onclick = () => { pts = []; draw(); };
+document.getElementById('prev').onclick = () => { preview = !preview; draw(); };
+document.getElementById('save').onclick = () => {
+  if (pts.length < 8) { toast('⚠ Marca al menos 8 puntos'); return; }
+  // circuitos.js: coords normalizadas [0..1] sobre la imagen + aspecto real
+  const ar = img.height / img.width;
+  const P = pts.map(([u, v]) => [+u.toFixed(4), +v.toFixed(4)]);
+  // conserva el resto de circuitos y solo reescribe el que se está editando
+  const out = (window.CIRCUITOS || []).map(c => Object.assign({}, c));
+  out[CI] = Object.assign({}, out[CI] || { name: 'CIRCUITO ' + (CI + 1) },
+    { img: (circ && circ.img) || 'fondo.jpg', ar: +ar.toFixed(4), pts: P });
+  const js = '// Super Circuit GP — trazados (editado con trazar.html?c=' + CI + ')\n' +
+    'window.CIRCUITOS = ' + out.map(c => JSON.stringify(c)).join(',\n') + ';\n';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([js], { type: 'text/javascript' }));
+  a.download = 'circuitos.js'; a.click();
+  navigator.clipboard?.writeText(js).catch(() => {});
+  toast('💾 circuitos.js descargado — reemplaza el de la carpeta del juego');
+};
+function toast(m) {
+  const el = document.getElementById('toast');
+  el.textContent = m; el.style.opacity = 1;
+  setTimeout(() => el.style.opacity = 0, 2200);
+}
+</script>
+</body>
+</html>

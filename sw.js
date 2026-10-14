@@ -1,0 +1,23 @@
+// Service worker: actualiza primero por red y guarda copia para offline (PWA)
+const CACHE = 'scgp-v16';
+const ASSETS = [
+  './', 'index.html', 'circuitos.js', 'fondo.jpg', 'fondo2.jpg', 'portada.jpg',
+  'fondo_pw.jpg', 'fondo_card.jpg', 'f1.png', 'f1sel.png', 'f1_r26.png', 'f1_scarlet.png', 'f1_verde.png', 'f1_amarillo.png', 'f1_negro.png', 'f1_rosa.png', 'f1_naranja.png', 'volante.png', 'RADIO.mp3', 'three.min.js', 'peerjs.min.js',
+  'icon-192.png', 'icon-512.png', 'manifest.json'
+];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(ks =>
+    Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  // Network-first: la versión nueva manda; si no hay red, se usa la caché
+  e.respondWith(fetch(e.request).then(net => {
+    const cp = net.clone();
+    caches.open(CACHE).then(c => c.put(e.request, cp));
+    return net;
+  }).catch(() => caches.match(e.request)));
+});

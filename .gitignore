@@ -1,0 +1,16 @@
+# Pesados / regenerables
+SuperCircuitGP-1.0.apk
+*.zip
+RESTORE_POINT_*/
+_glb/r26.glb
+_glb/tex/
+_glb/*.png
+node_modules/
+android/.gradle/
+android/build/
+android/app/build/
+android/app/src/main/assets/
+capturas/
+_*.png
+_*.jpg
+*.pyc
