@@ -3943,7 +3943,7 @@ function draw(now) {
   }
   // Volante de cabina: aparece al acercar la cámara, gira con la dirección del coche
   const wOp = clamp((1 - camZoom) * 1.8 - 0.35, 0, 0.96);
-  wheelDegS += ((car.steer || 0) * 130 - wheelDegS) * Math.min(1, dt * 4.5);
+  wheelDegS += ((car.steer || 0) * 55 - wheelDegS) * Math.min(1, dt * 3.6);   // giro suave y corto
   el('wheelImg').style.opacity = wOp.toFixed(2);
   el('wheelImg').style.transform = `rotate(${wheelDegS.toFixed(1)}deg)`;
   // Capa de LEDs + pantalla + grados: gira y aparece junto al volante
