@@ -2834,7 +2834,16 @@ function buildF1(tint) {
     f.scale.set(1.2, 1.2, 1); f.position.set(s, 1.7, -5.15); f.visible = false;
     grp.add(f); flames.push(f);
   }
-  grp.userData = { wF: [], wR: [], tails, flames };
+  // Piloto rojo trasero tipo F1 (rain light): barra central vertical + halo parpadeante
+  const rainBar = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 1.05),
+    new THREE.MeshBasicMaterial({ color: 0xff1818, transparent: true, opacity: 0.9 }));
+  rainBar.rotation.x = -Math.PI / 2; rainBar.position.set(0, 2.26, -4.55);
+  grp.add(rainBar);
+  const rainGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: tex3(makeGlowTex(255, 30, 20, 0.95)), transparent: true, depthWrite: false }));
+  rainGlow.scale.set(2.3, 2.3, 1); rainGlow.position.set(0, 2.3, -4.6);
+  grp.add(rainGlow);
+  grp.userData = { wF: [], wR: [], tails, flames, rain: { bar: rainBar, glow: rainGlow } };
   grp.scale.setScalar(0.72);                        // coches más pequeños: más circuito a la vista
   return grp;
 }
@@ -2850,6 +2859,15 @@ function flameTick(grp, on) {
       f.material.opacity = rnd(0.45, 0.95);
     }
   }
+}
+// Piloto rojo trasero: destello tipo F1 (~4 Hz) — mismo ritmo en todos los coches
+function rainTick(grp) {
+  const r = grp && grp.userData && grp.userData.rain;
+  if (!r) return;
+  const k = 0.12 + 0.88 * Math.max(0, Math.sin(performance.now() / 70));
+  r.bar.material.opacity = 0.35 + 0.65 * k;
+  r.glow.material.opacity = k;
+  const s = 1.6 + k * 1.1; r.glow.scale.set(s, s, 1);
 }
 // Monta el coche del jugador (sprite F1) con foco
 function spawnCar() {
@@ -3856,6 +3874,10 @@ function draw(now) {
   flameTick(carGrp, (inGas > 0 || keys.KeyW || keys.ArrowUp) && playing);   // fuego al acelerar
   if (remote && remote.grp) flameTick(remote.grp, (remote.spd || 0) > 14);
   if (ghostCar && ghostCar.visible) flameTick(ghostCar, true);
+  rainTick(carGrp);                                                        // piloto trasero ~4 Hz
+  for (const c of cpus) if (c && c.grp) rainTick(c.grp);
+  if (remote && remote.grp) rainTick(remote.grp);
+  if (ghostCar && ghostCar.visible) rainTick(ghostCar);
 
 
   // Coche rival: interpolación suave hacia la última posición recibida
