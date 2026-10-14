@@ -243,7 +243,7 @@
   @keyframes wLedBlink { 50% { filter: brightness(0.15); } }
   @keyframes wLedGlint { 0%, 82%, 100% { filter: brightness(1); } 90% { filter: brightness(2.8); } }
   /* Grados de giro: texto naranja muy pequeño sobre el centro del volante */
-  #wheelDeg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  #wheelDeg { position: absolute; left: 50%; top: 57%; transform: translate(-50%, -50%);
     z-index: 7; pointer-events: none; opacity: 0; transition: opacity .2s;
     color: #ff9838; font-size: 10px; font-weight: 800; letter-spacing: 1px;
     text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
@@ -1140,6 +1140,8 @@
     <i class="wled glint" style="left:63.6%;top:34.6%;background:#fff;box-shadow:0 0 5px #fff;animation-delay:1.4s"></i>
     <i class="wled glint" style="left:63.6%;top:52%;background:#b040ff;box-shadow:0 0 5px #b040ff;animation-delay:1.9s"></i>
     <div id="wheelDeg">0°</div>
+    <canvas id="wheelRadar" width="120" height="74"
+      style="position:absolute;left:39.6%;top:33.9%;width:22.1%;height:18.7%;transform-origin:47% 86%;opacity:0;border-radius:3px"></canvas>
   </div>
 </div>
 
@@ -4111,6 +4113,32 @@ function draw(now) {
       g.textAlign = 'left';
     });
     g.textBaseline = 'alphabetic';
+  }
+  // Radar del volante: el mismo mapa dentro de la pantalla del volante,
+  // adaptado a su ventana y girando con él (canvas sobre la zona del display)
+  {
+    const wrc = el('wheelRadar');
+    const wOp2 = parseFloat(el('wheelImg').style.opacity || 0);
+    if (wrc && wOp2 > 0.03 && pathPts.length > 4) {
+      const wc = wrc.getContext('2d'), ww = wrc.width, wh = wrc.height;
+      wc.clearRect(0, 0, ww, wh);
+      wc.fillStyle = '#060a10'; wc.fillRect(0, 0, ww, wh);          // cristal apagado
+      const ws = Math.min((ww - 6) / mmSpanX, (wh - 6) / mmSpanZ);  // encuadre a la ventana
+      const wx = p => ww / 2 + (p.x - mmMinX - mmSpanX / 2) * ws;
+      const wy = p => wh / 2 + (p.z - mmMinZ - mmSpanZ / 2) * ws;
+      wc.strokeStyle = '#9fb4cc'; wc.lineWidth = 1.1;
+      wc.beginPath();
+      pathPts.forEach((p, i2) => i2 ? wc.lineTo(wx(p), wy(p)) : wc.moveTo(wx(p), wy(p)));
+      wc.closePath(); wc.stroke();
+      wc.fillStyle = '#ffa030';                                    // meta
+      wc.beginPath(); wc.arc(wx(pathPts[0]), wy(pathPts[0]), 2.4, 0, 7); wc.fill();
+      for (const r of board) {                                     // coches en el mapa
+        wc.fillStyle = r.me ? '#ff4030' : '#60a0ff';
+        wc.beginPath(); wc.arc(wx(r), wy(r), r.me ? 3 : 2.4, 0, 7); wc.fill();
+      }
+      wrc.style.opacity = wOp2;
+      wrc.style.transform = `rotate(${wheelDegS}deg)`;
+    }
   }
   // Lluvia: tinte de tormenta + gotas inclinadas densas en el overlay
   if (rain > 0.01) {
