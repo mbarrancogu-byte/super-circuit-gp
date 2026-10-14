@@ -1677,7 +1677,7 @@ let camZoom = 1;                                   // 0 = pegado al coche · 1 =
 let trackCX = 0, trackCZ = 0, trackSpanX = 1, trackSpanZ = 1;
 let carGrp = null, wheelF = [], wheelR = [], beamL = null, beamR = null, tailSpr = [];
 let skidPool = [], dustPool = [], moonLight = null, pathPts = null;
-let mmMinX = 0, mmMinZ = 0, mmScale = 1;            // encuadre del minimapa (cacheado por etapa)
+let mmMinX = 0, mmMinZ = 0, mmScale = 1, mmSpanX = 1, mmSpanZ = 1; // encuadre justo del minimapa (cacheado por etapa)
 let ambLight = null, hemiLight = null, moonOX = 300, moonOZ = -400;
 let gateMeshes = [];
 
@@ -2588,8 +2588,18 @@ function buildWorld() {
 
   // --- Minimapa: polyline de la pista + encuadre cacheado (antes se recalculaba por frame) ---
   pathPts = path.map(p => ({ x: p.x, z: p.z }));
-  mmMinX = trackCX - trackSpanX / 2; mmMinZ = trackCZ - trackSpanZ / 2;
-  mmScale = Math.min(80 / trackSpanX, 80 / trackSpanZ);
+  // Encuadre justo del trazado (sin el margen de la cámara): el radar
+  // escala siempre el circuito hasta el borde del cuadro
+  {
+    let mnx = 1e9, mxx = -1e9, mnz = 1e9, mxz = -1e9;
+    for (const p of pathPts) {
+      mnx = Math.min(mnx, p.x); mxx = Math.max(mxx, p.x);
+      mnz = Math.min(mnz, p.z); mxz = Math.max(mxz, p.z);
+    }
+    mmMinX = mnx; mmMinZ = mnz;
+    mmSpanX = Math.max(1, mxx - mnx); mmSpanZ = Math.max(1, mxz - mnz);
+    mmScale = Math.min(1 / mmSpanX, 1 / mmSpanZ);
+  }
   scene3.add(world);
 }
 
@@ -4015,8 +4025,8 @@ function draw(now) {
   const mm = W < 540 ? 148 : 196, mx = 10, my = W < 540 ? 92 : 56;
   g.fillStyle = 'rgba(248,248,244,0.92)'; g.fillRect(mx, my, mm, mm);   // radar claro: fondo blanco
   g.strokeStyle = 'rgba(20,24,30,0.55)'; g.lineWidth = 1; g.strokeRect(mx + 0.5, my + 0.5, mm - 1, mm - 1);
-  const msc = mmScale;
-  const mSpanX = trackSpanX * msc, mSpanZ = trackSpanZ * msc;
+  const msc = mmScale * (mm - 14);                     // el circuito llena el radar hasta el borde
+  const mSpanX = mmSpanX * msc, mSpanZ = mmSpanZ * msc;
   const mx2 = p => mx + (mm - mSpanX) / 2 + (p.x - mmMinX) * msc;
   const my2 = p => my + (mm - mSpanZ) / 2 + (p.z - mmMinZ) * msc;
   g.strokeStyle = '#101418'; g.lineWidth = 2.2;                  // trazado en negro
