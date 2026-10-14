@@ -4173,19 +4173,30 @@ function draw(now) {
       const wc = wrc.getContext('2d'), ww = wrc.width, wh = wrc.height;
       wc.clearRect(0, 0, ww, wh);
       wc.fillStyle = '#060a10'; wc.fillRect(0, 0, ww, wh);          // cristal apagado
-      const ws = Math.min((ww - 6) / mmSpanX, (wh - 6) / mmSpanZ);  // encuadre a la ventana
+      const ws = Math.min((ww - 6) / mmSpanX, (wh - 18) / mmSpanZ); // mapa deja la fila de datos abajo
+      const wy0 = (wh - 14) / 2;
       const wx = p => ww / 2 + (p.x - mmMinX - mmSpanX / 2) * ws;
-      const wy = p => wh / 2 + (p.z - mmMinZ - mmSpanZ / 2) * ws;
-      wc.strokeStyle = '#9fb4cc'; wc.lineWidth = 1.1;
+      const wy = p => wy0 + (p.z - mmMinZ - mmSpanZ / 2) * ws;
+      wc.save();
+      wc.shadowColor = '#50c8ff'; wc.shadowBlur = 3;               // trazado con glow
+      wc.strokeStyle = '#7fd8ff'; wc.lineWidth = 1.6;
       wc.beginPath();
       pathPts.forEach((p, i2) => i2 ? wc.lineTo(wx(p), wy(p)) : wc.moveTo(wx(p), wy(p)));
       wc.closePath(); wc.stroke();
+      wc.restore();
       wc.fillStyle = '#ffa030';                                    // meta
       wc.beginPath(); wc.arc(wx(pathPts[0]), wy(pathPts[0]), 2.4, 0, 7); wc.fill();
       for (const r of board) {                                     // coches en el mapa
         wc.fillStyle = r.me ? '#ff4030' : '#60a0ff';
         wc.beginPath(); wc.arc(wx(r), wy(r), r.me ? 3 : 2.4, 0, 7); wc.fill();
       }
+      // Instrumentos de volante: marcha grande + velocidad, fila inferior
+      wc.textBaseline = 'bottom';
+      wc.font = '900 15px monospace'; wc.fillStyle = '#ffb020';
+      wc.textAlign = 'right'; wc.fillText(String(gear), ww - 4, wh - 2);
+      wc.font = '700 8px monospace'; wc.fillStyle = '#9fd0f0';
+      wc.textAlign = 'left'; wc.fillText(Math.round(spd * 3.4) + ' km/h', 4, wh - 4);
+      wc.textBaseline = 'alphabetic';
       wrc.style.opacity = 1;                              // la capa wheelLayer ya rota y regula la opacidad
     }
   }
