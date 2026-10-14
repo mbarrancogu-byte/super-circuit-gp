@@ -5143,7 +5143,8 @@ async function c3dR26() {
       const f = c3dMap(nm, C3D_TMAP);
       if (f) jobs.push(getTex(f).then(t => { if (t) { o.material.map = t; o.material.needsUpdate = true; } }));
       if (o.material.map) o.material.map.encoding = THREE.sRGBEncoding;
-      o.material.metalness = 0.15; o.material.roughness = 0.55;
+      o.material.color.setHex(0xffffff);              // baseColorFactor oscuro del GLB apagaba la librea
+      o.material.metalness = 0.12; o.material.roughness = 0.5;
       if ('specularIntensity' in o.material) o.material.specularIntensity = 0.25;
       o.material.vertexColors = false;
       o.material.needsUpdate = true;
@@ -5161,10 +5162,11 @@ function c3dInit() {
   c3d.scene = new THREE.Scene();
   c3d.cam = new THREE.PerspectiveCamera(38, 1.6, 0.1, 500);
   c3d.cam.position.set(0, 5.6, 15.5); c3d.cam.lookAt(0, 1.4, 0);
-  c3d.scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x1a2030, 0.85));
-  const key = new THREE.DirectionalLight(0xfff2dc, 1.25); key.position.set(6, 10, 5); c3d.scene.add(key);
-  const rim = new THREE.DirectionalLight(0x80b0ff, 0.7); rim.position.set(-7, 6, -6); c3d.scene.add(rim);
-  const under = new THREE.PointLight(0x60a0ff, 0.5, 40); under.position.set(0, 1, 0); c3d.scene.add(under);
+  c3d.scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x2a3242, 1.15));
+  const key = new THREE.DirectionalLight(0xfff2dc, 1.6); key.position.set(6, 10, 5); c3d.scene.add(key);
+  const rim = new THREE.DirectionalLight(0x80b0ff, 0.9); rim.position.set(-7, 6, -6); c3d.scene.add(rim);
+  const fill = new THREE.DirectionalLight(0xbfd4ff, 0.55); fill.position.set(0, 4, -9); c3d.scene.add(fill);
+  const under = new THREE.PointLight(0x60a0ff, 0.6, 40); under.position.set(0, 1, 0); c3d.scene.add(under);
   // Plataforma de exposición
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(6.1, 6.5, 0.35, 48),
     new THREE.MeshStandardMaterial({ color: 0x182238, roughness: 0.35, metalness: 0.7 }));
