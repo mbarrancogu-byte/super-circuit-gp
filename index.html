@@ -3928,11 +3928,17 @@ function draw(now) {
   // Peralte: la cámara se ladea levemente siguiendo la dirección — sensación de curva
   cam3.rotateZ(-(car.steer || 0) * 0.05 * (1 - zm));
   // FOV respira con la velocidad y pega un puñetazo con el nitro (más sensación de empuje)
-  const fovT = 66 + spd * 0.055 * (1 - zm * 0.6) + (nitroOn ? 4.5 : 0) + (boostT > 0 ? 3 : 0);
+  const fovT = 66 + spd * 0.082 * (1 - zm * 0.6) + (nitroOn ? 6.5 : 0) + (boostT > 0 ? 4 : 0);
   if (Math.abs(fovT - cam3.fov) > 0.01) { cam3.fov += (fovT - cam3.fov) * Math.min(1, dt * 4); cam3.updateProjectionMatrix(); }
   // Viñeta de velocidad: efecto túnel — solo de cerca y a partir de ~200 km/h
-  const vig = clamp((spd - 60) / 90, 0, 0.8) * (1 - zm * 0.7);
+  const vig = clamp((spd - 55) / 85, 0, 1) * (1 - zm * 0.7);
   el('speedVig').style.opacity = vig.toFixed(2);
+  // Micro-vibración de cámara a alta velocidad — la carrocería "tiembla"
+  if (spd > 70 && camZoom < 0.85) {
+    const sv = (spd - 70) / 110 * 0.28;
+    cam3.position.x += rnd(-sv, sv); cam3.position.z += rnd(-sv, sv);
+    cam3.position.y += rnd(-sv, sv) * 0.5;
+  }
   // Volante de cabina: aparece al acercar la cámara, gira con la dirección del coche
   const wOp = clamp((1 - camZoom) * 1.8 - 0.35, 0, 0.96);
   wheelDegS += ((car.steer || 0) * 130 - wheelDegS) * Math.min(1, dt * 4.5);
@@ -4139,6 +4145,26 @@ function draw(now) {
       wrc.style.opacity = wOp2;
       wrc.style.transform = `rotate(${wheelDegS}deg)`;
     }
+  }
+  // Líneas de velocidad: trazos radiales en los bordes — el aire "pasa volando"
+  if (spd > 55 && camZoom < 0.9 && playing) {
+    const k = clamp((spd - 55) / 60, 0, 1);
+    const nL = 6 + (k * 18) | 0, cx2 = W / 2, cy2 = H / 2;
+    const R = Math.hypot(cx2, cy2);
+    g.save();
+    g.lineCap = 'round';
+    for (let i2 = 0; i2 < nL; i2++) {
+      const a2 = Math.random() * Math.PI * 2;
+      const r0 = R * (0.58 + Math.random() * 0.34), len = R * (0.06 + k * 0.14);
+      const x0 = cx2 + Math.cos(a2) * r0, y0 = cy2 + Math.sin(a2) * r0;
+      g.strokeStyle = `rgba(205,230,255,${(0.08 + k * 0.24).toFixed(2)})`;
+      g.lineWidth = 1.8 + Math.random() * 2.4;
+      g.beginPath();
+      g.moveTo(x0, y0);
+      g.lineTo(x0 - Math.cos(a2) * len, y0 - Math.sin(a2) * len);   // apuntan al centro: movimiento hacia adelante
+      g.stroke();
+    }
+    g.restore();
   }
   // Lluvia: tinte de tormenta + gotas inclinadas densas en el overlay
   if (rain > 0.01) {
