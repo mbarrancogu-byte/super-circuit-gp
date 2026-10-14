@@ -3065,8 +3065,8 @@ function skidMark(x, z, a, k = 1) {
   const m = skidPool.find(m => !m.visible) || skidPool[0];
   m.position.set(x, 0.12, z);
   m.rotation.y = a + (Math.random() - 0.5) * 0.05;          // jitter: la raya no es una regla
-  m.scale.set(1.7 * (0.75 + 0.25 * k) * (0.9 + Math.random() * 0.2),
-            (6.5 + Math.random() * 3.2) * (0.8 + 0.4 * k), 1);   // tramos largos que se solapan
+  m.scale.set(0.95 * (0.8 + 0.2 * k) * (0.9 + Math.random() * 0.2),  // muy finas: hilo de caucho
+            (11 + Math.random() * 4.5) * (0.85 + 0.35 * k), 1);      // muy largas: tramos que se solapan
   const op = 0.34 + 0.36 * k;
   m.material.opacity = op; m.userData.op = op; m.userData.life = 1; m.visible = true;
 }
