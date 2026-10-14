@@ -2063,7 +2063,7 @@ function buildWorld() {
     world.add(road);
     if (dragMode) {
       // Línea de meta a cuadros rojo/negro cruzando los dos carriles del drag
-      const fin = new THREE.Mesh(new THREE.PlaneGeometry(3.5, RW - 1),
+      const fin = new THREE.Mesh(new THREE.PlaneGeometry(2.3, RW - 1),
         new THREE.MeshBasicMaterial({ map: makeCheckTex() }));
       fin.rotation.x = -Math.PI / 2;
       fin.rotation.z = Math.PI / 2;
@@ -2293,7 +2293,7 @@ function buildWorld() {
   // Línea de meta a cuadros rojo/negro cruzando la calzada (todos los circuitos)
   {
     const p = path[0], hw0 = ((trackHW && trackHW[0]) || RW / 2) * 2;
-    const fl = new THREE.Mesh(new THREE.PlaneGeometry(4.6, hw0 - 0.6),
+    const fl = new THREE.Mesh(new THREE.PlaneGeometry(2.5, hw0 - 0.6),
       new THREE.MeshStandardMaterial({ map: makeCheckTex(), roughness: 0.55, metalness: 0.05 }));
     fl.rotation.x = -Math.PI / 2; fl.rotation.y = -Math.atan2(p.tz, p.tx);
     fl.position.set(p.x, 0.135, p.z);
