@@ -4036,8 +4036,24 @@ function draw(now) {
   // Minimapa (canvas 2D) — grande, pegado arriba a la izquierda bajo la fila de chips
   const mm = W < 540 ? 148 : 196, mx = 10, my = W < 540 ? 92 : 56;
   g.beginPath(); g.roundRect(mx, my, mm, mm, 14);      // radar claro: fondo blanco, esquinas redondeadas
+  g.save();                                            // sombra proyectada: el panel flota sobre el HUD
+  g.shadowColor = 'rgba(0,0,0,0.4)'; g.shadowBlur = 12; g.shadowOffsetY = 5;
   g.fillStyle = 'rgba(248,248,244,0.92)'; g.fill();
-  g.strokeStyle = 'rgba(20,24,30,0.55)'; g.lineWidth = 1; g.stroke();
+  g.restore();
+  const rg = g.createLinearGradient(0, my, 0, my + mm); // leve gradiente vertical: volumen
+  rg.addColorStop(0, 'rgba(252,252,248,0.94)'); rg.addColorStop(1, 'rgba(226,226,220,0.92)');
+  g.beginPath(); g.roundRect(mx, my, mm, mm, 14); g.fillStyle = rg; g.fill();
+  g.save();                                            // bisel 3D: sombra interior arriba, luz abajo
+  g.beginPath(); g.roundRect(mx, my, mm, mm, 14); g.clip();
+  const bz = g.createLinearGradient(0, my, 0, my + mm);
+  bz.addColorStop(0, 'rgba(0,0,0,0.30)'); bz.addColorStop(0.10, 'rgba(0,0,0,0)');
+  bz.addColorStop(0.90, 'rgba(255,255,255,0)'); bz.addColorStop(1, 'rgba(255,255,255,0.45)');
+  g.fillStyle = bz; g.fillRect(mx, my, mm, mm);
+  g.restore();
+  g.beginPath(); g.roundRect(mx, my, mm, mm, 14);      // borde fino negro
+  g.strokeStyle = '#0e1216'; g.lineWidth = 1.6; g.stroke();
+  g.beginPath(); g.roundRect(mx + 2.5, my + 2.5, mm - 5, mm - 5, 11); // filete interno
+  g.strokeStyle = 'rgba(14,18,22,0.35)'; g.lineWidth = 1; g.stroke();
   const msc = mmScale * (mm - 14);                     // el circuito llena el radar hasta el borde
   const mSpanX = mmSpanX * msc, mSpanZ = mmSpanZ * msc;
   const mx2 = p => mx + (mm - mSpanX) / 2 + (p.x - mmMinX) * msc;
