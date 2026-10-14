@@ -4038,20 +4038,60 @@ function draw(now) {
   const mSpanX = mmSpanX * msc, mSpanZ = mmSpanZ * msc;
   const mx2 = p => mx + (mm - mSpanX) / 2 + (p.x - mmMinX) * msc;
   const my2 = p => my + (mm - mSpanZ) / 2 + (p.z - mmMinZ) * msc;
-  g.strokeStyle = '#101418'; g.lineWidth = 2.2;                  // trazado en negro
+  // Trazado por sectores (S1 verde, S2 ámbar, S3 morado — colores de telemetría)
+  // con sombra suave debajo para que el mapa "flote" sobre el fondo blanco
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  g.save();
+  g.translate(0.8, 1.2);
+  g.strokeStyle = 'rgba(30,40,55,0.18)'; g.lineWidth = 3.4;
   g.beginPath();
   pathPts.forEach((p, i) => i ? g.lineTo(mx2(p), my2(p)) : g.moveTo(mx2(p), my2(p)));
   g.closePath(); g.stroke();
-  // Puertas
+  g.restore();
+  if (gates.length >= 3) {
+    const SECT = ['#1a9c50', '#e0a800', '#8a2ec0'];            // S1, S2, S3
+    const cuts = [0, gates[0], gates[1], pathPts.length];
+    g.lineWidth = 2.4;
+    for (let s2 = 0; s2 < 3; s2++) {
+      g.strokeStyle = SECT[s2];
+      g.beginPath();
+      for (let i = cuts[s2]; i <= cuts[s2 + 1]; i++) {
+        const p = pathPts[i % pathPts.length];
+        i === cuts[s2] ? g.moveTo(mx2(p), my2(p)) : g.lineTo(mx2(p), my2(p));
+      }
+      g.stroke();
+    }
+  } else {
+    g.strokeStyle = '#101418'; g.lineWidth = 2.2;              // drag: un solo trazo
+    g.beginPath();
+    pathPts.forEach((p, i) => i ? g.lineTo(mx2(p), my2(p)) : g.moveTo(mx2(p), my2(p)));
+    g.stroke();
+  }
+  // Meta: damero pequeño sobre la línea de salida
+  {
+    const p0 = pathPts[0], fx = mx2(p0), fy = my2(p0);
+    for (let cy = 0; cy < 2; cy++) for (let cx = 0; cx < 4; cx++) {
+      g.fillStyle = (cx + cy) % 2 ? '#0c0c10' : '#f4f4f0';
+      g.fillRect(fx - 4 + cx * 2, fy - 2 + cy * 2, 2, 2);
+    }
+    g.strokeStyle = 'rgba(20,24,30,0.5)'; g.lineWidth = 0.6;
+    g.strokeRect(fx - 4, fy - 2, 8, 4);
+  }
+  // Puertas S1/S2 con etiqueta
   gates.forEach((gi2, k) => {
+    if (k === gates.length - 1) return;                       // la meta ya lleva damero
     const p = pathPts[gi2];
-    g.fillStyle = k === cpIdx ? '#18a050' : k === gates.length - 1 ? '#e07000' : 'rgba(80,90,120,0.7)';
-    g.beginPath(); g.arc(mx2(p), my2(p), k === cpIdx ? 5 : 3, 0, 7); g.fill();
+    g.fillStyle = k === cpIdx ? '#18a050' : 'rgba(80,90,120,0.75)';
+    g.beginPath(); g.arc(mx2(p), my2(p), k === cpIdx ? 4.5 : 2.6, 0, 7); g.fill();
+    g.fillStyle = 'rgba(50,60,80,0.85)'; g.font = '700 8px sans-serif'; g.textAlign = 'left';
+    g.fillText('S' + (k + 1), mx2(p) + 5, my2(p) - 3);
   });
-  // Coche
-  g.fillStyle = '#e01010';
+  // Coche: cono de dirección + triángulo rojo
   g.save();
   g.translate(mx2(car), my2(car)); g.rotate(Math.atan2(sf, cf));
+  g.fillStyle = 'rgba(224,16,16,0.22)';                       // cono de visión hacia el morro
+  g.beginPath(); g.moveTo(5, 0); g.lineTo(15, 7); g.lineTo(15, -7); g.closePath(); g.fill();
+  g.fillStyle = '#e01010';
   g.beginPath(); g.moveTo(6, 0); g.lineTo(-4.5, 4); g.lineTo(-4.5, -4); g.closePath(); g.fill();
   g.restore();
   // Clasificación: jugador + rivales ordenados por progreso en pista
