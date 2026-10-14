@@ -4013,24 +4013,24 @@ function draw(now) {
 
   // Minimapa (canvas 2D) — grande, pegado arriba a la izquierda bajo la fila de chips
   const mm = W < 540 ? 148 : 196, mx = 10, my = W < 540 ? 92 : 56;
-  g.fillStyle = 'rgba(6,10,20,0.75)'; g.fillRect(mx, my, mm, mm);
-  g.strokeStyle = 'rgba(255,200,80,0.4)'; g.lineWidth = 1; g.strokeRect(mx + 0.5, my + 0.5, mm - 1, mm - 1);
+  g.fillStyle = 'rgba(248,248,244,0.92)'; g.fillRect(mx, my, mm, mm);   // radar claro: fondo blanco
+  g.strokeStyle = 'rgba(20,24,30,0.55)'; g.lineWidth = 1; g.strokeRect(mx + 0.5, my + 0.5, mm - 1, mm - 1);
   const msc = mmScale;
   const mSpanX = trackSpanX * msc, mSpanZ = trackSpanZ * msc;
   const mx2 = p => mx + (mm - mSpanX) / 2 + (p.x - mmMinX) * msc;
   const my2 = p => my + (mm - mSpanZ) / 2 + (p.z - mmMinZ) * msc;
-  g.strokeStyle = 'rgba(200,190,160,0.85)'; g.lineWidth = 1.5;
+  g.strokeStyle = '#101418'; g.lineWidth = 2.2;                  // trazado en negro
   g.beginPath();
   pathPts.forEach((p, i) => i ? g.lineTo(mx2(p), my2(p)) : g.moveTo(mx2(p), my2(p)));
   g.closePath(); g.stroke();
   // Puertas
   gates.forEach((gi2, k) => {
     const p = pathPts[gi2];
-    g.fillStyle = k === cpIdx ? '#7dffb0' : k === gates.length - 1 ? '#ffa030' : 'rgba(120,150,200,0.5)';
+    g.fillStyle = k === cpIdx ? '#18a050' : k === gates.length - 1 ? '#e07000' : 'rgba(80,90,120,0.7)';
     g.beginPath(); g.arc(mx2(p), my2(p), k === cpIdx ? 5 : 3, 0, 7); g.fill();
   });
   // Coche
-  g.fillStyle = '#fff';
+  g.fillStyle = '#e01010';
   g.save();
   g.translate(mx2(car), my2(car)); g.rotate(Math.atan2(sf, cf));
   g.beginPath(); g.moveTo(6, 0); g.lineTo(-4.5, 4); g.lineTo(-4.5, -4); g.closePath(); g.fill();
@@ -4045,12 +4045,12 @@ function draw(now) {
   // Rival (punto azul)
   for (const r of board) {
     if (r.me) continue;                              // el jugador ya lleva su triángulo
-    g.fillStyle = '#60a0ff';
+    g.fillStyle = '#2050d0';
     g.beginPath(); g.arc(mx2(r), my2(r), 4.5, 0, 7); g.fill();
   }
   // Líder: aro dorado que parpadea fuerte
   if (board.length > 1 && Math.floor(now / 140) % 2 === 0) {
-    g.strokeStyle = '#ffd040'; g.lineWidth = 2.5;
+    g.strokeStyle = '#e09800'; g.lineWidth = 2.5;
     g.beginPath(); g.arc(mx2(board[0]), my2(board[0]), 9, 0, 7); g.stroke();
   }
   // Nombres del top-3 en rojo pequeño (evitando solaparse)
