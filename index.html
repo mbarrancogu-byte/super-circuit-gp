@@ -2906,16 +2906,43 @@ function init3() {
   scene3.add(moonLight, moonLight.target);
   // Pools de marcas de derrape y polvo
   const skidTex = tex3((() => {
-    const c = document.createElement('canvas'); c.width = 16; c.height = 32;
+    const c = document.createElement('canvas'); c.width = 32; c.height = 64;
     const t = c.getContext('2d');
-    const gr = t.createLinearGradient(0, 0, 16, 0);
-    gr.addColorStop(0, 'rgba(20,14,8,0)'); gr.addColorStop(0.5, 'rgba(20,14,8,0.85)'); gr.addColorStop(1, 'rgba(20,14,8,0)');
-    t.fillStyle = gr; t.fillRect(0, 0, 16, 32);
+    // Huella de neumático real: banda central densa + hombros marcados, no una mancha uniforme
+    const gr = t.createLinearGradient(0, 0, 32, 0);
+    gr.addColorStop(0.00, 'rgba(16,12,7,0)');
+    gr.addColorStop(0.10, 'rgba(16,12,7,0.55)');
+    gr.addColorStop(0.22, 'rgba(16,12,7,0.85)');
+    gr.addColorStop(0.38, 'rgba(16,12,7,0.55)');
+    gr.addColorStop(0.50, 'rgba(16,12,7,0.9)');
+    gr.addColorStop(0.62, 'rgba(16,12,7,0.55)');
+    gr.addColorStop(0.78, 'rgba(16,12,7,0.85)');
+    gr.addColorStop(0.90, 'rgba(16,12,7,0.55)');
+    gr.addColorStop(1.00, 'rgba(16,12,7,0)');
+    t.fillStyle = gr; t.fillRect(0, 0, 32, 64);
+    // Extremos fundidos: los tramos encadenados no dejan cortes visibles
+    const gcap = t.createLinearGradient(0, 0, 0, 64);
+    gcap.addColorStop(0, 'rgba(0,0,0,1)'); gcap.addColorStop(0.14, 'rgba(0,0,0,0)');
+    gcap.addColorStop(0.86, 'rgba(0,0,0,0)'); gcap.addColorStop(1, 'rgba(0,0,0,1)');
+    t.globalCompositeOperation = 'destination-out';
+    t.fillStyle = gcap; t.fillRect(0, 0, 32, 64);
+    // Grano: borde irregular comido por píxeles + motas oscuras fuera del núcleo
+    for (let i = 0; i < 420; i++) {
+      const x = Math.random() * 32, y = Math.random() * 64;
+      const edge = Math.min(x, 32 - x) / 16;                 // más desgaste hacia los bordes
+      t.fillStyle = `rgba(0,0,0,${(1 - edge) * Math.random() * 0.55})`;
+      t.fillRect(x, y, 1, 1 + Math.random() * 2);
+    }
+    t.globalCompositeOperation = 'source-over';
+    for (let i = 0; i < 80; i++) {
+      t.fillStyle = `rgba(15,11,6,${0.15 + Math.random() * 0.4})`;
+      t.fillRect(Math.random() * 32, Math.random() * 64, 1, 1 + Math.random() * 3);
+    }
     return c;
   })());
   const skidGeo = new THREE.PlaneGeometry(1, 1); skidGeo.rotateX(-Math.PI / 2);
   skidPool = [];
-  for (let i = 0; i < (LOW_POWER ? 120 : 240); i++) {   // menos marcas en modo rendimiento
+  for (let i = 0; i < (LOW_POWER ? 150 : 320); i++) {   // menos marcas en modo rendimiento
     const m = new THREE.Mesh(skidGeo, new THREE.MeshBasicMaterial({ map: skidTex, transparent: true, depthWrite: false, opacity: 0 }));
     m.visible = false; m.renderOrder = 1; m.userData.life = 0;
     scene3.add(m); skidPool.push(m);
@@ -3037,9 +3064,11 @@ function skidMark(x, z, a, k = 1) {
   if (!OPTS.skid) return;
   const m = skidPool.find(m => !m.visible) || skidPool[0];
   m.position.set(x, 0.12, z);
-  m.rotation.y = a;
-  m.scale.set(1.5 * (0.7 + 0.3 * k), 4.2, 1);
-  m.material.opacity = 0.32 + 0.38 * k; m.userData.life = 1; m.visible = true;
+  m.rotation.y = a + (Math.random() - 0.5) * 0.05;          // jitter: la raya no es una regla
+  m.scale.set(1.7 * (0.75 + 0.25 * k) * (0.9 + Math.random() * 0.2),
+            (6.5 + Math.random() * 3.2) * (0.8 + 0.4 * k), 1);   // tramos largos que se solapan
+  const op = 0.34 + 0.36 * k;
+  m.material.opacity = op; m.userData.op = op; m.userData.life = 1; m.visible = true;
 }
 
 /* ================== LÓGICA ================== */
@@ -3923,12 +3952,12 @@ function draw(now) {
     s.scale.x += dt * 10; s.scale.y += dt * 8;
     s.material.opacity = (s.userData.op0 || 0.55) * (s.userData.life / (s.userData.life0 || 1));
   }
-  // Marcas de derrape: se borran en ~18s
+  // Marcas de rodadura: duran ~45s (aguantan casi toda la carrera), fade suave al final
   for (const m of skidPool) {
     if (!m.visible) continue;
-    m.userData.life -= dt / 18;
+    m.userData.life -= dt / 45;
     if (m.userData.life <= 0) { m.visible = false; continue; }
-    m.material.opacity = 0.7 * Math.min(1, m.userData.life * 3);
+    m.material.opacity = (m.userData.op || 0.7) * Math.min(1, m.userData.life * 2.5);
   }
 
   // Cámara 2.5D: inclinada tras el punto de mira — de cerca se ve el horizonte,
