@@ -1678,6 +1678,8 @@ function measureTrackW(circ) {
 /* ================== THREE ================== */
 let world = null;
 let camZoom = 1;                                   // 0 = pegado al coche · 1 = circuito entero
+let camLeadX = 0, camLeadZ = 0;                    // look-ahead suavizado (sin sacudida en choques)
+let camHS = 62;                                    // altura de cámara suavizada
 let trackCX = 0, trackCZ = 0, trackSpanX = 1, trackSpanZ = 1;
 let carGrp = null, wheelF = [], wheelR = [], beamL = null, beamR = null, tailSpr = [];
 let skidPool = [], dustPool = [], moonLight = null, pathPts = null;
@@ -3967,11 +3969,17 @@ function draw(now) {
   const zm = camZoom * camZoom;                  // ease: la parte alta sube rápido
   const halfTanV = Math.tan(33 * Math.PI / 180); // fov 66 → medio ángulo vertical
   const fitH = Math.max(trackSpanZ, trackSpanX / (W / H)) / (2 * halfTanV) * 1.12;
-  const camH = 62 + spd * 0.45 + zm * Math.max(0, fitH - 62);
-  // Look-ahead: de cerca la cámara se adelanta en la dirección del coche (más reacción visual)
+  const camHt = 62 + spd * 0.45 + zm * Math.max(0, fitH - 62);
+  camHS += (camHt - camHS) * Math.min(1, dt * 4);  // filtrada: no da el tirón al frenar/chocar
+  const camH = camHS;
+  // Look-ahead suavizado: la cámara se adelanta a la dirección, pero el vector va
+  // filtrado — al chocar la velocidad se invierte de golpe y el encuadre no sacude
   const lead = 14 * (1 - zm) * Math.min(1, spd / 60);
-  let cx = car.x + (trackCX - car.x) * zm + (spd > 3 ? car.vx / spd * lead : 0);
-  let cz = car.z + (trackCZ - car.z) * zm + (spd > 3 ? car.vz / spd * lead : 0);
+  const lxT = spd > 3 ? car.vx / spd * lead : 0, lzT = spd > 3 ? car.vz / spd * lead : 0;
+  const kL = Math.min(1, dt * 5);
+  camLeadX += (lxT - camLeadX) * kL; camLeadZ += (lzT - camLeadZ) * kL;
+  let cx = car.x + (trackCX - car.x) * zm + camLeadX;
+  let cz = car.z + (trackCZ - car.z) * zm + camLeadZ;
   // PHOTO FINISH: durante la cámara lenta el encuadre tira hacia la línea de meta
   if (pfSlowT > 0) {
     const fl = dragMode ? { x: dragFinX, z: dragLaneZ } : path[0];
