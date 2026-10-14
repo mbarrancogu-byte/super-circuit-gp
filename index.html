@@ -244,7 +244,7 @@
   @keyframes wLedGlint { 0%, 82%, 100% { filter: brightness(1); } 90% { filter: brightness(2.8); } }
   /* Grados de giro: texto naranja muy pequeño sobre el centro del volante */
   #wheelDeg { position: absolute; left: 50%; top: 57%; transform: translate(-50%, -50%);
-    z-index: 7; pointer-events: none; opacity: 0; transition: opacity .2s;
+    z-index: 7; pointer-events: none; opacity: 1;
     color: #ff9838; font-size: 10px; font-weight: 800; letter-spacing: 1px;
     text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
 
@@ -1127,21 +1127,23 @@
   <div id="speedBox"><div id="speedNum">0<small> km/h</small></div><div id="gearNum">MARCHA 1</div><div id="rpmWrap"><div id="rpmBar"></div></div></div>
   <div id="wheelWrap">
     <img id="wheelImg" src="volante.png" alt="">
-    <i class="wled" style="left:38.4%;top:29.2%;background:#34e060;box-shadow:0 0 4px #34e060"></i>
-    <i class="wled" style="left:41.4%;top:29.2%;background:#34e060;box-shadow:0 0 4px #34e060"></i>
-    <i class="wled" style="left:44.4%;top:29.2%;background:#34e060;box-shadow:0 0 4px #34e060"></i>
-    <i class="wled blink" style="left:47.4%;top:29.2%;background:#ff3020;box-shadow:0 0 4px #ff3020"></i>
-    <i class="wled blink" style="left:50.4%;top:29.2%;background:#ff3020;box-shadow:0 0 4px #ff3020"></i>
-    <i class="wled blink" style="left:53.4%;top:29.2%;background:#ff3020;box-shadow:0 0 4px #ff3020"></i>
-    <i class="wled blink" style="left:56.4%;top:29.2%;background:#3080ff;box-shadow:0 0 4px #3080ff;animation-duration:.24s"></i>
-    <i class="wled blink" style="left:59.4%;top:29.2%;background:#3080ff;box-shadow:0 0 4px #3080ff;animation-duration:.24s"></i>
-    <i class="wled glint" style="left:34.4%;top:34.6%;background:#ff3020;box-shadow:0 0 5px #ff3020"></i>
-    <i class="wled glint" style="left:34.4%;top:52%;background:#ffb020;box-shadow:0 0 5px #ffb020;animation-delay:.8s"></i>
-    <i class="wled glint" style="left:63.6%;top:34.6%;background:#fff;box-shadow:0 0 5px #fff;animation-delay:1.4s"></i>
-    <i class="wled glint" style="left:63.6%;top:52%;background:#b040ff;box-shadow:0 0 5px #b040ff;animation-delay:1.9s"></i>
-    <div id="wheelDeg">0°</div>
-    <canvas id="wheelRadar" width="120" height="74"
-      style="position:absolute;left:39.6%;top:33.9%;width:22.1%;height:18.7%;transform-origin:47% 86%;opacity:0;border-radius:3px"></canvas>
+    <div id="wheelLayer" style="position:absolute;inset:0;transform-origin:50% 50%;opacity:0;transition:opacity .2s">
+      <i class="wled" style="left:38.4%;top:29.2%;background:#34e060;box-shadow:0 0 4px #34e060"></i>
+      <i class="wled" style="left:41.4%;top:29.2%;background:#34e060;box-shadow:0 0 4px #34e060"></i>
+      <i class="wled" style="left:44.4%;top:29.2%;background:#34e060;box-shadow:0 0 4px #34e060"></i>
+      <i class="wled blink" style="left:47.4%;top:29.2%;background:#ff3020;box-shadow:0 0 4px #ff3020"></i>
+      <i class="wled blink" style="left:50.4%;top:29.2%;background:#ff3020;box-shadow:0 0 4px #ff3020"></i>
+      <i class="wled blink" style="left:53.4%;top:29.2%;background:#ff3020;box-shadow:0 0 4px #ff3020"></i>
+      <i class="wled blink" style="left:56.4%;top:29.2%;background:#3080ff;box-shadow:0 0 4px #3080ff;animation-duration:.24s"></i>
+      <i class="wled blink" style="left:59.4%;top:29.2%;background:#3080ff;box-shadow:0 0 4px #3080ff;animation-duration:.24s"></i>
+      <i class="wled glint" style="left:34.4%;top:34.6%;background:#ff3020;box-shadow:0 0 5px #ff3020"></i>
+      <i class="wled glint" style="left:34.4%;top:52%;background:#ffb020;box-shadow:0 0 5px #ffb020;animation-delay:.8s"></i>
+      <i class="wled glint" style="left:63.6%;top:34.6%;background:#fff;box-shadow:0 0 5px #fff;animation-delay:1.4s"></i>
+      <i class="wled glint" style="left:63.6%;top:52%;background:#b040ff;box-shadow:0 0 5px #b040ff;animation-delay:1.9s"></i>
+      <div id="wheelDeg">0°</div>
+      <canvas id="wheelRadar" width="120" height="74"
+        style="position:absolute;left:39.6%;top:33.9%;width:22.1%;height:18.7%;opacity:1;border-radius:3px"></canvas>
+    </div>
   </div>
 </div>
 
@@ -3944,13 +3946,15 @@ function draw(now) {
   wheelDegS += ((car.steer || 0) * 130 - wheelDegS) * Math.min(1, dt * 4.5);
   el('wheelImg').style.opacity = wOp.toFixed(2);
   el('wheelImg').style.transform = `rotate(${wheelDegS.toFixed(1)}deg)`;
-  el('wheelDeg').style.opacity = wOp.toFixed(2);
+  // Capa de LEDs + pantalla + grados: gira y aparece junto al volante
+  el('wheelLayer').style.opacity = wOp.toFixed(2);
+  el('wheelLayer').style.transform = `rotate(${wheelDegS.toFixed(1)}deg)`;
   el('wheelDeg').textContent = (wheelDegS > 0.5 ? '+' : '') + Math.round(wheelDegS) + '°';
   // LEDs: barra RPM progresiva (verde→rojo→azul, parpadea al corte) + testigos fijos
   if (!wheelLeds) wheelLeds = document.querySelectorAll('#wheelWrap .wled');
   const wrpm = clamp((spd * 3.4 - (gear - 1) * GEAR_SPAN) / GEAR_SPAN, 0, 1);
   for (let i = 0; i < wheelLeds.length; i++)
-    wheelLeds[i].style.opacity = (i < 8 ? (i / 8 < wrpm ? 1 : 0) : 0.92) * wOp;
+    wheelLeds[i].style.opacity = i < 8 ? (i / 8 < wrpm ? 1 : 0) : 0.92;
   // Lago: deriva del agua — la textura se desplaza lento y la capa de oleaje rota
   if (lakeWaterTex) { lakeWaterTex.offset.x += dt * 0.011; lakeWaterTex.offset.y += dt * 0.007; }
   if (lakeSurf) lakeSurf.rotation.y += dt * 0.05;
@@ -4182,8 +4186,7 @@ function draw(now) {
         wc.fillStyle = r.me ? '#ff4030' : '#60a0ff';
         wc.beginPath(); wc.arc(wx(r), wy(r), r.me ? 3 : 2.4, 0, 7); wc.fill();
       }
-      wrc.style.opacity = wOp2;
-      wrc.style.transform = `rotate(${wheelDegS}deg)`;
+      wrc.style.opacity = 1;                              // la capa wheelLayer ya rota y regula la opacidad
     }
   }
   // Líneas de velocidad: trazos radiales en los bordes — el aire "pasa volando"
