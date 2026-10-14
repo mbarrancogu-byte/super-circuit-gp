@@ -3033,13 +3033,13 @@ function sparkBurst(x, z, dx, dz) {
     dustPuff(x, z, dx * rnd(2, 8) + rnd(-9, 9), dz * rnd(2, 8) + rnd(-9, 9),
              0xffb838, rnd(0.12, 0.28), rnd(0.5, 1.1), 0.95);
 }
-function skidMark(x, z, a) {
+function skidMark(x, z, a, k = 1) {
   if (!OPTS.skid) return;
   const m = skidPool.find(m => !m.visible) || skidPool[0];
   m.position.set(x, 0.12, z);
   m.rotation.y = a;
-  m.scale.set(1.5, 4.2, 1);
-  m.material.opacity = 0.7; m.userData.life = 1; m.visible = true;
+  m.scale.set(1.5 * (0.7 + 0.3 * k), 4.2, 1);
+  m.material.opacity = 0.32 + 0.38 * k; m.userData.life = 1; m.visible = true;
 }
 
 /* ================== LÓGICA ================== */
@@ -3706,13 +3706,23 @@ function update(dt) {
     }
   }
 
-  // Marcas de derrape en las ruedas traseras + polvo en tierra
+  // Marcas de rodadura: derrape = rastro seguro; además rayas aleatorias por rueda
+  // cuanto más cerrada la curva (más giro aplicado a más velocidad)
   const sliding = Math.abs(vl) > 9 || (hb && spd > 12);
+  const turnK = spd > 16 ? clamp((Math.abs(car.steer || 0) - 0.35) * 1.9, 0, 1) : 0;
   skidT -= dt;
-  if (sliding && spd > 10 && skidT <= 0) {
-    skidT = 0.05;
-    for (const s of [-1, 1])
-      skidMark(car.x - cf * 3 - sf * s * 1.9, car.z - sf * 3 + cf * s * 1.9, -car.a + Math.PI / 2);
+  if (spd > 10 && skidT <= 0 && (sliding || (turnK > 0 && Math.random() < turnK * 0.85))) {
+    skidT = sliding ? 0.05 : 0.08 + Math.random() * 0.07;
+    const mk = sliding ? 1 : 0.25 + 0.45 * turnK;
+    for (const s of [-1, 1]) {
+      if (!sliding && Math.random() < 0.4) continue;      // a veces solo una rueda raya
+      skidMark(car.x - cf * 3 - sf * s * 1.9, car.z - sf * 3 + cf * s * 1.9, -car.a + Math.PI / 2, mk);
+    }
+    // en curva muy cerrada las delanteras también dejan alguna raya suelta
+    if (!sliding && turnK > 0.65 && Math.random() < 0.35) {
+      const s = Math.random() < 0.5 ? -1 : 1;
+      skidMark(car.x + cf * 3 - sf * s * 1.9, car.z + sf * 3 + cf * s * 1.9, -car.a + Math.PI / 2, mk * 0.8);
+    }
   }
   dustT -= dt;
   // Spray de lluvia tras el coche: estela de agua al correr sobre mojado
