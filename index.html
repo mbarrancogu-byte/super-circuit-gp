@@ -142,6 +142,21 @@
   #nitroBtn { right: 14px; bottom: 128px; width: 70px; height: 70px; font-size: 26px; }
   #pitBtn { right: 126px; bottom: 118px; width: 64px; height: 64px; font-size: 13px;
     border-color: rgba(255,230,140,0.7); color: #ffe8b0; }
+  /* BOXEX: botón cuadrado 3D con degradado radial rojo — autopiloto al box propio */
+  #boxexBtn { right: 198px; bottom: 118px; width: 66px; height: 66px; border-radius: 16px;
+    flex-direction: column; gap: 1px; font-size: 9px; letter-spacing: 1px; color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    border: 1px solid rgba(255,150,120,0.85);
+    background: radial-gradient(circle at 34% 26%, #ff9a78 0%, #e8321e 48%, #8f1008 80%, #5c0903 100%);
+    box-shadow: 0 5px 0 #4d0702, 0 10px 18px rgba(0,0,0,0.6),
+      inset 0 2px 3px rgba(255,255,255,0.4), inset 0 -6px 10px rgba(0,0,0,0.45); }
+  #boxexBtn.on { transform: translateY(4px);
+    background: radial-gradient(circle at 50% 55%, #ff6a4a 0%, #b01408 60%, #5c0903 100%);
+    box-shadow: 0 1px 0 #4d0702, 0 4px 9px rgba(0,0,0,0.6),
+      inset 0 3px 8px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.15); }
+  #boxexBtn svg { width: 22px; height: 22px; margin: 0; }
+  #boxexChip { top: 108px; left: 50%; transform: translateX(-50%); display: none;
+    border-color: rgba(255,90,60,0.8); color: #ffb0a0; }
   /* Pulsador pequeño de faros, encima del PIT */
   #lightsBtn { right: 126px; bottom: 190px; width: 42px; height: 42px; font-size: 17px;
     border-color: rgba(255,235,150,0.45); color: #8a8f9c; }
@@ -162,6 +177,7 @@
   body.lefty #brkBtn { right: auto; left: 100px; }
   body.lefty #nitroBtn { right: auto; left: 14px; }
   body.lefty #pitBtn { right: auto; left: 126px; }
+  body.lefty #boxexBtn { right: auto; left: 198px; }
   body.lefty #lightsBtn { right: auto; left: 126px; }
   body.lefty #hbBtn { right: auto; left: 14px; }
   /* ---------- Tres zonas de la pantalla de juego ---------- */
@@ -901,6 +917,8 @@
     #brkBtn { right: 80px; bottom: 14px; width: 62px; height: 62px; font-size: 11px; }
     #nitroBtn { width: 58px; height: 58px; font-size: 20px; right: 10px; bottom: 108px; }
     #pitBtn { width: 56px; height: 56px; font-size: 11px; right: 102px; bottom: 100px; }
+    #boxexBtn { width: 52px; height: 52px; font-size: 8px; right: 166px; bottom: 100px; border-radius: 13px; }
+    #boxexBtn svg { width: 18px; height: 18px; }
     #lightsBtn { width: 36px; height: 36px; font-size: 14px; right: 102px; bottom: 164px; }
     #hbBtn { width: 52px; height: 52px; font-size: 11px; right: 10px; bottom: 174px; }
     body.lefty #stPad { left: auto; right: 10px; }
@@ -909,6 +927,7 @@
     body.lefty #brkBtn { left: 80px; }
     body.lefty #nitroBtn { left: 10px; }
     body.lefty #pitBtn { left: 102px; }
+    body.lefty #boxexBtn { left: 166px; }
     body.lefty #lightsBtn { left: 102px; }
     body.lefty #hbBtn { left: 10px; }
     .zbtn { width: 38px; height: 34px; font-size: 22px; }
@@ -946,9 +965,12 @@
     body.lefty #speedBox { left: auto; right: 94px; }
     #nitroBtn { width: 52px; height: 52px; bottom: 96px; right: 14px; }
     #pitBtn { width: 48px; height: 48px; bottom: 92px; right: 96px; font-size: 10px; }
+    #boxexBtn { width: 46px; height: 46px; bottom: 92px; right: 150px; font-size: 8px; border-radius: 11px; }
+    #boxexBtn svg { width: 16px; height: 16px; }
     #lightsBtn { width: 32px; height: 32px; font-size: 12px; right: 96px; bottom: 148px; }
     #hbBtn { width: 48px; height: 48px; bottom: 158px; }
     body.lefty #pitBtn { left: 96px; }
+    body.lefty #boxexBtn { left: 150px; }
     body.lefty #lightsBtn { left: 96px; }
     body.lefty #brkBtn { left: 96px; }
     body.lefty #nitroBtn { left: 14px; }
@@ -1368,6 +1390,11 @@
   <circle cx="12" cy="12" r="1.7" fill="url(#gSilv)"/>
   <path d="M12 3.4 L12 6 M12 18 L12 20.6 M3.4 12 L6 12 M18 12 L20.6 12 M6 6 L7.8 7.8 M18 18 L16.2 16.2 M18 6 L16.2 7.8 M6 18 L7.8 16.2" stroke="#3a4250" stroke-width="1.3"/>
 </symbol>
+<!-- llave de boxes -->
+<symbol id="i-wrench" viewBox="0 0 24 24">
+  <path d="M21.2 5.8a5.8 5.8 0 0 1-7.6 7.4L7.1 19.7a2.3 2.3 0 0 1-3.2-3.2l6.5-6.5A5.8 5.8 0 0 1 17.8 2.4l-2.8 2.8 1 2.6 2.6 1 2.6-3z" fill="url(#gSilv)"/>
+  <circle cx="5.4" cy="18.6" r="1.1" fill="#1a2030"/>
+</symbol>
 <!-- rayo nitro -->
 <symbol id="i-bolt" viewBox="0 0 24 24">
   <path d="M13.5 2 L5.5 13.5 L10.8 13.5 L9.5 22 L18.5 10 L13.2 10 Z" fill="url(#gCyan)"/>
@@ -1497,6 +1524,7 @@
   <div class="chip" id="ovtChip">⚔ ADELANTAR</div>
   <div class="chip" id="scChip">🚩 SAFETY CAR</div>
   <div class="chip" id="formChip"></div>
+  <div class="chip" id="boxexChip"><svg class="ic" style="width:13px;height:13px"><use href="#i-wrench"/></svg>BOXEX</div>
   <div class="chip" id="reChip" style="display:none;top:76px;left:50%;transform:translateX(-50%);border-color:rgba(120,200,255,0.8);color:#9fd8ff">⏪ REPLAY</div>
   <div id="tuto"></div>
   <div class="chip" id="wrongWay"><svg class="ic"><use href="#i-warn"/></svg>SENTIDO CONTRARIO</div>
@@ -1534,6 +1562,7 @@
 <div class="tbtn" id="shift2Btn" style="display:none">▲<br><span style="font-size:10px">J2</span></div>
 <div class="tbtn" id="hbBtn">HB</div>
 <div class="tbtn" id="pitBtn">PIT</div>
+<div class="tbtn" id="boxexBtn"><svg class="ic"><use href="#i-wrench"/></svg><span>BOXEX</span></div>
 <div class="tbtn" id="lightsBtn"><svg class="ic" style="width:26px;height:26px;margin:0"><use href="#i-light"/></svg></div>
 <div class="tbtn" id="nitroBtn" style="border-color:rgba(80,200,255,0.7);color:#80d8ff">⚡</div>
 <div class="zbtn" id="zoomIn">+</div>
@@ -2838,6 +2867,7 @@ function genTrack(seed) {
 function buildWorld() {
   if (world) scene3.remove(world);
   world = new THREE.Group(); obstacles = []; gateMeshes = []; lakeSurf = null;
+  window._pitBoxes = null;                            // marcas de box: se regeneran abajo si hay pit lane
   tunI0 = tunI1 = -1; tunA = 0; tunIn = 0;
   const circ = circAt(stage);
   const traced = !!(circ && circ.img);              // foto aérea = día; sin foto = circuito nocturno dibujado
@@ -3389,8 +3419,14 @@ function buildWorld() {
     pit.add(lane);
     // Líneas de box pintadas en la calle: una por garaje, con el color del
     // coche de cada jugador — como las marcas de parada reales de la F1
+    const pitTh = Math.atan2(p.x - bcx, p.z - bcz);      // giro del grupo: +z local mira a la pista
+    const pitCs = Math.cos(pitTh), pitSn = Math.sin(pitTh);
+    window._pitBoxes = [];                               // posición mundo de cada marca de box
     for (let i = 0; i < 8; i++) {
       const col = '#' + CARS[i % CARS.length].tint.toString(16).padStart(6, '0');
+      const bxL = -BL / 2 + (i + 0.5) * (BL / 8);
+      window._pitBoxes.push({ tint: CARS[i % CARS.length].tint,
+        x: bcx + bxL * pitCs + lmZ * pitSn, z: bcz - bxL * pitSn + lmZ * pitCs });
       const bc = document.createElement('canvas'); bc.width = 64; bc.height = 64;
       const bt = bc.getContext('2d');
       bt.strokeStyle = col; bt.lineWidth = 5.5; bt.lineCap = 'square';
@@ -4901,6 +4937,7 @@ function bindBtn(id, on, off) {
   pad.addEventListener('pointercancel', off);
 })();
 let pitReq = false;                                   // botón PIT mantenido
+let boxexReq = false, boxexPt = null;                 // BOXEX: autopiloto al box del color del coche
 let lightsOn = null;                                  // faros: null = automático (noche on / día off)
 function applyLights() {
   const on = lightsOn === null ? !dayMode : lightsOn;
@@ -4922,6 +4959,22 @@ bindBtn('brkBtn', () => inBrake = 1, () => inBrake = 0);
 bindBtn('hbBtn', () => inHB = true, () => inHB = false);
 bindBtn('nitroBtn', () => inNitro = true, () => inNitro = false);
 bindBtn('pitBtn', () => pitReq = true, () => pitReq = false);
+// BOXEX: pulsar = el coche entra solo en boxes y para en la marca de su color
+document.getElementById('boxexBtn').addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  if (!playing || demoMode || dragMode) return;
+  boxexReq = !boxexReq;
+  const bb = el('boxexBtn'); bb.classList.toggle('on', boxexReq);
+  if (boxexReq) {
+    const boxes = window._pitBoxes || [];
+    const myTint = (CARS[OPTS.car] || CARS[0]).tint;
+    let bi = boxes.findIndex(b => b.tint === myTint);   // box pintado con mi color
+    if (bi < 0) bi = OPTS.car % Math.max(1, boxes.length);
+    boxexPt = boxes[bi] ||
+      (pitZone ? { x: pitZone.x, z: pitZone.z } : null); // circuitos sin box pintado: zona de boxes
+    showToast('🔧 BOXEX — ' + T('boxexIn')); buzz(30);
+  }
+});
 
 /* ================== AYUDAS ================== */
 // Punto de pista más cercano (búsqueda en ventana alrededor del último índice)
@@ -4980,7 +5033,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 352;
+const BUILD_NO = 353;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -5341,6 +5394,17 @@ function update(dt) {
     if ((pitReq || pad.pit) && pitZone && Math.hypot(car.x - pitZone.x, car.z - pitZone.z) < pitZone.r + 8) {
       brake = 1; gas = 0;
     }
+    // BOXEX: autopiloto — dirige el coche hasta la marca de box de su color y para
+    if (boxexReq && boxexPt) {
+      const bx = boxexPt.x - car.x, bz = boxexPt.z - car.z, bd = Math.hypot(bx, bz);
+      let da = Math.atan2(bz, bx) - car.a;
+      while (da > Math.PI) da -= 2 * Math.PI;
+      while (da < -Math.PI) da += 2 * Math.PI;
+      steer = clamp(da * 1.9, -1, 1);
+      const bspd = Math.hypot(car.vx, car.vz);
+      if (bd > 5) { gas = bspd < 26 ? 0.6 : 0; brake = bspd > 44 ? 0.9 : 0; }
+      else { gas = 0; brake = 1; }
+    }
     if (pitDur > 0) { brake = 1; gas = 0; }       // parada en boxes en curso: coche inmovilizado
   }
   car.steer = steer;                                     // para el volante de cabina del HUD
@@ -5640,6 +5704,8 @@ function update(dt) {
   const ovtOn = drsZone && slipT > 0.15 && !drsOn;           // zona detectada, casi a tiro
   const oc = el('ovtChip');
   if (oc._on !== ovtOn) { oc._on = ovtOn; oc.style.display = ovtOn ? 'block' : 'none'; }
+  const bxOn = boxexReq || pitDur > 0, bxc = el('boxexChip');
+  if (bxc._on !== bxOn) { bxc._on = bxOn; bxc.style.display = bxOn ? 'inline-flex' : 'none'; }
 
   // Desgaste de neumáticos: blandos gastan rápido, duros aguantan toda la carrera
   tireWear = Math.min(100, tireWear + dt * (0.55 + (slidingNow ? 2.6 : 0) + offroad * 1.4) * (OPTS.tire ? 0.42 : 1));
@@ -5701,11 +5767,13 @@ function update(dt) {
         dmg = 0; dmgBroken = false; tireWear = 0; fuel = 100;   // boxes también reposta
         for (let i = 0; i < 4; i++) twW[i] = 0;
         pitStop = 0; pitDur = 0; pitT = 0; addDamage(0);
+        boxexReq = false; boxexPt = null; el('boxexBtn').classList.remove('on');
         showToast('✅ ' + T('pitDone')); sfx.fin(); ach('pit');
       } else if (Math.floor(pitStop * 4) !== Math.floor((pitStop - dt) * 4)) {
         showToast('🔧 ' + T('pitting') + ' ' + (pitDur - pitStop).toFixed(1) + 's');
       }
-    } else if (pd < pitZone.r && spd < (pitReq ? 45 : 30) && need) {
+    } else if ((pd < pitZone.r && spd < (pitReq ? 45 : 30) && need) ||
+               (boxexReq && boxexPt && Math.hypot(car.x - boxexPt.x, car.z - boxexPt.z) < 4.5 && spd < 5)) {
       pitStop = 0; pitDur = 1.6 + Math.random() * 1.9;   // 1.60–3.50 s aleatorios
       pitT += dt;
       showToast('🔧 ' + T('pitting')); sfx.pit();
@@ -6856,6 +6924,8 @@ function startStage(n, seed, mp, mode) {
   if (p2Mode && cpu) { cpu.react = 0; cpu.k = 1; cpu.boost = 0; cpu.launchDone = false; }         // J2: sin IA, salida en su mano
   ghostLoad();                                        // fantasma si hay récord grabado
   pitZone = null;
+  boxexReq = false; boxexPt = null;
+  const _bxb = el('boxexBtn'); if (_bxb) _bxb.classList.remove('on');
   if (circAt(stage)) {                                // boxes junto a la salida (zona invisible, sin círculo)
     const pp = path[Math.floor(pathLen * 0.06)], pnx = -pp.tz, pnz = pp.tx;
     pitZone = { x: pp.x - pnx * (RW / 2 + 6), z: pp.z - pnz * (RW / 2 + 6), r: 13 };
@@ -7081,7 +7151,7 @@ function addPts(n) {
 }
 const SENS_MULT = [0.7, 1.0, 1.35];                  // sensibilidad de giro: BAJA/NORMAL/ALTA
 const SENS_KEYS = ['sensLow', 'sensMid', 'sensHigh'];
-const TOUCH_IDS = ['stPad', 'gasBtn', 'brkBtn', 'pitBtn', 'lightsBtn', 'hbBtn', 'nitroBtn', 'shiftBtn', 'gas2Btn', 'shift2Btn', 'zoomIn', 'zoomOut'];
+const TOUCH_IDS = ['stPad', 'gasBtn', 'brkBtn', 'pitBtn', 'boxexBtn', 'lightsBtn', 'hbBtn', 'nitroBtn', 'shiftBtn', 'gas2Btn', 'shift2Btn', 'zoomIn', 'zoomOut'];
 function paintSens() {
   const b = document.getElementById('optSens');
   b.textContent = T(SENS_KEYS[OPTS.steerSens] || 'sensMid');
@@ -7301,6 +7371,7 @@ const I18N = {
     nextRace: '▶ SIGUIENTE CARRERA', race: 'carrera', champPts: 'Puntos',
     champWin: '¡CAMPEÓN DEL GP!', champ2: 'SUBCAMPEÓN',
     pitting: 'EN BOXES…', pitDone: '¡LISTO! Reparado y ruedas nuevas',
+    boxexIn: 'ENTRANDO A BOXES',
     mustPit: '¡MOTOR DESTROZADO! Entra en boxes',
     c3dHint: 'Arrastra gira · clic der. mueve · rueda o +/− zoom · flechas giran · R centra',
     rain: '¡EMPIEZA A LLOVER! — el asfalto resbala',
@@ -7395,6 +7466,7 @@ const I18N = {
     nextRace: '▶ NEXT RACE', race: 'race', champPts: 'Points',
     champWin: 'GP CHAMPION!', champ2: 'RUNNER-UP',
     pitting: 'IN THE PITS…', pitDone: 'ALL FIXED! Fresh tires',
+    boxexIn: 'PITTING IN',
     mustPit: 'ENGINE WRECKED! Pit stop required',
     c3dHint: 'Drag rotates · right-drag moves · wheel or +/− zoom · arrows rotate · R resets',
     rain: 'RAIN! — the track is slippery',
