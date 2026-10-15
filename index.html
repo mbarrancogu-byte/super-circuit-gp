@@ -4566,6 +4566,9 @@ let inGas = 0, inBrake = 0, inSteer = 0, inHB = false, inShift = 0, shiftHeld = 
 let inGas2 = 0, inShift2 = 0, shiftHeld2 = false;   // entradas del JUGADOR 2 (modo local)
 addEventListener('keydown', e => {
   keys[e.code] = true;
+  // Mientras la intro cinematográfica está abierta el teclado no hace nada:
+  // solo el botón SALTAR la cierra
+  if (document.getElementById('intro').classList.contains('show')) { e.preventDefault(); return; }
   if (e.code === 'Space') e.preventDefault();
   // En carrera las flechas son controles (↑ gas · ↓ freno · ◀▶ dirección): no scroll
   if (playing && e.code.startsWith('Arrow')) e.preventDefault();
@@ -4686,7 +4689,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 327;
+const BUILD_NO = 328;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
