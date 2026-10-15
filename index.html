@@ -1738,6 +1738,7 @@ let fpsAcc = 0, fpsN = 0, perfChecked = false;     // auto-modo rendimiento
 let tutoT = 0;                                     // cuenta atrás del tutorial inicial
 let trackCX = 0, trackCZ = 0, trackSpanX = 1, trackSpanZ = 1;
 let carGrp = null, wheelF = [], wheelR = [], beamL = null, beamR = null, tailSpr = [];
+let ledMats = [], ledFR = null, ledFL = null;         // señales LED: materiales y frames por lado
 let skidPool = [], dustPool = [], moonLight = null, pathPts = null;
 let mmMinX = 0, mmMinZ = 0, mmScale = 1, mmSpanX = 1, mmSpanZ = 1; // encuadre justo del minimapa (cacheado por etapa)
 let ambLight = null, hemiLight = null, moonOX = 300, moonOZ = -400;
@@ -2658,25 +2659,34 @@ function buildWorld() {
     }
   }
 
-  // Señales de dirección en las curvas: tablón amarillo FIA con chevrones negros,
-  // en el exterior de la curva y mirando al piloto que se aproxima
+  // Señales de dirección en las curvas: tablón amarillo FIA con chevrones LED
+  // rojos que hacen barrido hacia el vértice — como los paneles LED reales
   {
-    const mkSign = right => {
+    ledMats = [];
+    const mkSign = (right, lit) => {
       const c = document.createElement('canvas'); c.width = 192; c.height = 64;
       const t = c.getContext('2d');
       t.fillStyle = '#f2c614'; t.fillRect(0, 0, 192, 64);
       t.fillStyle = '#0e0e0e'; t.fillRect(0, 0, 192, 6); t.fillRect(0, 58, 192, 6);
-      t.strokeStyle = '#141414'; t.lineWidth = 11; t.lineCap = 'round'; t.lineJoin = 'round';
+      t.lineWidth = 11; t.lineCap = 'round'; t.lineJoin = 'round';
       for (let k = 0; k < 3; k++) {
-        const x = 52 + k * 46;
+        const x = 52 + k * 46, on = k === lit;
+        t.strokeStyle = on ? '#ff2818' : '#4d100e';
+        t.shadowColor = '#ff3020'; t.shadowBlur = on ? 12 : 0;
         t.beginPath();
         if (right) { t.moveTo(x - 15, 14); t.lineTo(x + 13, 32); t.lineTo(x - 15, 50); }
         else       { t.moveTo(x + 15, 14); t.lineTo(x - 13, 32); t.lineTo(x + 15, 50); }
         t.stroke();
       }
+      t.shadowBlur = 0;
       return tex3(c);
     };
-    const texR = mkSign(true), texL = mkSign(false);
+    // 4 frames por lado: chevrón 0→1→2 encendido, luego todos apagados.
+    // Las señales de la izquierda barren hacia la izquierda (orden inverso)
+    if (!ledFR) {
+      ledFR = [mkSign(true, 0), mkSign(true, 1), mkSign(true, 2), mkSign(true, -1)];
+      ledFL = [mkSign(false, 2), mkSign(false, 1), mkSign(false, 0), mkSign(false, -1)];
+    }
     const LOOK = 6;
     const putSign = i => {
       const p = path[i], pa = path[(i + LOOK) % pathLen];
@@ -2684,8 +2694,9 @@ function buildWorld() {
       const s = turn > 0 ? -1 : 1;                            // exterior de la curva
       const hw = (neon ? RW / 2 + 2.2 : ((trackHW && trackHW[i]) || RW / 2) + 1.6);
       const nx = -p.tz * s, nz = p.tx * s;
-      const sign = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.1),
-        new THREE.MeshBasicMaterial({ map: turn > 0 ? texR : texL, side: THREE.DoubleSide, fog: false }));
+      const sgn = new THREE.MeshBasicMaterial({ map: turn > 0 ? ledFR[0] : ledFL[0], side: THREE.DoubleSide, fog: false });
+      ledMats.push({ m: sgn, r: turn > 0 });
+      const sign = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.1), sgn);
       sign.position.set(p.x + nx * hw, 1.05, p.z + nz * hw);  // sin postes: tablón bajo
       sign.rotation.order = 'YXZ';
       // La cara sigue la tangente LOCAL: los tablones dibujan el arco de la curva
@@ -3449,7 +3460,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 253;
+const BUILD_NO = 254;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -4387,6 +4398,11 @@ function draw(now) {
   for (const c of cpus) if (c && c.grp) rainTick(c.grp);
   if (remote && remote.grp) rainTick(remote.grp);
   if (ghostCar && ghostCar.visible) rainTick(ghostCar);
+  // Señales LED: los chevrones barren rojo hacia el vértice de cada curva
+  if (ledMats.length) {
+    const ph = Math.floor(now / 130) % 4;
+    for (const s of ledMats) s.m.map = (s.r ? ledFR : ledFL)[ph];
+  }
 
 
   // Coche rival: interpolación suave hacia la última posición recibida
