@@ -789,6 +789,15 @@
     color: #ffd080; font-size: 20px; font-weight: 900; cursor: pointer; z-index: 2; }
   .c3dNav:hover { background: rgba(60,80,140,0.7); }
   #c3dPrev { left: 10px; } #c3dNext { right: 10px; }
+  /* Pad de direcciones + zoom del visor CARS 3D */
+  #c3dPad { position: absolute; left: 12px; bottom: 12px; z-index: 6;
+    display: grid; grid-template-columns: repeat(3, 42px); gap: 5px; }
+  #c3dZoom { position: absolute; right: 12px; bottom: 12px; z-index: 6; display: flex; gap: 6px; }
+  .pBtn { width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(120,180,255,0.55);
+    background: rgba(10,18,36,0.78); color: #bfe0ff; font-size: 17px; font-weight: 900;
+    cursor: pointer; touch-action: none; }
+  .pBtn:active { background: rgba(80,140,255,0.4); transform: scale(0.92); }
+  #c3dReset { color: #ffd080; border-color: rgba(255,200,90,0.55); }
   #c3dHint { font-size: 12px; color: #8898c0; letter-spacing: 1px; }
   #opts::-webkit-scrollbar { width: 8px; }
   #opts::-webkit-scrollbar-thumb { background: rgba(255,190,80,0.35); border-radius: 4px; }
@@ -1705,6 +1714,12 @@
     <button class="c3dNav" id="c3dNext">▶</button>
     <button id="c3dAll">TODOS</button>
     <div id="c3dName">AMARILLO</div>
+    <div id="c3dPad">
+      <span></span><button class="pBtn" id="c3dUp">▲</button><span></span>
+      <button class="pBtn" id="c3dLeft">◀</button><button class="pBtn" id="c3dReset">⊙</button><button class="pBtn" id="c3dRight">▶</button>
+      <span></span><button class="pBtn" id="c3dDown">▼</button><span></span>
+    </div>
+    <div id="c3dZoom"><button class="pBtn" id="c3dZi">＋</button><button class="pBtn" id="c3dZo">－</button></div>
   </div>
   <div id="c3dHint">Arrastra para girar · rueda para zoom</div>
   <div class="backWrap"><button class="mbtn" id="c3dBack">VOLVER</button></div>
@@ -4572,7 +4587,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 312;
+const BUILD_NO = 313;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6680,6 +6695,7 @@ const I18N = {
     champWin: '¡CAMPEÓN DEL GP!', champ2: 'SUBCAMPEÓN',
     pitting: 'EN BOXES…', pitDone: '¡LISTO! Reparado y ruedas nuevas',
     mustPit: '¡MOTOR DESTROZADO! Entra en boxes',
+    c3dHint: 'Arrastra gira · clic der. mueve · rueda o +/− zoom · flechas giran · R centra',
     rain: '¡EMPIEZA A LLOVER! — el asfalto resbala',
     koCpu: '¡RIVAL ELIMINADO!', koOut: 'ELIMINADO',
     koInfo: 'Ibas último en el corte — ¡pide revancha!',
@@ -6766,6 +6782,7 @@ const I18N = {
     champWin: 'GP CHAMPION!', champ2: 'RUNNER-UP',
     pitting: 'IN THE PITS…', pitDone: 'ALL FIXED! Fresh tires',
     mustPit: 'ENGINE WRECKED! Pit stop required',
+    c3dHint: 'Drag rotates · right-drag moves · wheel or +/− zoom · arrows rotate · R resets',
     rain: 'RAIN! — the track is slippery',
     koCpu: 'RIVAL ELIMINATED!', koOut: 'ELIMINATED',
     koInfo: 'You were last at the cutoff — demand a rematch!',
@@ -7211,7 +7228,8 @@ document.getElementById('powBack').addEventListener('click', () => {
 
 /* ================== CARS 3D: visor de modelos ================== */
 const c3d = { on: false, r: null, scene: null, cam: null, car: null, raf: 0,
-  idx: 0, rotY: 0, rotX: 0, zoom: 1, drag: null, r26: null, r26p: null, allGrp: null, req: 0 };
+  idx: 0, rotY: 0, rotX: 0, zoom: 1, drag: null, pan: null, panX: 0, panY: 0,
+  r26: null, r26p: null, allGrp: null, req: 0 };
 // Mismo tratamiento de materiales que el render del sprite
 const C3D_TMAP = {
   WCWING: 'wcwing.png', WCEXTRA0: 'wcextra0.png', WCEXTRA1: 'wcextra1.png',
@@ -7323,18 +7341,60 @@ function c3dInit() {
   const ringT = new THREE.Mesh(new THREE.TorusGeometry(6.1, 0.07, 8, 60),
     new THREE.MeshBasicMaterial({ color: 0xffc860 }));
   ringT.rotation.x = Math.PI / 2; ringT.position.y = 0.01; c3d.scene.add(ringT);
-  // interacción: arrastre gira, rueda acerca
+  // interacción: arrastre izq. gira · clic derecho mueve la vista · rueda acerca
   const wrap = document.getElementById('c3dWrap');
-  wrap.addEventListener('pointerdown', e => { c3d.drag = { x: e.clientX, y: e.clientY }; wrap.setPointerCapture(e.pointerId); });
+  wrap.addEventListener('contextmenu', e => e.preventDefault());
+  wrap.addEventListener('pointerdown', e => {
+    if (e.button === 2) c3d.pan = { x: e.clientX, y: e.clientY };
+    else c3d.drag = { x: e.clientX, y: e.clientY };
+    wrap.setPointerCapture(e.pointerId);
+  });
   wrap.addEventListener('pointermove', e => {
+    if (c3d.pan) {                                       // mover la vista (encuadre)
+      c3d.panX = clamp(c3d.panX - (e.clientX - c3d.pan.x) * 0.025, -5, 5);
+      c3d.panY = clamp(c3d.panY + (e.clientY - c3d.pan.y) * 0.025, -4, 4);
+      c3d.pan = { x: e.clientX, y: e.clientY };
+      return;
+    }
     if (!c3d.drag) return;
     c3d.rotY += (e.clientX - c3d.drag.x) * 0.012;
     c3d.rotX += (e.clientY - c3d.drag.y) * 0.008;          // giro libre en todas direcciones
     c3d.drag = { x: e.clientX, y: e.clientY };
   });
-  wrap.addEventListener('pointerup', () => c3d.drag = null);
-  wrap.addEventListener('pointercancel', () => c3d.drag = null);
+  wrap.addEventListener('pointerup', () => c3d.drag = c3d.pan = null);
+  wrap.addEventListener('pointercancel', () => c3d.drag = c3d.pan = null);
   wrap.addEventListener('wheel', e => { e.preventDefault(); c3d.zoom = Math.max(0.55, Math.min(1.9, c3d.zoom + e.deltaY * 0.001)); }, { passive: false });
+  // Teclado: flechas giran en todas direcciones · PgUp/PgDn o +/− zoom · R/0 centra
+  window.addEventListener('keydown', e => {
+    if (!c3d.on) return;
+    const k = e.code;
+    if (k === 'ArrowLeft') c3d.rotY -= 0.12;
+    else if (k === 'ArrowRight') c3d.rotY += 0.12;
+    else if (k === 'ArrowUp') c3d.rotX -= 0.10;
+    else if (k === 'ArrowDown') c3d.rotX += 0.10;
+    else if (k === 'PageUp' || k === 'Equal' || k === 'NumpadAdd') c3d.zoom = Math.max(0.55, c3d.zoom - 0.12);
+    else if (k === 'PageDown' || k === 'Minus' || k === 'NumpadSubtract') c3d.zoom = Math.min(1.9, c3d.zoom + 0.12);
+    else if (k === 'KeyR' || k === 'Digit0') { c3d.rotY = c3d.rotX = c3d.panX = c3d.panY = 0; c3d.zoom = 1; }
+    else return;
+    e.preventDefault();
+  });
+  // Pad de direcciones en pantalla: mantener pulsado = giro/zoom continuo
+  const pbtn = (id, fn) => {
+    const b = document.getElementById(id); let tm = 0;
+    const dn = e => { e.preventDefault(); e.stopPropagation(); fn(); tm = setInterval(fn, 55); };
+    const up = () => { clearInterval(tm); tm = 0; };
+    b.addEventListener('pointerdown', dn);
+    b.addEventListener('pointerup', up);
+    b.addEventListener('pointerleave', up);
+    b.addEventListener('pointercancel', up);
+  };
+  pbtn('c3dUp',    () => c3d.rotX -= 0.09);
+  pbtn('c3dDown',  () => c3d.rotX += 0.09);
+  pbtn('c3dLeft',  () => c3d.rotY -= 0.09);
+  pbtn('c3dRight', () => c3d.rotY += 0.09);
+  pbtn('c3dZi',    () => c3d.zoom = Math.max(0.55, c3d.zoom - 0.06));
+  pbtn('c3dZo',    () => c3d.zoom = Math.min(1.9, c3d.zoom + 0.06));
+  pbtn('c3dReset', () => { c3d.rotY = c3d.rotX = c3d.panX = c3d.panY = 0; c3d.zoom = 1; });
 }
 // Textura con el tono del equipo: mezcla 'hue' — conserva saturación y
 // sombreado de la librea original, solo cambia el matiz (blancos/grises intactos)
@@ -7381,11 +7441,9 @@ function c3dTintR26(base, tint) {
 // Crea un modelo de exposición limpio (sin faros/haces/sprites) para el visor
 async function c3dModel(def) {
   let mdl;
-  if (def.glb) {
-    try { mdl = (await c3dGlb(def.glb)).clone(true); }
-    catch (e) { mdl = buildCar(def.tint, false); }
-  } else {
-    // Todos montan el chasis real del R26; el de cada nombre va repintado
+  {
+    // De momento TODOS montan el chasis real r26.glb; cada nombre va
+    // repintado con su color de equipo (el R26 conserva su librea)
     try {
       mdl = def.img === 'f1_r26.png' ? (await c3dR26()).clone(true)
                                      : c3dTintR26(await c3dR26(), def.tint);
@@ -7468,8 +7526,9 @@ function c3dLoop() {
   if (c3d.car) { c3d.car.rotation.y = c3d.rotY; c3d.car.rotation.x = c3d.rotX; }
   const mr = c3d.car === c3d.allGrp ? c3d.allMirr : c3d.mirr;
   if (mr) { mr.rotation.y = c3d.rotY; mr.rotation.x = -c3d.rotX; }
-  const w = c3d.cam;                                     // zoom = distancia
-  w.position.set(0, 5.6 * c3d.zoom, 15.5 * c3d.zoom); w.lookAt(0, 1.4, 0);
+  const w = c3d.cam;                                     // zoom = distancia · pan = encuadre
+  w.position.set(c3d.panX, 5.6 * c3d.zoom + c3d.panY, 15.5 * c3d.zoom);
+  w.lookAt(c3d.panX, 1.4 + c3d.panY, 0);
   const cvEl = document.getElementById('c3dCv'), wrap = document.getElementById('c3dWrap');
   const cw = wrap.clientWidth, ch = wrap.clientHeight;
   if (cvEl.width !== cw || cvEl.height !== ch) {
@@ -7484,6 +7543,7 @@ document.getElementById('cars3dBtn').addEventListener('click', async () => {
   c3d.on = true;
   c3dInit(); c3dLoop();
   document.getElementById('c3dAll').textContent = T('allBtn');
+  document.getElementById('c3dHint').textContent = T('c3dHint');
   c3dShow(OPTS.car || 0);
 });
 document.getElementById('c3dBack').addEventListener('click', () => {
