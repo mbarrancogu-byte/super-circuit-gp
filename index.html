@@ -939,6 +939,16 @@
   #splashFog i:nth-child(2) { left: 22%;  bottom: -28%; width: 66%; height: 66%; animation-delay: -3s; }
   #splashFog i:nth-child(3) { left: 58%;  bottom: -20%; width: 72%; height: 60%; animation-delay: -6s; }
   #splashFog i:nth-child(4) { left: 5%;   bottom: -35%; width: 90%; height: 75%; animation-delay: -9s; }
+  #splashFog i:nth-child(5) { top: -20%;  left: -8%;  width: 95%; height: 58%; animation-delay: -5s; }
+  /* Ola de niebla superior: envuelve la zona del logo cuando el ciclo alcanza el pico */
+  #splashFog::after { content: ''; position: absolute; inset: 0; opacity: 0;
+    background: linear-gradient(to bottom, rgba(241,245,252,0.95), rgba(236,241,249,0.75) 42%, rgba(231,237,246,0.42) 72%, transparent 100%);
+    animation: fogTop 16s ease-in-out infinite; }
+  @keyframes fogTop {
+    0%, 40%  { opacity: 0; }
+    68%      { opacity: 0.55; }
+    86%, 94% { opacity: 0.95; }
+    100%     { opacity: 0; } }
   @keyframes fogBuild {
     0%   { opacity: 0; }
     45%  { opacity: 0.4; }
@@ -1405,7 +1415,7 @@
   <div id="splashLogo3D"></div>
   <div id="splashWheels"><i></i><i></i></div>
   <div id="splashSmoke"><i></i><i></i><i></i><i></i><i></i><i class="surge"></i></div>
-  <div id="splashFog"><i></i><i></i><i></i><i></i></div>
+  <div id="splashFog"><i></i><i></i><i></i><i></i><i></i></div>
   <div id="splashOpts"><svg class="ic"><use href="#i-gear"/></svg></div>
   <div id="blinkStart"><svg width="100%" height="100%" viewBox="0 0 24 24"><use href="#i-down"/></svg></div>
   <div id="splashLang">
@@ -4390,7 +4400,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 293;
+const BUILD_NO = 294;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
