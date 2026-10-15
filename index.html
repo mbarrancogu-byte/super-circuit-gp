@@ -3117,6 +3117,7 @@ function buildWorld() {
     const BL = 130, BD = 14, BH = 8.5;                         // largo × fondo × alto — bajo: no tapa la cámara
     const off = RW / 2 + 16 + BD / 2;                          // hueco del pit lane + mitad del fondo (edificio alejado)
     const bcx = p.x - nx * off, bcz = p.z - nz * off;        // lado de la cámara: no tapa la vista
+    window._pitExcl = { x: bcx, z: bcz, tx: p.tx, tz: p.tz, hx: BL / 2 + 42, hz: off + 8 }; // huella del complejo
     const pit = new THREE.Group();
     pit.position.set(bcx, 0, bcz);
     pit.lookAt(p.x, 0, p.z);                                   // +z local (fachada) mira a la pista
@@ -3766,6 +3767,74 @@ function buildWorld() {
     world.add(pines, oaks, cyps, shades, rocks);
   }
 
+  // --- VOLUMEN DE LA HIERBA: matas de césped instanciadas por todo el terreno ---
+  // Matas de dos planos cruzados con alfa; dan relieve real al pasto sin
+  // tocar la calzada (solo fuera del radio de pista y del pit lane).
+  // Solo etapas procedurales: en las de foto aérea la hierba ya es real
+  if (!traced && !dragMode) {
+    // Textura de mechón: ~18 briznas afiladas desde la base
+    if (!window._grassTex) {
+      const gc = document.createElement('canvas'); gc.width = gc.height = 64;
+      const gx = gc.getContext('2d');
+      for (let i = 0; i < 22; i++) {
+        const bx = 8 + Math.random() * 48, top = 4 + Math.random() * 26,
+              w = 2 + Math.random() * 3.2, lean = (Math.random() - 0.5) * 10;
+        const g = gx.createLinearGradient(bx, 64, bx + lean, top);
+        const h = 95 + Math.random() * 45;
+        g.addColorStop(0, `rgb(${40 + Math.random() * 30},${h},${34 + Math.random() * 22})`);
+        g.addColorStop(1, `rgb(${70 + Math.random() * 50},${h + 55},${50 + Math.random() * 30})`);
+        gx.strokeStyle = g; gx.lineWidth = w; gx.lineCap = 'round';
+        gx.beginPath(); gx.moveTo(bx, 64);
+        gx.quadraticCurveTo(bx + lean * 0.4, 40, bx + lean, top); gx.stroke();
+      }
+      window._grassTex = tex3(gc);
+    }
+    // Geometría de la mata: dos planos cruzados, base en y=0
+    const gp1 = new THREE.PlaneGeometry(1.6, 1.6); gp1.translate(0, 0.8, 0);
+    const gp2 = gp1.clone(); gp2.rotateY(Math.PI / 2);
+    const tuftGeo = mergeGeos([{ geo: gp1, m: new THREE.Matrix4() },
+                               { geo: gp2, m: new THREE.Matrix4() }]);
+    const tuftMat = new THREE.MeshStandardMaterial({
+      map: window._grassTex, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.95 });
+    const NT = LOW_POWER ? 1600 : 5200;
+    const tufts = new THREE.InstancedMesh(tuftGeo, tuftMat, NT);
+    tufts.frustumCulled = false;
+    const tm = new THREE.Matrix4(), tq = new THREE.Quaternion(), tv = new THREE.Vector3(),
+          ts = new THREE.Vector3(), tc = new THREE.Color();
+    let nt = 0, gtry = 0;
+    const okSpot = (x, z) => {
+      if (nearRoad(x, z, 13)) return false;
+      const pe = window._pitExcl;
+      if (pe) {                                              // nada de hierba en el pit lane/entrada
+        const dx = x - pe.x, dz = z - pe.z;
+        if (Math.abs(dx * pe.tx + dz * pe.tz) < pe.hx &&
+            Math.abs(-dx * pe.tz + dz * pe.tx) < pe.hz) return false;
+      }
+      for (const o of obstacles) if (o.r > 5 && Math.hypot(o.x - x, o.z - z) < o.r + 4) return false;
+      return true;
+    };
+    // 70% en la banda que bordea la pista (24-95u), 30% por el entorno lejano
+    while (nt < NT && gtry++ < NT * 6) {
+      let x, z;
+      if (nt % 10 < 7) {
+        const i = (rnd(0, pathLen) | 0), p = path[i];
+        const sd = rnd(0, 1) < 0.5 ? 1 : -1, lat = 24 + Math.pow(rnd(0, 1), 1.6) * 71;
+        x = p.x - p.tz * sd * lat + rnd(-6, 6); z = p.z + p.tx * sd * lat + rnd(-6, 6);
+      } else { x = rnd(-860, 860); z = rnd(-860, 860); }
+      if (!okSpot(x, z)) continue;
+      const s = rnd(0.75, 1.7);                               // ~1.2-2.7u de alto
+      tq.setFromAxisAngle(tv.set(0, 1, 0), rnd(0, Math.PI * 2));
+      tm.compose(tv.set(x, hAt(x, z) - 0.06, z), tq,
+                 ts.set(s * rnd(0.85, 1.2), s, s * rnd(0.85, 1.2)));
+      tufts.setMatrixAt(nt, tm);
+      tufts.setColorAt(nt, tc.setHSL(0.27 + rnd(-0.05, 0.05), rnd(0.45, 0.62), rnd(0.34, 0.52)));
+      nt++;
+    }
+    tufts.count = nt; tufts.instanceMatrix.needsUpdate = true;
+    if (tufts.instanceColor) tufts.instanceColor.needsUpdate = true;
+    world.add(tufts);
+  }
+
   // --- Montañas lejanas + cielo estrellado + luna (solo de noche) ---
   if (!traced) {
     for (let i = 0; i < 16; i++) {
@@ -4321,7 +4390,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 291;
+const BUILD_NO = 292;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
