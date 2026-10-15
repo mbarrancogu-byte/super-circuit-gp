@@ -3130,44 +3130,81 @@ function buildWorld() {
 
   // --- Entorno: bosque de rally (solo en etapas procedurales; el drag va en llano limpio) ---
   if (!traced && !dragMode) {
-    // Pinos 3D reales: tronco + copa de 4 conos solapados (pico alto y follaje denso)
+    // Bosque variado: pinos (4 conos), ROBLES de copa redondeada y CIPRESES
+    // altos y finos — tres especies instanciadas repartidas por el entorno
     const nTrees = 130;
     const _m = (x, y, z, sx, sy, sz) => new THREE.Matrix4().compose(
       new THREE.Vector3(x, y, z), new THREE.Quaternion(), new THREE.Vector3(sx, sy, sz));
-    // Copa: conos superpuestos de abajo arriba — cada uno cubre la base del siguiente
+    // Copa de pino: conos superpuestos de abajo arriba — cada uno cubre la base del siguiente
     const leafGeo = mergeGeos([
       { geo: new THREE.ConeGeometry(5.6, 10, 8),  m: _m(0, 9.5, 0, 1, 1, 1) },
       { geo: new THREE.ConeGeometry(4.6, 9, 8),   m: _m(0, 15.5, 0, 1, 1, 1) },
       { geo: new THREE.ConeGeometry(3.3, 8, 8),   m: _m(0, 21, 0, 1, 1, 1) },
       { geo: new THREE.ConeGeometry(1.7, 7, 7),   m: _m(0, 26.5, 0, 1, 1, 1) },   // pico afilado
     ]);
+    // Copa de roble: tres grumos redondos solapados sobre tronco grueso
+    const oakGeo = mergeGeos([
+      { geo: new THREE.IcosahedronGeometry(5.4, 1), m: _m(0, 15, 0, 1.15, 0.92, 1.15) },
+      { geo: new THREE.IcosahedronGeometry(3.8, 1), m: _m(3.6, 19, 1.4, 1, 0.85, 1) },
+      { geo: new THREE.IcosahedronGeometry(3.4, 1), m: _m(-3.8, 18.2, -1.6, 1, 0.9, 1) },
+    ]);
+    // Ciprés: llama alta y estrecha con base redondeada
+    const cypGeo = mergeGeos([
+      { geo: new THREE.ConeGeometry(2.4, 30, 7),  m: _m(0, 17, 0, 1, 1, 1) },
+      { geo: new THREE.SphereGeometry(2.2, 7, 6), m: _m(0, 6.5, 0, 1, 1.3, 1) },
+    ]);
     const trunkGeo = new THREE.CylinderGeometry(0.5, 0.8, 9, 6);
+    const trunkOak = new THREE.CylinderGeometry(0.95, 1.5, 13, 6);   // tronco grueso
+    const trunkCyp = new THREE.CylinderGeometry(0.35, 0.6, 8, 6);    // tronco fino
     if (!foliageTex) { foliageTex = makeFoliageTex(); barkTex = makeBarkTex(); }
-    const trees = new THREE.InstancedMesh(leafGeo,
-      new THREE.MeshStandardMaterial({ color: 0xd8e0c8, roughness: 0.95, map: foliageTex }), nTrees);
-    const trunks = new THREE.InstancedMesh(trunkGeo,
-      new THREE.MeshStandardMaterial({ color: 0xc8b8a0, roughness: 1, map: barkTex }), nTrees);
+    const leafMat = new THREE.MeshStandardMaterial({ color: 0xd8e0c8, roughness: 0.95, map: foliageTex });
+    const oakMat = new THREE.MeshStandardMaterial({ color: 0xcfe0a8, roughness: 0.95, map: foliageTex });
+    const cypMat = new THREE.MeshStandardMaterial({ color: 0x9ab88e, roughness: 0.95, map: foliageTex });
+    const barkMat = new THREE.MeshStandardMaterial({ color: 0xc8b8a0, roughness: 1, map: barkTex });
+    const CAP = { pine: 60, oak: 50, cyp: 40 };
+    const pines = new THREE.InstancedMesh(leafGeo, leafMat, CAP.pine);
+    const oaks = new THREE.InstancedMesh(oakGeo, oakMat, CAP.oak);
+    const cyps = new THREE.InstancedMesh(cypGeo, cypMat, CAP.cyp);
+    const trunksP = new THREE.InstancedMesh(trunkGeo, barkMat, CAP.pine);
+    const trunksO = new THREE.InstancedMesh(trunkOak, barkMat, CAP.oak);
+    const trunksC = new THREE.InstancedMesh(trunkCyp, barkMat, CAP.cyp);
     const rocks = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(2.4, 0),
       new THREE.MeshStandardMaterial({ color: 0x3a4048, roughness: 1, flatShading: true }), 60);
     const pm = new THREE.Matrix4(), tCol = new THREE.Color();
-    let ti = 0, rk = 0, guard = 0;
-    while (ti < nTrees && guard++ < 4000) {
+    let ti = 0, nP = 0, nO = 0, nC = 0, rk = 0, guard = 0;
+    while (ti < nTrees && guard++ < 6000) {
       const x = rnd(-900, 900), z = rnd(-900, 900);
       if (nearRoad(x, z, 10)) continue;
+      const pick = Math.random();
+      const kind = pick < 0.44 ? 0 : pick < 0.82 ? 1 : 2;    // 44% pino / 38% roble / 18% ciprés
+      if (kind === 0 && nP >= CAP.pine || kind === 1 && nO >= CAP.oak || kind === 2 && nC >= CAP.cyp) continue;
       const s = rnd(1.1, 2.3);                                   // altura real: ~32-66u
-      pm.makeRotationY(rnd(0, Math.PI * 2));                     // cada pino con su orientación
-      pm.scale(new THREE.Vector3(s * rnd(0.9, 1.1), s, s * rnd(0.9, 1.1)));
+      pm.makeRotationY(rnd(0, Math.PI * 2));                     // cada árbol con su orientación
+      pm.scale(new THREE.Vector3(s * rnd(0.9, 1.1), s * (kind === 1 ? rnd(0.8, 1) : 1), s * rnd(0.9, 1.1)));
       pm.setPosition(x, 0, z);
-      trees.setMatrixAt(ti, pm);
-      trunks.setMatrixAt(ti, pm);
-      trees.setColorAt(ti, tCol.setHSL(0.28 + rnd(-0.06, 0.07), rnd(0.42, 0.66), rnd(0.62, 0.88)));
+      if (kind === 0) {
+        pines.setMatrixAt(nP, pm); trunksP.setMatrixAt(nP, pm);
+        pines.setColorAt(nP, tCol.setHSL(0.28 + rnd(-0.06, 0.07), rnd(0.42, 0.66), rnd(0.62, 0.88)));
+        nP++;
+      } else if (kind === 1) {
+        oaks.setMatrixAt(nO, pm); trunksO.setMatrixAt(nO, pm);
+        oaks.setColorAt(nO, tCol.setHSL(0.20 + rnd(-0.04, 0.08), rnd(0.45, 0.7), rnd(0.55, 0.8)));
+        nO++;
+      } else {
+        cyps.setMatrixAt(nC, pm); trunksC.setMatrixAt(nC, pm);
+        cyps.setColorAt(nC, tCol.setHSL(0.33 + rnd(-0.03, 0.03), rnd(0.5, 0.7), rnd(0.45, 0.62)));
+        nC++;
+      }
       obstacles.push({ x, z, r: 3 * s });
       ti++;
     }
-    trees.castShadow = trunks.castShadow = true;
-    if (trees.instanceColor) trees.instanceColor.needsUpdate = true;
-    trunks.instanceMatrix.needsUpdate = true;
-    world.add(trunks);
+    pines.count = nP; oaks.count = nO; cyps.count = nC;
+    trunksP.count = nP; trunksO.count = nO; trunksC.count = nC;
+    pines.castShadow = trunksP.castShadow = oaks.castShadow = trunksO.castShadow =
+      cyps.castShadow = trunksC.castShadow = true;
+    for (const m of [pines, oaks, cyps]) if (m.instanceColor) m.instanceColor.needsUpdate = true;
+    for (const m of [pines, oaks, cyps, trunksP, trunksO, trunksC]) m.instanceMatrix.needsUpdate = true;
+    world.add(trunksP, trunksO, trunksC);
     guard = 0;
     while (rk < 60 && guard++ < 2000) {
       const x = rnd(-850, 850), z = rnd(-850, 850);
@@ -3179,8 +3216,8 @@ function buildWorld() {
       rk++;
     }
     rocks.castShadow = true;
-    trees.instanceMatrix.needsUpdate = rocks.instanceMatrix.needsUpdate = true;
-    world.add(trees, rocks);
+    rocks.instanceMatrix.needsUpdate = true;
+    world.add(pines, oaks, cyps, rocks);
   }
 
   // --- Montañas lejanas + cielo estrellado + luna (solo de noche) ---
@@ -3719,7 +3756,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 269;
+const BUILD_NO = 270;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
