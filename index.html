@@ -1730,24 +1730,24 @@ function makeRoadTex() {
   }
   const tx = tex3(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; return tx;
 }
-// Asfalto gris para el trazado NEÓN/drag: grano de hormigón con rodadas oscuras
+// Asfalto gris OSCURO para el trazado NEÓN/drag: grano de hormigón con rodadas
 function makeAsphaltTex() {
   const c = document.createElement('canvas'); c.width = 128; c.height = 128;
   const t = c.getContext('2d');
-  t.fillStyle = '#43464c'; t.fillRect(0, 0, 128, 128);
+  t.fillStyle = '#2a2d33'; t.fillRect(0, 0, 128, 128);
   for (let i = 0; i < 900; i++) {
-    const v = ri(46, 128);
-    t.fillStyle = `rgba(${v},${v},${v + ri(0, 8)},${rnd(0.25, 0.65)})`;
+    const v = ri(30, 92);
+    t.fillStyle = `rgba(${v},${v},${v + ri(0, 8)},${rnd(0.25, 0.6)})`;
     t.fillRect(ri(0, 127), ri(0, 127), ri(1, 2), ri(1, 2));
   }
   for (const bx of [38, 90]) {
     const gr = t.createLinearGradient(bx - 16, 0, bx + 16, 0);
-    gr.addColorStop(0, 'rgba(18,19,22,0)'); gr.addColorStop(0.5, 'rgba(18,19,22,0.5)'); gr.addColorStop(1, 'rgba(18,19,22,0)');
+    gr.addColorStop(0, 'rgba(12,13,16,0)'); gr.addColorStop(0.5, 'rgba(12,13,16,0.55)'); gr.addColorStop(1, 'rgba(12,13,16,0)');
     t.fillStyle = gr; t.fillRect(bx - 16, 0, 32, 128);
   }
   for (const bx of [0, 128]) {
     const gr = t.createLinearGradient(bx === 0 ? 0 : 128, 0, bx === 0 ? 14 : 114, 0);
-    gr.addColorStop(0, 'rgba(150,155,164,0.55)'); gr.addColorStop(1, 'rgba(150,155,164,0)');
+    gr.addColorStop(0, 'rgba(110,116,126,0.45)'); gr.addColorStop(1, 'rgba(110,116,126,0)');
     t.fillStyle = gr; t.fillRect(bx === 0 ? 0 : 114, 0, 14, 128);
   }
   const tx = tex3(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; return tx;
@@ -2126,7 +2126,8 @@ function buildWorld() {
     rg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     rg.setIndex(idx);
     rg.computeVertexNormals();
-    const road = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({ map: roadTex, roughness: 1, side: THREE.DoubleSide }));
+    const road = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({ map: roadTex, roughness: 1, side: THREE.DoubleSide,
+      color: neon ? 0x8f949c : 0xffffff }));            // NEÓN: el asfalto responde menos a la luz — gris oscuro
     road.position.y = 0.06; road.receiveShadow = true;
     world.add(road);
     if (dragMode) {
