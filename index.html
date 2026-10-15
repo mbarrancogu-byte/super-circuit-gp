@@ -375,6 +375,9 @@
   #title span { color: transparent; }
   #titleLogo { height: clamp(140px, 26vh, 230px); width: auto; display: block; margin: 0 auto;
     filter: drop-shadow(0 10px 26px rgba(0,0,0,0.6)); }
+  #titleLogo3D { height: clamp(160px, 28vh, 250px); width: min(56vw, 300px); margin: 0 auto;
+    cursor: grab; touch-action: none; }
+  #titleLogo3D canvas { display: block; filter: drop-shadow(0 10px 26px rgba(0,0,0,0.55)); }
   #gpBig { position: relative; font-size: clamp(88px, 24vw, 200px); line-height: 0.95; letter-spacing: 2px;
     background: linear-gradient(180deg, #fff 8%, #ffe9a0 30%, #ffd060 48%, #ff7a30 78%, #ff5030 95%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -1199,7 +1202,7 @@
     <div class="langF" id="langEN"><span class="miniFlag" data-flag="gb"></span></div>
   </div>
   <div class="stripe"></div>
-  <div id="title"><img id="titleLogo" src="logo_gp.webp" alt="Super Circuit GP"></div>
+  <div id="title"><div id="titleLogo3D" title="Arrastra para girar"></div></div>
   <div class="stripe"></div>
   <div class="subtitle" id="subTitle">RALLY NOCTURNO · CONTRARRELOJ</div>
   <div class="selRow">
@@ -1420,6 +1423,7 @@
 <div id="toast"></div>
 
 <script src="three.min.js"></script>
+<script src="logo_shape.js"></script>
 <script src="peerjs.min.js"></script>
 <script>
 'use strict';
@@ -5942,6 +5946,68 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+// Escudo GP en 3D: silueta extruida con la imagen en las caras. Gira solo
+// y se puede arrastrar para rotarlo a mano
+(function () {
+  const host = document.getElementById('titleLogo3D');
+  if (!host || typeof LOGO_SHAPE === 'undefined' || !LOGO_SHAPE.length) return;
+  const W = () => host.clientWidth || 280, H = () => host.clientHeight || 240;
+  const lr = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  lr.setPixelRatio(Math.min(devicePixelRatio, 2));
+  lr.setSize(W(), H());
+  host.appendChild(lr.domElement);
+  const lsc = new THREE.Scene();
+  const lcam = new THREE.PerspectiveCamera(34, W() / H(), 0.1, 50);
+  lcam.position.set(0, 0, 1.85);
+  lsc.add(new THREE.AmbientLight(0xffffff, 0.9));
+  const key2 = new THREE.DirectionalLight(0xfff3d8, 1.6); key2.position.set(2, 3, 4); lsc.add(key2);
+  const rim2 = new THREE.DirectionalLight(0x8fb8ff, 0.7); rim2.position.set(-3, -1, 3); lsc.add(rim2);
+  const grp = new THREE.Group(); lsc.add(grp);
+  const sc = 0.72;                                              // el escudo mide ~1.5u de alto
+  const shape = new THREE.Shape(LOGO_SHAPE.map(p => new THREE.Vector2(p[0] * sc, p[1] * sc)));
+  const DEPTH = 0.09;
+  const exg = new THREE.ExtrudeGeometry(shape, {
+    depth: DEPTH, bevelEnabled: true, bevelThickness: 0.018, bevelSize: 0.014, bevelSegments: 3 });
+  exg.center();
+  // caras con la textura del escudo; canto metálico oscuro
+  const faceMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.25, roughness: 0.45 });
+  const edgeMat = new THREE.MeshStandardMaterial({ color: 0x23262e, metalness: 0.85, roughness: 0.35 });
+  const mesh = new THREE.Mesh(exg, [faceMat, edgeMat]);
+  grp.add(mesh);
+  new THREE.TextureLoader().load('logo_gp.webp', t => {
+    t.colorSpace = THREE.SRGBColorSpace;
+    // UVs: el extrude usa coords XY -> normalizamos al bounding box de la silueta
+    exg.computeBoundingBox();
+    const bb = exg.boundingBox, sx = bb.max.x - bb.min.x, sy = bb.max.y - bb.min.y;
+    const pos = exg.attributes.position, uv = exg.attributes.uv;
+    for (let i = 0; i < pos.count; i++)
+      uv.setXY(i, (pos.getX(i) - bb.min.x) / sx, (pos.getY(i) - bb.min.y) / sy);
+    uv.needsUpdate = true;
+    faceMat.map = t; faceMat.transparent = true; faceMat.alphaTest = 0.15; faceMat.needsUpdate = true;
+  });
+  let vel = 0.35, dragging = false, lastX = 0, lastY = 0, rotX = 0;
+  host.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; host.setPointerCapture(e.pointerId); });
+  host.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    grp.rotation.y += (e.clientX - lastX) * 0.012;
+    rotX = clamp(rotX + (e.clientY - lastY) * 0.008, -0.6, 0.6);
+    grp.rotation.x = rotX;
+    vel = (e.clientX - lastX) * 0.012 * 60;
+    lastX = e.clientX; lastY = e.clientY;
+  });
+  const endDrag = () => dragging = false;
+  host.addEventListener('pointerup', endDrag); host.addEventListener('pointercancel', endDrag);
+  window.addEventListener('resize', () => {
+    lcam.aspect = W() / H(); lcam.updateProjectionMatrix(); lr.setSize(W(), H());
+  });
+  let lt = performance.now();
+  (function lloop(now) {
+    const d = Math.min(0.05, (now - lt) / 1000); lt = now;
+    if (!dragging) { grp.rotation.y += vel * d; vel += (0.35 - vel) * d * 1.5; }
+    if (host.offsetParent) lr.render(lsc, lcam);   // solo dibuja cuando el menú es visible
+    requestAnimationFrame(lloop);
+  })(lt);
+})();
 // PWA: service worker para instalar como app y jugar offline (solo http/https, no file://)
 if ('serviceWorker' in navigator && location.protocol.startsWith('http'))
   navigator.serviceWorker.register('sw.js').catch(() => {});
