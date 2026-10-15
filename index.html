@@ -4683,7 +4683,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 323;
+const BUILD_NO = 324;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -5009,9 +5009,10 @@ function update(dt) {
     steer = ai.steer; gas = ai.gas; brake = ai.brake; hb = ai.hb;
   } else {
     steer = inSteer + pad.steer;
-    // Dirección del teclado remapeada a A/D (las flechas son los pedales: ↑ gas · ↓ freno)
-    if (keys.KeyA) steer -= 1;
-    if (keys.KeyD) steer += 1;
+    // Dirección: A/D o flechas ◀▶ — las flechas solo en 1 jugador
+    // (en 2P las flechas ↑↓ son los pedales de J2)
+    if (keys.KeyA || (!p2Mode && keys.ArrowLeft)) steer -= 1;
+    if (keys.KeyD || (!p2Mode && keys.ArrowRight)) steer += 1;
     steer = clamp(steer, -1, 1);
     gas = Math.max(inGas, pad.gas); brake = Math.max(inBrake, pad.brake);
     hb = inHB || pad.hb || (keys.Space && !dragMode);
@@ -5682,7 +5683,7 @@ function draw(now) {
                     + bmp * 0.05 + kick * 0.07 - bnk / RW;            // bascula con bache y peralte
   carGrp.rotation.x = clamp(-(inGas - inBrake) * 0.03, -0.05, 0.05)
                     + clamp(bvv * 0.007, -0.07, 0.07) + kick * 0.05;  // cabeceo de suspensión
-  for (const w of wheelF) w.rotation.y = (inSteer + (keys.KeyA ? -1 : 0) + (keys.KeyD ? 1 : 0)) * 0.4;
+  for (const w of wheelF) w.rotation.y = (inSteer + (keys.KeyA || keys.ArrowLeft ? -1 : 0) + (keys.KeyD || keys.ArrowRight ? 1 : 0)) * 0.4;
   const wSpin = spd * dt * 1.2;
   for (const w of wheelF) w.children[0].rotation.x += wSpin;
   for (const w of wheelR) w.children[0].rotation.x += wSpin;
