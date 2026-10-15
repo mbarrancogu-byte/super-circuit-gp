@@ -492,13 +492,51 @@
   #intro { position: fixed; inset: 0; z-index: 88; background: #02040a;
     opacity: 0; pointer-events: none; transition: opacity 0.55s ease; }
   #intro.show { opacity: 1; pointer-events: auto; }
-  .inSlide { position: absolute; inset: 0; opacity: 0;
-    transition: opacity 0.85s ease; overflow: hidden; }
+  .inSlide { position: absolute; inset: 0; opacity: 0; overflow: hidden;
+    transition: opacity 0.85s ease, transform 1.1s cubic-bezier(0.2,0.8,0.25,1);
+    transform-origin: 50% 50%; }
   .inSlide img { position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover; transform: scale(1.03); transition: transform 3.4s ease-out;
     filter: saturate(1.06) contrast(1.03); }
-  .inSlide.on { opacity: 1; }
-  .inSlide.on img { transform: scale(1.10); }          /* ken burns suave */
+  .inSlide.on { opacity: 1; transform: none; }
+  /* Entrada distinta por pantalla + Ken Burns con dirección propia */
+  .inSlide.m1 { transform: scale(1.09); }
+  .inSlide.m2 { transform: translateX(7%)  scale(1.05); }
+  .inSlide.m3 { transform: translateX(-7%) scale(1.05); }
+  .inSlide.m4 { transform: translateY(4%)  scale(0.94); }
+  .inSlide.m5 { transform: scale(1.14); }
+  .inSlide.m1 img { transform: scale(1.06) translate(-2.5%, 1.5%); }
+  .inSlide.m1.on img { transform: scale(1.14) translate(2%, -1%); }
+  .inSlide.m2 img { transform: scale(1.13) translate(2%, 0); }
+  .inSlide.m2.on img { transform: scale(1.05) translate(-2.5%, 1%); }
+  .inSlide.m3 img { transform: scale(1.12) translate(-2.5%, 0); }
+  .inSlide.m3.on img { transform: scale(1.05) translate(2%, -1%); }
+  .inSlide.m4 img { transform: scale(1.04) translateY(2%); }
+  .inSlide.m4.on img { transform: scale(1.13) translateY(-2%); }
+  .inSlide.m5 img { transform: scale(1.16) translate(2%, 2%); }
+  .inSlide.m5.on img { transform: scale(1.05); }
+  /* Barras cinematográficas que encuadran al abrir */
+  .inBar { position: absolute; left: 0; right: 0; height: 7.5vh; background: #000; z-index: 2;
+    transition: transform 0.8s cubic-bezier(0.2,0.8,0.2,1); }
+  .inBar.t { top: 0; transform: translateY(-102%); }
+  .inBar.b { bottom: 0; transform: translateY(102%); }
+  #intro.show .inBar { transform: none; }
+  /* Destello de luz que barre la pantalla en diagonal */
+  .inStreak { position: absolute; inset: -20%; z-index: 1; pointer-events: none;
+    background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,0.11) 50%, transparent 58%);
+    background-size: 300% 100%; mix-blend-mode: screen;
+    animation: inStreakX 5.5s linear infinite; }
+  @keyframes inStreakX { from { background-position: 130% 0; } to { background-position: -70% 0; } }
+  /* Titular animado de cada pantalla */
+  #introCap { position: absolute; left: 6%; bottom: 13vh; z-index: 2; pointer-events: none; }
+  #introCap b { display: block; font-size: clamp(26px, 5.5vw, 56px); font-weight: 900;
+    letter-spacing: 3px; color: #fff; text-transform: uppercase;
+    text-shadow: 0 4px 24px rgba(0,0,0,0.85), 0 0 44px rgba(255,200,80,0.28);
+    transform: translateY(26px); opacity: 0; transition: 0.6s cubic-bezier(0.2,0.9,0.3,1); }
+  #introCap span { display: block; margin-top: 7px; font-size: clamp(12px, 2vw, 17px);
+    font-weight: 700; letter-spacing: 5px; color: #ffd98a; text-transform: uppercase;
+    transform: translateY(18px); opacity: 0; transition: 0.6s 0.1s cubic-bezier(0.2,0.9,0.3,1); }
+  #introCap.on b, #introCap.on span { transform: none; opacity: 1; }
   .inSlide::after { content: ''; position: absolute; inset: 0;
     background:
       radial-gradient(ellipse at 50% 50%, transparent 48%, rgba(0,0,0,0.78) 100%),
@@ -1431,11 +1469,14 @@
 
 <!-- INTRO cinematográfica: 5 pantallas promocionales con transición -->
 <div id="intro">
-  <div class="inSlide"><img src="intro1.jpg" alt=""></div>
-  <div class="inSlide"><img src="intro2.jpg" alt=""></div>
-  <div class="inSlide"><img src="intro3.jpg" alt=""></div>
-  <div class="inSlide"><img src="intro4.jpg" alt=""></div>
-  <div class="inSlide"><img src="intro5.jpg" alt=""></div>
+  <div class="inSlide m1"><img src="intro1.jpg" alt=""></div>
+  <div class="inSlide m2"><img src="intro2.jpg" alt=""></div>
+  <div class="inSlide m3"><img src="intro3.jpg" alt=""></div>
+  <div class="inSlide m4"><img src="intro4.jpg" alt=""></div>
+  <div class="inSlide m5"><img src="intro5.jpg" alt=""></div>
+  <div class="inBar t"></div><div class="inBar b"></div>
+  <div class="inStreak"></div>
+  <div id="introCap"><b></b><span></span></div>
   <button id="introExit">✕ SALTAR</button>
   <div id="introDots"><i></i><i></i><i></i><i></i><i></i></div>
 </div>
@@ -4405,7 +4446,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 296;
+const BUILD_NO = 297;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6450,6 +6491,11 @@ const I18N = {
     spAero: 'CARGA AERO', spTireL: 'NEUMÁTICOS',
     spEngV: 'V6 TURBO HÍBRIDO', spGearV: 'SECUENCIAL 6 VEL.', ciBtn: 'ℹ FICHA',
     inSkip: '✕ SALTAR',
+    inCap1t: 'VELOCIDAD PURA', inCap1s: 'máquinas de verdad',
+    inCap2t: 'INGENIERÍA EXTREMA', inCap2s: 'telemetría en tiempo real',
+    inCap3t: 'CIRCUITOS DEL MUNDO', inCap3s: 'día · noche · lluvia',
+    inCap4t: 'RIVALES IMPLACABLES', inCap4s: 'una IA que pelea cada curva',
+    inCap5t: 'SUPER CIRCUIT GP', inCap5s: 'tu leyenda empieza aquí',
     shiftPerf: '¡CAMBIO PERFECTO!', shiftEarly: 'MUY PRONTO', shiftLate: 'AL CORTE',
     launchOk: '¡SALIDA PERFECTA!',
     divebomb: 'SE LANZA POR DENTRO', overtakeZone: 'ZONA DE ADELANTAMIENTO', shortcut: '¡ATAJO! +3s',
@@ -6530,6 +6576,11 @@ const I18N = {
     spAero: 'DOWNFORCE', spTireL: 'TYRES',
     spEngV: 'V6 TURBO HYBRID', spGearV: 'SEQUENTIAL 6 SPD', ciBtn: 'ℹ SHEET',
     inSkip: '✕ SKIP',
+    inCap1t: 'PURE SPEED', inCap1s: 'real machines',
+    inCap2t: 'EXTREME ENGINEERING', inCap2s: 'real-time telemetry',
+    inCap3t: 'WORLD CIRCUITS', inCap3s: 'day · night · rain',
+    inCap4t: 'RELENTLESS RIVALS', inCap4s: 'an AI that fights every corner',
+    inCap5t: 'SUPER CIRCUIT GP', inCap5s: 'your legend starts here',
     shiftPerf: 'PERFECT SHIFT!', shiftEarly: 'TOO EARLY', shiftLate: 'AT THE LIMIT',
     launchOk: 'PERFECT LAUNCH!',
     divebomb: 'DIVES DOWN THE INSIDE', overtakeZone: 'OVERTAKING ZONE', shortcut: 'SHORTCUT! +3s',
@@ -6837,8 +6888,76 @@ document.getElementById('optReset').addEventListener('click', () => {
     close();
   });
 })();
-/* ===== INTRO cinematográfica: 5 pantallas ~2.4s con crossfade+Ken Burns ===== */
+/* ===== INTRO cinematográfica: 5 pantallas con movimiento, caption y sonido ===== */
 let _introTm = null, _introIdx = -1;
+/* Banda sonora generada: drone épico + riser + boom/whoosh por transición */
+let _inBus = null, _inNodes = [];
+function introAudioStart() {
+  if (!OPTS.sound) return;
+  initAudio(); if (!AC) return;
+  try {
+    const t0 = AC.currentTime, DUR = 12.5;
+    _inBus = AC.createGain(); _inBus.gain.value = 0;
+    _inBus.gain.linearRampToValueAtTime(0.9, t0 + 0.18);
+    _inBus.connect(master);
+    // Drone: dos sierras desafinadas + sub-seno a través de un lowpass que se abre
+    const df = AC.createBiquadFilter(); df.type = 'lowpass'; df.Q.value = 4;
+    df.frequency.setValueAtTime(220, t0); df.frequency.linearRampToValueAtTime(720, t0 + DUR);
+    const dg = AC.createGain(); dg.gain.value = 0.15;
+    const o1 = AC.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 55;
+    const o2 = AC.createOscillator(); o2.type = 'sawtooth'; o2.frequency.value = 55.6;
+    const o3 = AC.createOscillator(); o3.type = 'sine'; o3.frequency.value = 27.5;
+    const lfo = AC.createOscillator(); lfo.frequency.value = 0.11;
+    const lg = AC.createGain(); lg.gain.value = 130; lfo.connect(lg); lg.connect(df.frequency);
+    o1.connect(df); o2.connect(df); df.connect(dg); o3.connect(dg); dg.connect(_inBus);
+    // Riser: ruido → bandpass que sube durante toda la intro
+    const nl = AC.sampleRate * DUR, nb = AC.createBuffer(1, nl, AC.sampleRate), nd = nb.getChannelData(0);
+    for (let i = 0; i < nl; i++) nd[i] = Math.random() * 2 - 1;
+    const ns = AC.createBufferSource(); ns.buffer = nb;
+    const nf = AC.createBiquadFilter(); nf.type = 'bandpass'; nf.Q.value = 1.4;
+    nf.frequency.setValueAtTime(180, t0); nf.frequency.exponentialRampToValueAtTime(5200, t0 + DUR - 0.4);
+    const ng = AC.createGain(); ng.gain.setValueAtTime(0.001, t0); ng.gain.linearRampToValueAtTime(0.11, t0 + DUR);
+    ns.connect(nf); nf.connect(ng); ng.connect(_inBus);
+    _inNodes = [o1, o2, o3, lfo, ns];
+    _inNodes.forEach(o => o.start(t0));
+  } catch (e) { _inBus = null; }
+}
+function introHit(big) {                                 // golpe grave + whoosh por transición
+  if (!_inBus || !AC) return;
+  try {
+    const t0 = AC.currentTime;
+    const o = AC.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(big ? 150 : 118, t0); o.frequency.exponentialRampToValueAtTime(38, t0 + 0.5);
+    const g = AC.createGain(); g.gain.setValueAtTime(big ? 0.5 : 0.32, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.9);
+    o.connect(g); g.connect(_inBus); o.start(t0); o.stop(t0 + 0.95);
+    const nl = AC.sampleRate * 0.5, b = AC.createBuffer(1, nl, AC.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < nl; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / nl);
+    const s = AC.createBufferSource(); s.buffer = b;
+    const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1;
+    f.frequency.setValueAtTime(420, t0); f.frequency.exponentialRampToValueAtTime(3800, t0 + 0.35);
+    const g2 = AC.createGain(); g2.gain.setValueAtTime(0.2, t0); g2.gain.exponentialRampToValueAtTime(0.001, t0 + 0.5);
+    s.connect(f); f.connect(g2); g2.connect(_inBus); s.start(t0);
+  } catch (e) {}
+}
+function introAudioStop() {
+  if (!_inBus) return;
+  try {
+    const t0 = AC.currentTime, bus = _inBus, nodes = _inNodes;
+    _inBus = null; _inNodes = [];
+    bus.gain.cancelScheduledValues(t0);
+    bus.gain.setValueAtTime(bus.gain.value, t0);
+    bus.gain.linearRampToValueAtTime(0.0001, t0 + 0.45);
+    setTimeout(() => { nodes.forEach(n => { try { n.stop(); } catch (e) {} }); try { bus.disconnect(); } catch (e) {} }, 650);
+  } catch (e) { _inBus = null; _inNodes = []; }
+}
+function introCap(i) {                                   // titular de la pantalla i (retrigger)
+  const cap = document.getElementById('introCap');
+  cap.classList.remove('on'); void cap.offsetWidth;
+  cap.querySelector('b').textContent = T('inCap' + (i + 1) + 't');
+  cap.querySelector('span').textContent = T('inCap' + (i + 1) + 's');
+  cap.classList.add('on');
+}
 function introStep() {                                   // avanza a la siguiente diapositiva
   const slides = document.querySelectorAll('#intro .inSlide');
   const dots = document.querySelectorAll('#introDots i');
@@ -6848,10 +6967,14 @@ function introStep() {                                   // avanza a la siguient
   dots.forEach((d, k) => d.classList.toggle('on', k === _introIdx));
   if (_introIdx >= slides.length) { introEnd(); return; }   // fin → menú
   slides[_introIdx].classList.add('on');
-  _introTm = setTimeout(introStep, 2400);                // ~2.4s por pantalla
+  introHit(_introIdx === slides.length - 1);              // golpe en cada entrada
+  introCap(_introIdx);
+  _introTm = setTimeout(introStep, 2500);                // ~2.5s por pantalla
 }
 function introEnd() {
   clearTimeout(_introTm); _introTm = null; _introIdx = -1;
+  introAudioStop();
+  document.getElementById('introCap').classList.remove('on');
   const iv = document.getElementById('intro');
   iv.classList.remove('show');
   iv.querySelectorAll('.inSlide').forEach(s => s.classList.remove('on'));
@@ -6861,6 +6984,7 @@ function introStart() {
   if (iv.classList.contains('show')) return;
   _introIdx = -1;
   iv.classList.add('show');
+  introAudioStart();
   introStep();
 }
 document.getElementById('introExit').addEventListener('pointerdown', e => {
