@@ -3432,7 +3432,7 @@ function init3() {
     return c;
   })());
   dustPool = [];
-  for (let i = 0; i < (LOW_POWER ? 14 : 26); i++) {     // menos partículas en modo rendimiento
+  for (let i = 0; i < (LOW_POWER ? 24 : 60); i++) {     // menos partículas en modo rendimiento
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, depthWrite: false, opacity: 0 }));
     s.visible = false; s.userData = { life: 0, vx: 0, vz: 0 };
     scene3.add(s); dustPool.push(s);
@@ -3561,7 +3561,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 260;
+const BUILD_NO = 261;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -4326,6 +4326,22 @@ function update(dt) {
         dustPuff(car.x - cf * 3.2 - sf * s * 1.9, car.z - sf * 3.2 + cf * s * 1.9,
                  car.vx * 0.35, car.vz * 0.35,
                  Math.random() < 0.7 ? 0xffffff : 0xe8e8e8, rnd(1.3, 1.9), rnd(6, 9), 0.78);
+  }
+  // Humo de aceleración: quema de rueda al lanzar (blanco de neumático mezclado
+  // con negro) y bocanadas oscuras del escape en acelerones fuertes
+  if (inGas > 0.6 && dustT <= 0 && offroad < 0.4) {
+    const launch = spd < 42;                                    // quema de goma al salir
+    if (launch || inGas > 0.8) {
+      dustT = launch ? 0.032 : 0.055;
+      for (const s of [-1, 1])
+        dustPuff(car.x - cf * 3.1 - sf * s * 1.9, car.z - sf * 3.1 + cf * s * 1.9,
+                 -car.vx * 0.25, -car.vz * 0.25,
+                 Math.random() < 0.45 ? 0x18181b : 0xf4f4f4,
+                 rnd(1.8, 2.7), rnd(6, 11), launch ? 0.95 : 0.78);
+      if (Math.random() < 0.7)                                  // bocanada negra del escape
+        dustPuff(car.x - cf * 4.6, car.z - sf * 4.6, -car.vx * 0.1, -car.vz * 0.1,
+                 0x121215, rnd(1.3, 1.9), rnd(3.5, 6), 0.85);
+    }
   }
   // Estela de nitro / mini-turbo: llamarada azul/naranja tras el coche
   if ((nitroOn || boostT > 0) && Math.random() < dt * 30) {
