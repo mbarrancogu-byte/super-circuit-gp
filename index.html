@@ -4604,9 +4604,16 @@ addEventListener('keydown', e => {
   // Mientras la intro cinematográfica está abierta el teclado no hace nada:
   // solo el botón SALTAR la cierra
   if (document.getElementById('intro').classList.contains('show')) { e.preventDefault(); return; }
+  // En carrera ningún botón conserva el foco: sin esto Enter/Espacio re-disparaban
+  // el último botón tocado (⏸ pausa, ⟳ reiniciar, ⏏ salir) en mitad de la carrera
+  if (playing && document.activeElement && document.activeElement.tagName === 'BUTTON')
+    document.activeElement.blur();
   if (e.code === 'Space') e.preventDefault();
   // En carrera las flechas son controles (↑ gas · ↓ freno · ◀▶ dirección): no scroll
   if (playing && e.code.startsWith('Arrow')) e.preventDefault();
+  // Enter no re-activa el último botón pulsado (⏸/⟳/⏏ conservan el foco tras el
+  // clic y volvían a dispararse al pulsar Enter → pausa o salida en plena carrera)
+  if (playing && e.code === 'Enter') e.preventDefault();
   if (e.code === 'Escape' && playing) setPaused(!paused);           // ESC pausa/reanuda
   if (e.code === 'Equal' || e.code === 'NumpadAdd') camZoom = Math.max(0, camZoom - 0.12);
   if (e.code === 'Minus' || e.code === 'NumpadSubtract') camZoom = Math.min(1, camZoom + 0.12);
@@ -4724,7 +4731,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 330;
+const BUILD_NO = 331;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6494,6 +6501,8 @@ function startStage(n, seed, mp, mode) {
          (p2Mode && (id === 'gas2Btn' || id === 'shift2Btn')))) ? 'flex' : 'none';
   }
   playing = true;
+  // Ningún control del menú/HUD conserva el foco: Enter/Espacio lo re-dispararían
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   // Semáforo F1: 5 luces se encienden en serie y al apagarse → ¡GO!
   const lt = document.getElementById('lights');
   lt.style.display = 'flex';
