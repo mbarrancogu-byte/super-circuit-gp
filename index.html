@@ -1923,6 +1923,50 @@ function makeWheelShadowTex() {
   t.fillStyle = rg; t.fillRect(0, 0, 64, 64);
   return c;
 }
+function makeGroundTex(neon) {
+  // Suelo realista en mosaico: grava/asfalto oscuro de noche o hierba seca de día.
+  // Tres escalas de ruido (manchas grandes, grano medio y piedritas) + vetas de tierra
+  const c = document.createElement('canvas'); c.width = c.height = 512;
+  const t = c.getContext('2d');
+  t.fillStyle = neon ? '#0c0f15' : '#263a1a'; t.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 110; i++) {                        // manchas grandes difusas
+    const x = Math.random() * 512, y = Math.random() * 512, r = 24 + Math.random() * 110;
+    const g = t.createRadialGradient(x, y, 0, x, y, r);
+    const lt = Math.random() < 0.45, a = 0.04 + Math.random() * 0.1;
+    g.addColorStop(0, lt ? (neon ? `rgba(52,60,74,${a})` : `rgba(70,96,46,${a})`)
+                         : (neon ? `rgba(4,6,9,${a})` : `rgba(14,22,10,${a})`));
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    t.fillStyle = g; t.beginPath(); t.arc(x, y, r, 0, 7); t.fill();
+  }
+  for (let i = 0; i < 26; i++) {                         // vetas alargadas de tierra
+    const x = Math.random() * 512, y = Math.random() * 512;
+    const w = 30 + Math.random() * 120, h = 4 + Math.random() * 14, an = Math.random() * Math.PI;
+    t.save(); t.translate(x, y); t.rotate(an);
+    t.fillStyle = neon ? `rgba(30,34,42,${0.05 + Math.random() * 0.08})`
+                       : `rgba(58,74,40,${0.05 + Math.random() * 0.09})`;
+    t.beginPath(); t.ellipse(0, 0, w, h, 0, 0, 7); t.fill(); t.restore();
+  }
+  for (let i = 0; i < 11000; i++) {                      // grano fino de grava
+    const x = Math.random() * 512, y = Math.random() * 512, v = Math.random();
+    t.fillStyle = neon ? `rgba(${28 + v * 40},${32 + v * 40},${40 + v * 44},${0.04 + v * 0.09})`
+                       : `rgba(${26 + v * 46},${48 + v * 56},${22 + v * 34},${0.05 + v * 0.13})`;
+    t.fillRect(x, y, 1 + Math.random() * 2, 1 + Math.random() * 2);
+  }
+  for (let i = 0; i < 140; i++) {                        // piedritas sueltas (tenues)
+    const x = Math.random() * 512, y = Math.random() * 512, r = 0.6 + Math.random() * 1.6;
+    const g2 = 52 + Math.random() * 55;
+    t.fillStyle = neon ? `rgba(${g2},${g2 + 5},${g2 + 12},0.2)`
+                       : `rgba(${g2 * 0.78},${g2},${g2 * 0.58},0.26)`;
+    t.beginPath(); t.arc(x, y, r, 0, 7); t.fill();
+  }
+  return c;
+}
+let groundTexN = null, groundTexD = null;
+function groundTex(neon) {
+  if (neon) { if (!groundTexN) { groundTexN = tex3(makeGroundTex(true)); groundTexN.wrapS = groundTexN.wrapT = THREE.RepeatWrapping; groundTexN.repeat.set(11, 11); } return groundTexN; }
+  if (!groundTexD) { groundTexD = tex3(makeGroundTex(false)); groundTexD.wrapS = groundTexD.wrapT = THREE.RepeatWrapping; groundTexD.repeat.set(11, 11); }
+  return groundTexD;
+}
 let wheelShTex = null;
 function makeShadowTex(wheels, xc) {
   // Sombra de contacto con la silueta del F1 visto desde arriba (arriba del canvas = trasera):
@@ -2449,12 +2493,9 @@ function buildWorld() {
   const tp = terGeo.attributes.position.array, tc = [];
   for (let i = 0; i < tp.length; i += 3) {
     const n = Math.sin(tp[i] * 0.01 + 2) * Math.cos(tp[i + 1] * 0.013 - 1) + Math.sin(tp[i] * 0.03) * 0.5;
-    const k = clamp(0.55 + n * 0.35, 0.3, 1);
-    if (neon) {
-      // fondo negro puro (provisional): la pista flota sobre negro
-      tc.push(0.012, 0.012, 0.014);
-    }
-    else tc.push(0.13 * k, 0.18 * k, 0.1 * k);
+    const k = clamp(0.78 + n * 0.22, 0.55, 1);
+    if (neon) tc.push(k, k, k * 1.04);              // modula la textura de grava nocturna
+    else tc.push(0.86 * k, k, 0.72 * k);            // modula la hierba (leve tinte verde)
   }
   terGeo.setAttribute('color', new THREE.Float32BufferAttribute(tc, 3));
   const ter = new THREE.Mesh(terGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
@@ -2477,10 +2518,9 @@ function buildWorld() {
     bgp.rotation.x = -Math.PI / 2; bgp.position.y = -0.08;
     world.add(bgp);
   } else {
-    if (neon) {
-      // Fondo negro liso (provisional) — sin textura de tierra
-      ter.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 });
-    }
+    // Suelo realista: grava/asfalto de noche (NEON) o hierba seca de día —
+    // el mapa lleva el color base y los vértices la variación macro
+    ter.material = new THREE.MeshStandardMaterial({ map: groundTex(neon), vertexColors: true, roughness: 1 });
     world.add(ter);
   }
 
