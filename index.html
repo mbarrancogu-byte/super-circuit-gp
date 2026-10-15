@@ -2873,7 +2873,7 @@ function buildWorld() {
             for (const yy of [21, 43]) {
               const g = ft.createLinearGradient(0, yy - 8, 0, yy + 8);
               g.addColorStop(0, 'rgba(6,8,11,0)');
-              g.addColorStop(0.5, 'rgba(6,8,11,0.9)');
+              g.addColorStop(0.5, 'rgba(5,7,10,0.97)');
               g.addColorStop(1, 'rgba(6,8,11,0)');
               ft.fillStyle = g; ft.fillRect(0, yy - 8, 128, 16);
             }
@@ -2907,28 +2907,26 @@ function buildWorld() {
             if (rEst < 150) {                                 // TODA curva lleva goma en el exterior
               const side = turn > 0 ? -1 : 1;
               const tight = rEst < 34;                        // horquillas: abanico cargado
-              if (rnd(0, 1) < (tight ? 0.95 : 0.8)) {         // curvas suaves: algo más ralo
-                const nMax = tight ? 3 : 2;
-                for (let k = 0, n = 1 + (rnd(0, 1) * nMax | 0); k < n; k++) {
-                  const lat = RW / 2 + 0.5 + rnd(0, 1) * (W_OUT - 1.1);
-                  const drift = rnd(-0.05, 0.13);             // leve deriva hacia fuera
-                  let dx = p.tx + nx * side * drift, dz = p.tz + nz * side * drift;
-                  const dl = Math.hypot(dx, dz); dx /= dl; dz /= dl;
-                  put(i, p.x + nx * side * lat, p.z + nz * side * lat,
-                      dx, dz, 0.55 + rnd(0, 1) * 0.55, 2.5 + rnd(0, 1) * 6.5,
-                      side * lat, rnd(0.4, 1));
-                }
+              const nMax = tight ? 5 : 3;                     // curvas MUY marcadas: más estelas
+              for (let k = 0, n = 1 + (rnd(0, 1) * nMax | 0); k < n; k++) {
+                const lat = RW / 2 + 0.4 + rnd(0, 1) * (W_OUT - 0.9);
+                const drift = rnd(-0.05, 0.15);               // leve deriva hacia fuera
+                let dx = p.tx + nx * side * drift, dz = p.tz + nz * side * drift;
+                const dl = Math.hypot(dx, dz); dx /= dl; dz /= dl;
+                put(i, p.x + nx * side * lat, p.z + nz * side * lat,
+                    dx, dz, 0.65 + rnd(0, 1) * 0.75, 3 + rnd(0, 1) * 8.5,
+                    side * lat, rnd(0.6, 1));                 // más anchas, largas y oscuras
               }
               continue;
             }
             // Rectas: solo tramos aleatorios sueltos — hay zonas limpias
-            if (run <= 0 && rnd(0, 1) < 0.09) run = 4 + (rnd(0, 1) * 11 | 0);
-            if (run-- > 0 && rnd(0, 1) < 0.6) {
+            if (run <= 0 && rnd(0, 1) < 0.14) run = 4 + (rnd(0, 1) * 14 | 0);
+            if (run-- > 0 && rnd(0, 1) < 0.7) {
               const sd = rnd(0, 1) < 0.5 ? 1 : -1;
-              const lat = RW / 2 + 0.5 + rnd(0, 1) * (W_OUT - 1);
+              const lat = RW / 2 + 0.4 + rnd(0, 1) * (W_OUT - 0.9);
               put(i, p.x + nx * sd * lat, p.z + nz * sd * lat,
-                  p.tx, p.tz, 0.5 + rnd(0, 1) * 0.6, 2 + rnd(0, 1) * 7,
-                  sd * lat, rnd(0.35, 0.8));
+                  p.tx, p.tz, 0.55 + rnd(0, 1) * 0.65, 2 + rnd(0, 1) * 7.5,
+                  sd * lat, rnd(0.45, 0.9));
             }
           }
           const sg = new THREE.BufferGeometry();
@@ -4560,7 +4558,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 305;
+const BUILD_NO = 306;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
