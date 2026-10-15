@@ -1673,6 +1673,10 @@ let circW = 560, circH = 560 * 682 / 1024;   // tamaño del mundo del circuito a
 // Si el usuario fija uno en OPCIONES (circSel), ese manda sobre la etapa
 function circAt(s) {
   if (dragMode) return null;            // el duelo drag siempre usa su propia recta
+  if (demoMode && window.CIRCUITOS) {   // la demo siempre corre en el PRINCIPAL
+    const nx = window.CIRCUITOS.findIndex(c => !c.img);
+    if (nx >= 0) return window.CIRCUITOS[nx];
+  }
   const sel = (typeof OPTS !== 'undefined') ? OPTS.circSel : 'auto';
   if (sel === 'rally') return null;
   if (typeof sel === 'number' && window.CIRCUITOS && window.CIRCUITOS[sel]) return window.CIRCUITOS[sel];
@@ -3501,7 +3505,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 257;
+const BUILD_NO = 258;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
