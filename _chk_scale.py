@@ -39,7 +39,9 @@ with sync_playwright() as pw:
     print('INFO:', info)
 
     pg.evaluate("inGas=1"); pg.wait_for_timeout(2500)
-    pg.screenshot(path='_scale_race.png')
+    pg.evaluate("el('wheelImg').style.opacity='1'")
+    pg.wait_for_timeout(300)
+    pg.screenshot(path='_wheel_shadow.png', clip={'x':300,'y':380,'width':680,'height':340})
     pg.evaluate("inGas=0"); pg.wait_for_timeout(300)
 
     print('errors:', errs[:6] if errs else '[]')

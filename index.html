@@ -258,9 +258,17 @@
   /* Volante de cabina: centrado abajo, solo con la cámara cerca — gira con la dirección */
   #wheelWrap { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
     height: min(22vh, 175px); aspect-ratio: 520/380; pointer-events: none; z-index: 6; }
+  /* Sombra de cabina: halo oscuro difuso detrás del volante — lo asienta sobre la
+     pista en vez de parecer una pegatina superpuesta */
+  #wheelWrap::before { content: ''; position: absolute; left: -14%; right: -14%;
+    top: -6%; bottom: -18%; z-index: -1; pointer-events: none;
+    background: radial-gradient(ellipse 72% 58% at 50% 62%,
+      rgba(0,0,0,0.55), rgba(0,0,0,0.32) 52%, transparent 78%); }
   #wheelImg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0;
     transform-origin: 50% 50%;
-    filter: drop-shadow(0 6px 18px rgba(0,0,0,0.7)); transition: opacity .2s; }
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.85))
+            drop-shadow(0 14px 26px rgba(0,0,0,0.6))
+            brightness(0.96); transition: opacity .2s; }
   /* LEDs del volante: barra RPM progresiva + fijos con destello */
   .wled { position: absolute; width: 2.1%; height: 2.4%; border-radius: 2px; opacity: 0; }
   .wled.blink { animation: wLedBlink .34s steps(2) infinite; }
@@ -4919,7 +4927,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 339;
+const BUILD_NO = 340;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
