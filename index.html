@@ -2376,6 +2376,24 @@ function makePitFacadeTex() {
     t.fillStyle = '#fff'; t.font = '900 9px Arial'; t.textAlign = 'left';
     t.fillText('BOX ' + (i + 1), x + 2, 79);
   }
+  // === Envejecido realista sobre toda la fachada ===
+  for (let i = 0; i < 2600; i++) {                          // grano mineral fino
+    const v = ri(60, 200);
+    t.fillStyle = `rgba(${v},${v},${v},${rnd(0.05, 0.16)})`;
+    t.fillRect(ri(0, 1023), ri(0, 159), ri(1, 2), ri(1, 2));
+  }
+  for (let i = 0; i < 20; i++) {                            // escurrimientos de agua/polvo
+    const x = ri(0, 1024), y0 = ri(26, 90), h = rnd(30, 130 - y0);
+    const g = t.createLinearGradient(0, y0, 0, y0 + h);
+    g.addColorStop(0, 'rgba(42,46,54,0.22)'); g.addColorStop(1, 'rgba(42,46,54,0)');
+    t.fillStyle = g; t.fillRect(x, y0, rnd(2, 7), h);
+  }
+  for (let i = 0; i < 8; i++) {                             // manchas de grasa en la planta baja
+    const x = ri(0, 1024), y = ri(120, 156), r = rnd(8, 26);
+    const g = t.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(20,22,26,0.28)'); g.addColorStop(1, 'rgba(20,22,26,0)');
+    t.fillStyle = g; t.beginPath(); t.arc(x, y, r, 0, 7); t.fill();
+  }
   return tex3(c);
 }
 // Funde varias geometrías en una sola (para instanciar árboles completos en un draw call)
@@ -3294,6 +3312,23 @@ function buildWorld() {
       new THREE.MeshStandardMaterial({ color: 0x30353d, roughness: 0.9 }));
     lane.position.set(0, 0.02, lmZ);
     pit.add(lane);
+    // Líneas de box pintadas en la calle: una por garaje, con el color del
+    // coche de cada jugador — como las marcas de parada reales de la F1
+    for (let i = 0; i < 8; i++) {
+      const col = '#' + CARS[i % CARS.length].tint.toString(16).padStart(6, '0');
+      const bc = document.createElement('canvas'); bc.width = 64; bc.height = 64;
+      const bt = bc.getContext('2d');
+      bt.strokeStyle = col; bt.lineWidth = 5.5; bt.lineCap = 'square';
+      bt.globalAlpha = 0.92;
+      bt.beginPath();                                       // U abierta hacia el garaje
+      bt.moveTo(5, 60); bt.lineTo(5, 8); bt.lineTo(59, 8); bt.lineTo(59, 60);
+      bt.stroke();
+      const bm = new THREE.Mesh(new THREE.PlaneGeometry(BL / 8 - 5, 7.4),
+        new THREE.MeshBasicMaterial({ map: tex3(bc), transparent: true, depthWrite: false }));
+      bm.rotation.x = -Math.PI / 2;
+      bm.position.set(-BL / 2 + (i + 0.5) * (BL / 8), 0.09, lmZ);
+      pit.add(bm);
+    }
 
     // ==== ENTRADA y SALIDA de boxes: cintas de asfalto siguiendo el trazado ====
     // Cinta asfáltica sobre bezier: 3 puntos = cuadrática, 4 = cúbica (S tangente)
@@ -4689,7 +4724,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 329;
+const BUILD_NO = 330;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
