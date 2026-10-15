@@ -3796,8 +3796,53 @@ function buildWorld() {
     const trunksP = new THREE.InstancedMesh(trunkGeo, barkMat, CAP.pine);
     const trunksO = new THREE.InstancedMesh(trunkOak, barkMat, CAP.oak);
     const trunksC = new THREE.InstancedMesh(trunkCyp, barkMat, CAP.cyp);
-    const rocks = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(2.4, 0),
-      new THREE.MeshStandardMaterial({ color: 0x3a4048, roughness: 1, flatShading: true }), 60);
+    // Textura de roca procedural: base tonal + grano moteado + vetas/grietas
+    const makeRockTex = (base, spot, vein) => {
+      const c = document.createElement('canvas'); c.width = c.height = 128;
+      const g = c.getContext('2d');
+      g.fillStyle = base; g.fillRect(0, 0, 128, 128);
+      for (let i = 0; i < 900; i++) {                        // grano mineral
+        g.fillStyle = spot[Math.random() * spot.length | 0];
+        g.globalAlpha = 0.25 + Math.random() * 0.5;
+        const s = 0.6 + Math.random() * 2.6;
+        g.fillRect(Math.random() * 128, Math.random() * 128, s, s);
+      }
+      g.globalAlpha = 1;
+      for (let i = 0; i < 14; i++) {                         // vetas/grietas
+        g.strokeStyle = vein; g.lineWidth = 0.7 + Math.random() * 1.6;
+        g.globalAlpha = 0.3 + Math.random() * 0.4;
+        g.beginPath();
+        let vx = Math.random() * 128, vy = Math.random() * 128;
+        g.moveTo(vx, vy);
+        for (let s = 0; s < 5; s++) {
+          vx += (Math.random() - 0.5) * 44; vy += (Math.random() - 0.5) * 44;
+          g.lineTo(vx, vy);
+        }
+        g.stroke();
+      }
+      g.globalAlpha = 1;
+      const t = tex3(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+    };
+    if (!window._rockTexs) window._rockTexs = {
+      granite: makeRockTex('#6d6f72', ['#8a8d92', '#57595e', '#9a9da2', '#4c4e52'], '#3a3c40'),
+      sand:    makeRockTex('#8a6f52', ['#a08662', '#6e563e', '#b89870', '#5c4734'], '#4a3826'),
+      basalt:  makeRockTex('#3c4046', ['#54585e', '#2c2f34', '#666a70', '#23262a'], '#1a1c20'),
+    };
+    // Tres familias: cantos pequeños, rocas medias y peñascos grandes — cada una
+    // con su textura y geometría deformada distinta
+    const rockFam = (geo, tex, n) => {
+      const gp = geo.attributes.position;
+      for (let v = 0; v < gp.count; v++) {                   // deformación natural por vértice
+        const k = 1 + (Math.random() - 0.5) * 0.34;
+        gp.setXYZ(v, gp.getX(v) * k, gp.getY(v) * k * 0.82, gp.getZ(v) * k);
+      }
+      geo.computeVertexNormals();
+      return new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({
+        map: tex, roughness: 0.96, metalness: 0.04, flatShading: true }), n);
+    };
+    const rocksS = rockFam(new THREE.IcosahedronGeometry(1, 0), window._rockTexs.basalt, 90);
+    const rocksM = rockFam(new THREE.DodecahedronGeometry(1.9, 0), window._rockTexs.granite, 46);
+    const rocksL = rockFam(new THREE.IcosahedronGeometry(3.4, 1), window._rockTexs.sand, 26);
     const pm = new THREE.Matrix4(), tCol = new THREE.Color();
     // Sombra de contacto propia bajo cada árbol: mancha suave desplazada levemente
     // al contrario de la luz — los árboles NO proyectan sombra direccional, que
@@ -3879,19 +3924,45 @@ function buildWorld() {
       m.frustumCulled = false;    // instancias repartidas por todo el mapa: sin culling parcial
     }
     world.add(trunksP, trunksO, trunksC);
+    // Reparto: cantos pequeños y rocas medias cerca de la pista, peñascos en el entorno
     guard = 0;
-    while (rk < 60 && guard++ < 2000) {
+    const rkS = new THREE.Vector3();
+    const putRock = (mesh, i, x, z, s, sink) => {
+      pm.makeRotationY(rnd(0, Math.PI * 2));
+      pm.scale(rkS.set(s, s * rnd(0.6, 1.05), s));
+      pm.setPosition(x, hAt(x, z) - sink, z);
+      mesh.setMatrixAt(i, pm);
+    };
+    for (let i = 0; i < 90 && guard++ < 4000; i++) {         // cantos rodados: no obstáculo
       const x = rnd(-850, 850), z = rnd(-850, 850);
-      if (nearRoad(x, z, 10)) continue;
-      const s = rnd(0.7, 2);
-      pm.makeScale(s, s * rnd(0.6, 1), s); pm.setPosition(x, hAt(x, z) - 0.4, z);
-      rocks.setMatrixAt(rk, pm);
-      obstacles.push({ x, z, r: 2.4 * s });
-      rk++;
+      if (nearRoad(x, z, 9)) { i--; continue; }
+      putRock(rocksS, i, x, z, rnd(0.35, 1.1), 0.18);
+      rocksS.setColorAt(i, tCol.setHSL(0, 0, rnd(0.55, 1)));
     }
-    rocks.castShadow = true;
-    rocks.instanceMatrix.needsUpdate = true;
-    world.add(pines, oaks, cyps, shades, rocks);
+    guard = 0;
+    for (let i = 0; i < 46 && guard++ < 4000; i++) {         // rocas medias
+      const x = rnd(-850, 850), z = rnd(-850, 850);
+      if (nearRoad(x, z, 12)) { i--; continue; }
+      const s = rnd(0.9, 1.7);
+      putRock(rocksM, i, x, z, s, 0.5);
+      rocksM.setColorAt(i, tCol.setHSL(0.08, rnd(0, 0.1), rnd(0.6, 1)));
+      obstacles.push({ x, z, r: 1.9 * s });
+    }
+    guard = 0;
+    for (let i = 0; i < 26 && guard++ < 3000; i++) {         // peñascos lejanos grandes
+      const x = rnd(-820, 820), z = rnd(-820, 820);
+      if (nearRoad(x, z, 20)) { i--; continue; }
+      const s = rnd(1.4, 2.6);
+      putRock(rocksL, i, x, z, s, 1.1);
+      rocksL.setColorAt(i, tCol.setHSL(0.07, rnd(0, 0.12), rnd(0.7, 1)));
+      obstacles.push({ x, z, r: 3.4 * s });
+    }
+    for (const m of [rocksS, rocksM, rocksL]) {
+      m.castShadow = true; m.frustumCulled = false;
+      m.instanceMatrix.needsUpdate = true;
+      if (m.instanceColor) m.instanceColor.needsUpdate = true;
+    }
+    world.add(pines, oaks, cyps, shades, rocksS, rocksM, rocksL);
   }
 
   // --- VOLUMEN DE LA HIERBA: matas de césped instanciadas por todo el terreno ---
@@ -4611,7 +4682,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 318;
+const BUILD_NO = 319;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
