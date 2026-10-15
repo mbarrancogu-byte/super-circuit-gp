@@ -259,6 +259,19 @@
     z-index: 7; pointer-events: none; opacity: 1;
     color: #ff9838; font-size: 11px; font-weight: 800; letter-spacing: 1px;
     text-shadow: 0 0 6px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.9); }
+  /* Barra horizontal de RPM cruzando el centro del volante (tras los botones) */
+  #wheelBar { position: absolute; left: 13%; top: 57%; width: 74%; height: 9%;
+    display: flex; gap: 1.7%; padding: 1.1%; border-radius: 12px; z-index: 6;
+    background: linear-gradient(180deg, #04060b, #0d1119 55%, #04060b);
+    border: 1px solid rgba(140,170,255,0.22);
+    box-shadow: inset 0 2px 7px rgba(0,0,0,0.95), 0 1px 0 rgba(255,255,255,0.07); }
+  #wheelBar i { flex: 1; border-radius: 3px; opacity: 0.07; }
+  #wheelBar i.g.on { opacity: 1; background: #2fe060; box-shadow: 0 0 7px #2fe060; }
+  #wheelBar i.y.on { opacity: 1; background: #ffb020; box-shadow: 0 0 7px #ffb020; }
+  #wheelBar i.r.on { opacity: 1; background: #ff3020; box-shadow: 0 0 8px #ff3020; }
+  #wheelBar i.b.on { opacity: 1; background: #3090ff; box-shadow: 0 0 8px #3090ff; }
+  #wheelBar.cut { animation: wheelBarCut .12s steps(2) infinite; }
+  @keyframes wheelBarCut { 50% { filter: brightness(0.35); } }
 
   /* Iconos SVG premium dentro de botones y chips */
   .ic { width: 1.15em; height: 1.15em; vertical-align: -0.22em; margin-right: 0.35em;
@@ -1444,6 +1457,7 @@
       <div id="wheelDeg">0°</div>
       <canvas id="wheelRadar" width="160" height="74"
         style="position:absolute;left:33.4%;top:20.0%;width:33.4%;height:26.6%;opacity:1;border-radius:6px"></canvas>
+      <div id="wheelBar"></div>
     </div>
   </div>
 </div>
@@ -2044,7 +2058,7 @@ let pfOn = false, pfCv = null, pfCtx = null, pfTmp = null, pfTctx = null, pfVec 
 let pfCols = 0, pfSlowT = 0, pfGap = 0, pfFired = false, pfMark = -1;
 let trackSegM = 0;                            // metros por índice de trazado (para huecos en segundos)
 const PF_W = 640, PF_H = 200;
-let obstacles = [], offroad = 0, wrongWay = 0, wwAlarmT = 0, wheelDegS = 0, wheelLeds = null;
+let obstacles = [], offroad = 0, wrongWay = 0, wwAlarmT = 0, wheelDegS = 0, wheelLeds = null, wheelSegs = null;
 let lakeWaterTex = null, lakeSurf = null;   // agua del lago: textura y capa de oleaje
 let noFog = false;                          // NEÓN: niebla desactivada — solo el sol
 let oilSpots = [], oilT = 0;            // manchas de aceite + temporizador de patinazo
@@ -4546,7 +4560,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 304;
+const BUILD_NO = 305;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -5661,6 +5675,21 @@ function draw(now) {
   const wrpm = clamp((spd * 3.4 - (gear - 1) * GEAR_SPAN) / GEAR_SPAN, 0, 1);
   for (let i = 0; i < wheelLeds.length; i++)
     wheelLeds[i].style.opacity = i < 8 ? (i / 8 < wrpm ? 1 : 0) : 0.92;
+  // Barra horizontal central del volante: 22 segmentos verde→ámbar→rojo→azul,
+  // parpadea entera al llegar al corte de encendido en 6ª
+  if (!wheelSegs) {
+    const wb = el('wheelBar');
+    for (let k = 0; k < 22; k++) {
+      const s = document.createElement('i');
+      s.className = k < 10 ? 'g' : k < 16 ? 'y' : k < 20 ? 'r' : 'b';
+      wb.appendChild(s);
+    }
+    wheelSegs = wb.children;
+  }
+  const wCut = gear >= 6 && wrpm > 0.96;
+  el('wheelBar').classList.toggle('cut', wCut);
+  for (let i = 0; i < wheelSegs.length; i++)
+    wheelSegs[i].classList.toggle('on', i / wheelSegs.length < wrpm);
   // Lago: deriva del agua — la textura se desplaza lento y la capa de oleaje rota
   if (lakeWaterTex) { lakeWaterTex.offset.x += dt * 0.011; lakeWaterTex.offset.y += dt * 0.007; }
   if (lakeSurf) lakeSurf.rotation.y += dt * 0.05;
