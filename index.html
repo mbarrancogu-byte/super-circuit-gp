@@ -2684,12 +2684,44 @@ function buildWorld() {
         const lh = Math.min(bd * 2 * 0.62 / Math.hypot(1, ASP), 105);
         const lm = new THREE.Mesh(
           new THREE.PlaneGeometry(lh * ASP, lh),
-          new THREE.MeshStandardMaterial({ transparent: true, alphaTest: 0.06,
-            opacity: 0.55, roughness: 1, metalness: 0, color: 0x9fae90,
+          new THREE.MeshStandardMaterial({ transparent: true, alphaTest: 0.05,
+            roughness: 1, metalness: 0,
             polygonOffset: true, polygonOffsetFactor: -2 }));
-        new THREE.TextureLoader().load('logo_gp.webp', t => {
-          t.colorSpace = THREE.SRGBColorSpace; lm.material.map = t; lm.material.needsUpdate = true;
-        });
+        // El escudo se compone como césped teñido: hierba real recortada con la
+        // silueta del logo, tinte de colores encima y grano por arriba
+        const lg = new Image();
+        lg.onload = () => {
+          const W = 512, H = Math.round(W / ASP);
+          const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+          const cx = cv.getContext('2d');
+          // Hierba con la misma escala de grano que el terreno (~236u por tile)
+          const gr = makeGroundTex(false), gs = W * 236 / lh;
+          cx.drawImage(gr, -(gs - W) / 2, -(gs - H) / 2, gs, gs);
+          // Franjas de siega alternas, como el césped cortado de un circuito real
+          for (let s = 0; s < 14; s++) {
+            cx.fillStyle = s % 2 ? 'rgba(255,255,255,0.045)' : 'rgba(0,0,0,0.05)';
+            cx.fillRect(s * W / 14, 0, W / 14, H);
+          }
+          // Silueta del escudo con borde difuminado para fundirse con el césped
+          const mk = document.createElement('canvas'); mk.width = W; mk.height = H;
+          const mc = mk.getContext('2d');
+          mc.filter = 'blur(2px)';
+          mc.drawImage(lg, 0, 0, W, H);
+          cx.globalCompositeOperation = 'destination-in';
+          cx.drawImage(mk, 0, 0);
+          // Tinte del escudo solo dentro de la silueta: colores sobre el grano
+          cx.globalCompositeOperation = 'source-atop';
+          cx.globalAlpha = 0.55;
+          cx.drawImage(lg, 0, 0, W, H);
+          // Grano de hierba por encima — la pintura queda metida en el césped
+          cx.globalAlpha = 0.38;
+          cx.drawImage(gr, 37 - (gs - W) / 2, 53 - (gs - H) / 2, gs, gs);
+          cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
+          const t = new THREE.CanvasTexture(cv);
+          t.colorSpace = THREE.SRGBColorSpace;
+          lm.material.map = t; lm.material.needsUpdate = true;
+        };
+        lg.src = 'logo_gp.webp';
         lm.rotation.set(-Math.PI / 2, 0, Math.atan2(-path[0].tx, -path[0].tz) + Math.PI / 2);
         lm.position.set(bx, -0.02, bz);
         world.add(lm);
