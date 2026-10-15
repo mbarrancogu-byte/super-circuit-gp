@@ -4413,6 +4413,16 @@ function buildF1(tint) {
       color: useSel ? 0xffffff : (tint || 0xffffff) }));
   spr.rotation.x = -Math.PI / 2; spr.position.y = 2.0;
   grp.add(spr);
+  // Chasis real r26.glb para TODOS los coches en pista (misma vista 3D que el
+  // visor): llega asíncrono — mientras carga se ve el sprite plano. Cada coche
+  // va repintado con su color; el R26 conserva su librea. El coche fantasma
+  // (contrarreloj) se queda como sprite translúcido.
+  if (tint !== 0x9ff2ff) c3dR26().then(src => {
+    if (!grp.parent) return;
+    const m = tint === 0x2a5fd0 ? src.clone(true) : c3dTintR26(src, tint);
+    const w = c3dNorm(m, 10.2);                     // misma huella que el sprite
+    grp.add(w); spr.visible = false; grp.userData.r26 = w;
+  }).catch(() => {});
   // Gemas de faro + haz volumétrico — solo encendidos en circuitos nocturnos
   const lensM = new THREE.MeshBasicMaterial({ color: 0xffe8b0 });
   for (const s of [-1.2, 1.2]) {
@@ -4738,7 +4748,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 332;
+const BUILD_NO = 333;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6792,6 +6802,8 @@ function buildCarStrip() {
 }
 if (f1Thumb.complete && f1Thumb.naturalWidth) { buildCarStrip(); m3dShow(OPTS.car || 0); }
 else f1Thumb.onload = () => { buildCarStrip(); m3dShow(OPTS.car || 0); };
+// Precalienta el GLB del R26: los coches de carrera lo montan al entrar en pista
+setTimeout(() => { try { c3dR26(); } catch (e) {} }, 600);
 document.getElementById('carPrev').addEventListener('click', () => selCar((OPTS.car || 0) - 1));
 document.getElementById('carNext').addEventListener('click', () => selCar((OPTS.car || 0) + 1));
 
