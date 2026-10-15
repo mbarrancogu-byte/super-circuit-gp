@@ -849,7 +849,7 @@
   }
   /* Selector de F1: scroll horizontal en el menú */
   /* Preview 3D del coche elegido, bajo la tira de selección */
-  #car3dWrap { width: min(340px, 82vw); height: 150px; margin: 2px auto 0; position: relative;
+  #car3dWrap { width: min(340px, 82vw); height: 150px; margin: 6px auto 18px; position: relative;
     border-radius: 14px; overflow: hidden; flex: 0 0 auto;
     background: radial-gradient(circle at 50% 42%, rgba(70,100,170,0.30), rgba(8,12,24,0.65) 72%);
     border: 1px solid rgba(130,170,255,0.30);
@@ -4400,7 +4400,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 294;
+const BUILD_NO = 295;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
