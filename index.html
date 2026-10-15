@@ -3897,6 +3897,98 @@ function buildWorld() {
     tufts.count = nt; tufts.instanceMatrix.needsUpdate = true;
     if (tufts.instanceColor) tufts.instanceColor.needsUpdate = true;
     world.add(tufts);
+
+    // --- SOTOBOSQUE: arbustos, helechos y flores — margen de pista con aspecto real ---
+    const _mm = (x, y, z, sx, sy, sz) => new THREE.Matrix4().compose(
+      new THREE.Vector3(x, y, z), new THREE.Quaternion(), new THREE.Vector3(sx, sy, sz));
+    // Arbustos: grumos redondeados achatados con la textura de hojas del bosque
+    const bushGeo = mergeGeos([
+      { geo: new THREE.SphereGeometry(1.35, 8, 6), m: _mm(0, 0.85, 0, 1.3, 0.75, 1.3) },
+      { geo: new THREE.SphereGeometry(0.95, 7, 6), m: _mm(0.95, 0.6, 0.35, 1.1, 0.7, 1.1) },
+      { geo: new THREE.SphereGeometry(0.8, 7, 6),  m: _mm(-0.85, 0.55, -0.3, 1, 0.65, 1) },
+    ]);
+    const bushMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, map: foliageTex });
+    const NB = LOW_POWER ? 130 : 380;
+    const bushes = new THREE.InstancedMesh(bushGeo, bushMat, NB);
+    bushes.frustumCulled = false;
+    // Helechos: abanico de 3 planos abiertos, bajo y ancho — color verde oscuro
+    const fp0 = new THREE.PlaneGeometry(2.8, 1.5); fp0.translate(0, 0.75, 0);
+    const fernGeo = mergeGeos([0, 1, 2].map(k => {
+      const g = fp0.clone(); g.rotateZ(rnd(-0.12, 0.12)); g.rotateY(k * Math.PI / 3 + rnd(-0.2, 0.2));
+      return { geo: g, m: new THREE.Matrix4() };
+    }));
+    const fernMat = new THREE.MeshStandardMaterial({
+      map: window._grassTex, alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.95 });
+    const NF = LOW_POWER ? 160 : 520;
+    const ferns = new THREE.InstancedMesh(fernGeo, fernMat, NF);
+    ferns.frustumCulled = false;
+    // Flores silvestres: dos planos cruzados con corola pintada (el matiz va por instancia)
+    if (!window._florTex) {
+      const fc = document.createElement('canvas'); fc.width = fc.height = 32;
+      const fx = fc.getContext('2d');
+      fx.strokeStyle = '#3e7a34'; fx.lineWidth = 2; fx.lineCap = 'round';
+      fx.beginPath(); fx.moveTo(16, 32); fx.quadraticCurveTo(14, 20, 16, 13); fx.stroke();
+      fx.fillStyle = '#ffffff';
+      for (let k = 0; k < 5; k++) {
+        const a = k / 5 * Math.PI * 2;
+        fx.beginPath(); fx.ellipse(16 + Math.cos(a) * 5.2, 11 + Math.sin(a) * 5.2, 4, 3.2, a, 0, 7); fx.fill();
+      }
+      fx.fillStyle = '#fff4c0'; fx.beginPath(); fx.arc(16, 11, 3.4, 0, 7); fx.fill();
+      window._florTex = tex3(fc);
+    }
+    const fl1 = new THREE.PlaneGeometry(0.9, 0.9); fl1.translate(0, 0.45, 0);
+    const fl2 = fl1.clone(); fl2.rotateY(Math.PI / 2);
+    const florGeo = mergeGeos([{ geo: fl1, m: new THREE.Matrix4() }, { geo: fl2, m: new THREE.Matrix4() }]);
+    const florMat = new THREE.MeshStandardMaterial({
+      map: window._florTex, alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.9 });
+    const NFL = LOW_POWER ? 220 : 700;
+    const flors = new THREE.InstancedMesh(florGeo, florMat, NFL);
+    flors.frustumCulled = false;
+    // Colocación compartida: misma banda cercana/lejana y exclusiones que la hierba
+    let nb = 0, nf = 0, nfl = 0, vtry = 0;
+    const VTRY = (NB + NF + NFL) * 6;
+    while ((nb < NB || nf < NF || nfl < NFL) && vtry++ < VTRY) {
+      let x, z;
+      if (vtry % 10 < 7) {
+        const i = (rnd(0, pathLen) | 0), p = path[i];
+        const sd = rnd(0, 1) < 0.5 ? 1 : -1, lat = 20 + Math.pow(rnd(0, 1), 1.5) * 62;
+        x = p.x - p.tz * sd * lat + rnd(-6, 6); z = p.z + p.tx * sd * lat + rnd(-6, 6);
+      } else { x = rnd(-860, 860); z = rnd(-860, 860); }
+      if (!okSpot(x, z)) continue;
+      const y = hAt(x, z), pick = rnd(0, 1);
+      if (pick < 0.28 && nb < NB) {                       // arbusto
+        const s = rnd(0.6, 1.9);
+        tq.setFromAxisAngle(tv.set(0, 1, 0), rnd(0, Math.PI * 2));
+        tm.compose(tv.set(x, y - 0.15, z), tq, ts.set(s * rnd(0.8, 1.2), s, s * rnd(0.8, 1.2)));
+        bushes.setMatrixAt(nb, tm);
+        bushes.setColorAt(nb, tc.setHSL(0.26 + rnd(-0.04, 0.06), rnd(0.4, 0.6), rnd(0.5, 0.75)));
+        nb++;
+      } else if (pick < 0.62 && nf < NF) {                // helecho
+        const s = rnd(0.7, 1.5);
+        tq.setFromAxisAngle(tv.set(0, 1, 0), rnd(0, Math.PI * 2));
+        tm.compose(tv.set(x, y - 0.05, z), tq, ts.set(s, s * rnd(0.8, 1.1), s));
+        ferns.setMatrixAt(nf, tm);
+        ferns.setColorAt(nf, tc.setHSL(0.3 + rnd(-0.03, 0.03), rnd(0.5, 0.68), rnd(0.3, 0.45)));
+        nf++;
+      } else if (nfl < NFL) {                             // flor: amarilla/blanca/violeta/roja
+        const s = rnd(0.7, 1.3);
+        tq.setFromAxisAngle(tv.set(0, 1, 0), rnd(0, Math.PI * 2));
+        tm.compose(tv.set(x, y - 0.03, z), tq, ts.set(s, s, s));
+        flors.setMatrixAt(nfl, tm);
+        const pk = rnd(0, 1);
+        flors.setColorAt(nfl, pk < 0.4 ? tc.setHSL(0.14, 0.85, 0.6)
+          : pk < 0.7 ? tc.setHSL(0.1, 0.1, 0.92)
+          : pk < 0.9 ? tc.setHSL(0.78, 0.55, 0.62)
+          : tc.setHSL(0.0, 0.7, 0.6));
+        nfl++;
+      }
+    }
+    bushes.count = nb; ferns.count = nf; flors.count = nfl;
+    for (const m of [bushes, ferns, flors]) {
+      m.instanceMatrix.needsUpdate = true;
+      if (m.instanceColor) m.instanceColor.needsUpdate = true;
+    }
+    world.add(bushes, ferns, flors);
   }
 
   // --- Montañas lejanas + cielo estrellado + luna (solo de noche) ---
@@ -4454,7 +4546,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 301;
+const BUILD_NO = 302;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
