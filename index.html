@@ -130,15 +130,15 @@
     box-shadow: 0 2px 0 rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.5),
       inset 0 4px 10px rgba(0,0,0,0.65), inset 0 -1px 2px rgba(255,255,255,0.12); }
   /* Zona izquierda: pad de dirección ancho tipo cruceta deslizante */
-  #stPad { left: 14px; bottom: 16px; width: 200px; height: 88px; border-radius: 44px;
+  #stPad { left: 14px; bottom: 16px; width: 150px; height: 66px; border-radius: 33px;
     flex-direction: row; padding: 0; overflow: hidden; }
   .stA { flex: 1; height: 100%; display: flex; align-items: center; justify-content: center;
-    font-size: 34px; transition: background .1s; }
+    font-size: 26px; transition: background .1s; }
   .stA:first-child { border-right: 1px solid rgba(255,200,80,0.35); }
   .stA.on { background: rgba(255,190,60,0.35); }
   /* Zona derecha: pedales grandes + nitro/pit al alcance del pulgar */
-  #gasBtn { right: 14px; bottom: 16px; width: 98px; height: 98px; border-color: rgba(80,255,120,0.6); color: #b0ffc0; font-size: 15px; }
-  #brkBtn { right: 126px; bottom: 16px; border-color: rgba(255,80,60,0.6); color: #ffb0a0; font-size: 15px; }
+  #gasBtn { right: 14px; bottom: 16px; width: 74px; height: 74px; border-color: rgba(80,255,120,0.6); color: #b0ffc0; font-size: 13px; }
+  #brkBtn { right: 100px; bottom: 16px; width: 74px; height: 74px; border-color: rgba(255,80,60,0.6); color: #ffb0a0; font-size: 13px; }
   #nitroBtn { right: 14px; bottom: 128px; width: 70px; height: 70px; font-size: 26px; }
   #pitBtn { right: 126px; bottom: 118px; width: 64px; height: 64px; font-size: 13px;
     border-color: rgba(255,230,140,0.7); color: #ffe8b0; }
@@ -159,7 +159,7 @@
   /* Modo zurdo: pad de dirección a la derecha, columna de acción a la izquierda */
   body.lefty #stPad { left: auto; right: 14px; }
   body.lefty #gasBtn { right: auto; left: 14px; }
-  body.lefty #brkBtn { right: auto; left: 126px; }
+  body.lefty #brkBtn { right: auto; left: 100px; }
   body.lefty #nitroBtn { right: auto; left: 14px; }
   body.lefty #pitBtn { right: auto; left: 126px; }
   body.lefty #lightsBtn { right: auto; left: 126px; }
@@ -888,9 +888,9 @@
     #gearNum { font-size: 11px; }
     /* Controles táctiles escalados */
     .tbtn { width: 72px; height: 72px; font-size: 24px; }
-    #stPad { left: 10px; bottom: 14px; width: 168px; height: 74px; border-radius: 37px; }
-    .stA { font-size: 27px; }
-    #gasBtn { width: 84px; height: 84px; font-size: 13px; right: 10px; bottom: 14px; }
+    #stPad { left: 10px; bottom: 14px; width: 128px; height: 56px; border-radius: 28px; }
+    .stA { font-size: 22px; }
+    #gasBtn { width: 62px; height: 62px; font-size: 11px; right: 10px; bottom: 14px; }
     #shiftBtn { width: 76px; height: 76px; font-size: 12px; left: 10px; bottom: 14px; }
     #gas2Btn { width: 84px; height: 84px; font-size: 13px; right: 10px; bottom: 14px; }
     #shift2Btn { width: 76px; height: 76px; font-size: 12px; right: 10px; bottom: 106px; }
@@ -898,7 +898,7 @@
     #hud.p2 #shiftBtn { bottom: 102px; }
     #hud.drag #speedBox { left: 96px; bottom: 26px; }
     body.lefty #hud.drag #speedBox { left: auto; right: 96px; }
-    #brkBtn { right: 102px; bottom: 14px; font-size: 12px; }
+    #brkBtn { right: 80px; bottom: 14px; width: 62px; height: 62px; font-size: 11px; }
     #nitroBtn { width: 58px; height: 58px; font-size: 20px; right: 10px; bottom: 108px; }
     #pitBtn { width: 56px; height: 56px; font-size: 11px; right: 102px; bottom: 100px; }
     #lightsBtn { width: 36px; height: 36px; font-size: 14px; right: 102px; bottom: 164px; }
@@ -906,7 +906,7 @@
     body.lefty #stPad { left: auto; right: 10px; }
     body.lefty #speedBox { left: auto; right: 94px; }
     body.lefty #gasBtn { left: 10px; }
-    body.lefty #brkBtn { left: 102px; }
+    body.lefty #brkBtn { left: 80px; }
     body.lefty #nitroBtn { left: 10px; }
     body.lefty #pitBtn { left: 102px; }
     body.lefty #lightsBtn { left: 102px; }
@@ -939,11 +939,11 @@
     .chip { font-size: 11px; padding: 3px 9px; }
     #speedNum { font-size: 32px; }
     .tbtn { width: 64px; height: 64px; font-size: 22px; }
-    #gasBtn { width: 74px; height: 74px; font-size: 12px; }
-    #stPad { width: 160px; height: 64px; bottom: 12px; }
+    #gasBtn { width: 56px; height: 56px; font-size: 11px; }
+    #brkBtn { width: 56px; height: 56px; right: 78px; }
+    #stPad { width: 120px; height: 50px; bottom: 12px; }
     #speedBox { left: 94px; bottom: 82px; }
     body.lefty #speedBox { left: auto; right: 94px; }
-    #brkBtn { right: 96px; }
     #nitroBtn { width: 52px; height: 52px; bottom: 96px; right: 14px; }
     #pitBtn { width: 48px; height: 48px; bottom: 92px; right: 96px; font-size: 10px; }
     #lightsBtn { width: 32px; height: 32px; font-size: 12px; right: 96px; bottom: 148px; }
@@ -4980,7 +4980,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 349;
+const BUILD_NO = 350;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
