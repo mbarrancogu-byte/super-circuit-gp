@@ -3802,7 +3802,8 @@ function buildCar(paintHex, withLight) {
 }
 // Modelos de F1: misma silueta, livery = tinte multiplicativo del sprite
 const CARS = [
-  { name: 'AMARILLO', tint: 0xffc818, img: 'f1_amarillo.png', st: { top: 1.00, acc: 1.00, grip: 1.00, res: 1.00 } },
+  { name: 'AMARILLO', tint: 0xffc818, img: 'f1_amarillo.png', glb: 'coche01.glb',
+    st: { top: 1.00, acc: 1.00, grip: 1.00, res: 1.00 } },
   { name: 'ROJO',     tint: 0xff4538, img: 'f1_scarlet.png', st: { top: 1.05, acc: 0.97, grip: 0.96, res: 0.95 } },
   { name: 'VERDE',    tint: 0x30d070, img: 'f1_verde.png', st: { top: 0.96, acc: 1.08, grip: 1.02, res: 1.00 } },
   { name: 'NEGRO',    tint: 0x707890, img: 'f1_negro.png', st: { top: 0.95, acc: 0.96, grip: 0.98, res: 1.18 } },
@@ -4186,7 +4187,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 288;
+const BUILD_NO = 289;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6713,6 +6714,24 @@ async function c3dR26() {
   })();
   return c3d.r26p;
 }
+// Loader GLB genérico con caché (COCHE-01 y futuros modelos)
+async function c3dGlb(url) {
+  if (!c3d.glbCache) c3d.glbCache = {};
+  if (!c3d.glbCache[url]) c3d.glbCache[url] = (async () => {
+    if (typeof THREE.GLTFLoader === 'undefined') await c3dScript('gltfloader.js');
+    const g = await new Promise((res, rej) => new THREE.GLTFLoader().load(url, res, undefined, rej));
+    g.scene.traverse(o => {
+      if (!o.isMesh || !o.material) return;
+      if (o.material.map) { o.material.map.encoding = THREE.sRGBEncoding; o.material.map.anisotropy = 8; }
+      o.material.color.setHex(0xffffff);
+      if ('metalness' in o.material) o.material.metalness = Math.min(o.material.metalness, 0.35);
+      if ('roughness' in o.material) o.material.roughness = Math.max(o.material.roughness, 0.45);
+      o.material.needsUpdate = true;
+    });
+    return g.scene;
+  })();
+  return c3d.glbCache[url];
+}
 function c3dInit() {
   if (c3d.r) return;
   const cvEl = document.getElementById('c3dCv');
@@ -6749,7 +6768,10 @@ function c3dInit() {
 // Crea un modelo de exposición limpio (sin faros/haces/sprites) para el visor
 async function c3dModel(def) {
   let mdl;
-  if (def.img === 'f1_r26.png') {
+  if (def.glb) {
+    try { mdl = (await c3dGlb(def.glb)).clone(true); }
+    catch (e) { mdl = buildCar(def.tint, false); }
+  } else if (def.img === 'f1_r26.png') {
     try { mdl = (await c3dR26()).clone(true); }
     catch (e) { mdl = buildCar(def.tint, false); }
   } else mdl = buildCar(def.tint, false);
