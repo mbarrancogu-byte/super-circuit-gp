@@ -500,7 +500,12 @@
   .inSlide.on { opacity: 1; }
   .inSlide.on img { transform: scale(1.10); }          /* ken burns suave */
   .inSlide::after { content: ''; position: absolute; inset: 0;
-    background: radial-gradient(circle at 50% 45%, transparent 55%, rgba(2,4,10,0.55) 100%); }
+    background:
+      radial-gradient(ellipse at 50% 50%, transparent 48%, rgba(0,0,0,0.78) 100%),
+      linear-gradient(to bottom, rgba(0,0,0,0.55), transparent 24%),
+      linear-gradient(to top,    rgba(0,0,0,0.62), transparent 28%),
+      linear-gradient(to right,  rgba(0,0,0,0.50), transparent 20%),
+      linear-gradient(to left,   rgba(0,0,0,0.50), transparent 20%); }
   #introExit { position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px;
     z-index: 3; cursor: pointer; font-size: 13px; font-weight: 900; letter-spacing: 2px;
     color: #ffe9b0; background: rgba(10,14,26,0.72); border: 1px solid rgba(255,200,90,0.55);
@@ -4400,7 +4405,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 295;
+const BUILD_NO = 296;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
