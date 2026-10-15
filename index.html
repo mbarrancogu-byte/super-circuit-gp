@@ -1739,6 +1739,7 @@ let tutoT = 0;                                     // cuenta atrás del tutorial
 let trackCX = 0, trackCZ = 0, trackSpanX = 1, trackSpanZ = 1;
 let carGrp = null, wheelF = [], wheelR = [], beamL = null, beamR = null, tailSpr = [];
 let ledMats = [], ledFR = null, ledFL = null;         // señales LED: materiales y frames por lado
+let beacons = [];                                     // balizas rojo neón de las curvas
 let skidPool = [], dustPool = [], moonLight = null, pathPts = null;
 let mmMinX = 0, mmMinZ = 0, mmScale = 1, mmSpanX = 1, mmSpanZ = 1; // encuadre justo del minimapa (cacheado por etapa)
 let ambLight = null, hemiLight = null, moonOX = 300, moonOZ = -400;
@@ -2715,6 +2716,40 @@ function buildWorld() {
     }
   }
 
+  // Pilotos intermitentes: balizas rojo neón separadas a lo largo de las curvas
+  // más pronunciadas — poste bajo + bola LED con halo; parpadeo en cadena
+  {
+    beacons = [];
+    const LOOK2 = 6;
+    const postGeo = new THREE.CylinderGeometry(0.05, 0.07, 0.55, 6);
+    const postMat = new THREE.MeshBasicMaterial({ color: 0x14161a });
+    const ballGeo = new THREE.SphereGeometry(0.15, 8, 6);
+    const glowTx = tex3(makeGlowTex(255, 42, 30, 0.95));
+    let bi = 0, acc2 = 0;
+    for (let i = 0; i < pathLen; i++) {
+      const p = path[i], pn = path[(i + 1) % pathLen], pa = path[(i + LOOK2) % pathLen];
+      const turn = p.tx * pa.tz - p.tz * pa.tx;
+      if (Math.abs(turn) < 0.28) { acc2 = 0; continue; }   // solo las más cerradas
+      acc2 += Math.hypot(pn.x - p.x, pn.z - p.z);
+      if (acc2 < 6.5) continue;                            // separadas ~6.5u
+      acc2 = 0;
+      const s = turn > 0 ? -1 : 1;                         // exterior de la curva
+      const hw = (neon ? RW / 2 + 1.0 : ((trackHW && trackHW[i]) || RW / 2) + 0.6);
+      const nx = -p.tz * s, nz = p.tx * s;
+      const post = new THREE.Mesh(postGeo, postMat);
+      post.position.set(p.x + nx * hw, 0.28, p.z + nz * hw);
+      const bm = new THREE.MeshBasicMaterial({ color: 0xff2416, transparent: true, opacity: 0.2, fog: false });
+      const ball = new THREE.Mesh(ballGeo, bm);
+      ball.position.y = 0.34;
+      const gm = new THREE.SpriteMaterial({ map: glowTx, color: 0xff2818, transparent: true, opacity: 0.08, depthWrite: false, fog: false });
+      const gl = new THREE.Sprite(gm);
+      gl.scale.set(1.6, 1.6, 1); gl.position.y = 0.34;
+      post.add(ball, gl);
+      beacons.push({ b: bm, g: gm, i: bi++, x: p.x + nx * hw, z: p.z + nz * hw });
+      world.add(post);
+    }
+  }
+
 
 
   // --- Puertas de control: solo marcadores invisibles (los puntos de `gates` siguen
@@ -3460,7 +3495,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 254;
+const BUILD_NO = 255;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -4402,6 +4437,15 @@ function draw(now) {
   if (ledMats.length) {
     const ph = Math.floor(now / 130) % 4;
     for (const s of ledMats) s.m.map = (s.r ? ledFR : ledFL)[ph];
+  }
+  // Balizas: pulso rojo neón que viaja en cadena a lo largo de la curva
+  if (beacons.length) {
+    const cyc = Math.floor(now / 150);
+    for (const bc of beacons) {
+      const on = (cyc - bc.i) % 5 === 0;
+      bc.b.opacity = on ? 1 : 0.18;
+      bc.g.opacity = on ? 0.9 : 0.07;
+    }
   }
 
 
