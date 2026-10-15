@@ -1973,6 +1973,24 @@ function makeGroundTex(neon) {
   }
   return c;
 }
+function makeRubberTex() {
+  // Goma acumulada en la línea de carrera: franjas finas y largas con vaivén,
+  // como las rayas de goma que deja la trazada en una foto aérea real
+  const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+  const t = c.getContext('2d');
+  for (let i = 0; i < 30; i++) {
+    const x = 22 + Math.random() * 212, w = 2 + Math.random() * 7, o = 0.07 + Math.random() * 0.2;
+    t.strokeStyle = `rgba(8,10,12,${o})`;
+    t.lineWidth = w; t.lineCap = 'round';
+    const wob = 6 + Math.random() * 18;
+    t.beginPath(); t.moveTo(x, -12);
+    t.bezierCurveTo(x + (Math.random() - 0.5) * wob, 75,
+                    x + (Math.random() - 0.5) * wob, 170, x + (Math.random() - 0.5) * 10, 268);
+    t.stroke();
+  }
+  const tx = tex3(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; return tx;
+}
+let rubberTex = null;
 let groundTexN = null, groundTexD = null;
 function groundTex(neon) {
   if (neon) { if (!groundTexN) { groundTexN = tex3(makeGroundTex(true)); groundTexN.wrapS = groundTexN.wrapT = THREE.RepeatWrapping; groundTexN.repeat.set(11, 11); } return groundTexN; }
@@ -2250,6 +2268,56 @@ function buildWorld() {
           color: 0x8a1e2c, side: THREE.DoubleSide }));            // vino fijo: no depende de la luz
         arcen.receiveShadow = true;
         world.add(arcen);
+      }
+      // Goma acumulada en la línea de carrera: overlay translúcido con rayas
+      // longitudinales — el asfalto "engomado" de las fotos aéreas
+      {
+        if (!rubberTex) rubberTex = makeRubberTex();
+        const pos = [], uvs = [], idx = [];
+        for (let i = 0; i <= pathLen; i++) {
+          const p = path[i % pathLen], pn = path[(i + 1) % pathLen];
+          const nx = -p.tz, nz = p.tx;
+          const segLen = Math.hypot(pn.x - p.x, pn.z - p.z) || 1;
+          const turn = p.tx * pn.tz - p.tz * pn.tx;
+          const rEst = segLen / Math.max(Math.abs(turn), 1e-3);
+          const eP = (turn > 0 ? clamp(rEst * 0.8, 3, RW / 2) : RW / 2) * 0.8;
+          const eN = (turn < 0 ? clamp(rEst * 0.8, 3, RW / 2) : RW / 2) * 0.8;
+          pos.push(p.x + nx * eP, 0.074 + bankYAt(i, eP), p.z + nz * eP,
+                   p.x - nx * eN, 0.074 + bankYAt(i, -eN), p.z - nz * eN);
+          uvs.push(0, i * 0.09, 1, i * 0.09);
+          if (i < pathLen) { const b = i * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); }
+        }
+        const rg2 = new THREE.BufferGeometry();
+        rg2.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        rg2.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+        rg2.setIndex(idx);
+        world.add(new THREE.Mesh(rg2, new THREE.MeshBasicMaterial({
+          map: rubberTex, transparent: true, depthWrite: false, side: THREE.DoubleSide })));
+      }
+      // Líneas blancas de borde: filete continuo justo dentro del límite de pista
+      {
+        const pos = [], idx = []; let q = 0;
+        const LW = 0.5;                                          // grosor de la línea
+        for (let i = 0; i <= pathLen; i++) {
+          const p = path[i % pathLen], pn = path[(i + 1) % pathLen];
+          const nx = -p.tz, nz = p.tx;
+          const segLen = Math.hypot(pn.x - p.x, pn.z - p.z) || 1;
+          const turn = p.tx * pn.tz - p.tz * pn.tx;
+          const rEst = segLen / Math.max(Math.abs(turn), 1e-3);
+          const eP = turn > 0 ? clamp(rEst * 0.8, 3, RW / 2) : RW / 2;
+          const eN = turn < 0 ? clamp(rEst * 0.8, 3, RW / 2) : RW / 2;
+          pos.push(p.x + nx * (eP - 0.7), 0.088 + bankYAt(i, eP - 0.7), p.z + nz * (eP - 0.7),
+                   p.x + nx * (eP - 0.7 - LW), 0.088 + bankYAt(i, eP - 0.7 - LW), p.z + nz * (eP - 0.7 - LW),
+                   p.x - nx * (eN - 0.7 - LW), 0.088 + bankYAt(i, -(eN - 0.7 - LW)), p.z - nz * (eN - 0.7 - LW),
+                   p.x - nx * (eN - 0.7), 0.088 + bankYAt(i, -(eN - 0.7)), p.z - nz * (eN - 0.7));
+          if (i < pathLen) { const b = q * 4; idx.push(b, b + 1, b + 4, b + 1, b + 5, b + 4,
+                                                b + 2, b + 3, b + 6, b + 3, b + 7, b + 6); q++; }
+        }
+        const lg = new THREE.BufferGeometry();
+        lg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        lg.setIndex(idx);
+        world.add(new THREE.Mesh(lg, new THREE.MeshBasicMaterial({
+          color: 0xe8edf2, transparent: true, opacity: 0.75, side: THREE.DoubleSide })));
       }
       // Carril central discontinuo: trazos cortos ~largo del coche, con hueco amplio
       {
@@ -2554,8 +2622,7 @@ function buildWorld() {
   for (let i = 0; i < tp.length; i += 3) {
     const n = Math.sin(tp[i] * 0.01 + 2) * Math.cos(tp[i + 1] * 0.013 - 1) + Math.sin(tp[i] * 0.03) * 0.5;
     const k = clamp(0.78 + n * 0.22, 0.55, 1);
-    if (neon) tc.push(k, k, k * 1.04);              // modula la textura de grava nocturna
-    else tc.push(0.86 * k, k, 0.72 * k);            // modula la hierba (leve tinte verde)
+    tc.push(0.86 * k, k, 0.72 * k);                 // modula la hierba (leve tinte verde)
   }
   terGeo.setAttribute('color', new THREE.Float32BufferAttribute(tc, 3));
   const ter = new THREE.Mesh(terGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
@@ -2578,9 +2645,8 @@ function buildWorld() {
     bgp.rotation.x = -Math.PI / 2; bgp.position.y = -0.08;
     world.add(bgp);
   } else {
-    // Suelo realista: grava/asfalto de noche (NEON) o hierba seca de día —
-    // el mapa lleva el color base y los vértices la variación macro
-    ter.material = new THREE.MeshStandardMaterial({ map: groundTex(neon), vertexColors: true, roughness: 1 });
+    // Suelo realista: hierba verde en todos los trazados — como en las fotos aéreas
+    ter.material = new THREE.MeshStandardMaterial({ map: groundTex(false), vertexColors: true, roughness: 1 });
     world.add(ter);
   }
 
