@@ -2292,10 +2292,37 @@ function buildWorld() {
       // pegado al borde del asfalto y asomando bajo el muro — estilo Paul Ricard
       {
         if (!window._arcenTex) {
-          const sc2 = document.createElement('canvas'); sc2.width = 64; sc2.height = 4;
+          const sc2 = document.createElement('canvas'); sc2.width = 512; sc2.height = 16;
           const st = sc2.getContext('2d');
-          st.fillStyle = '#6e7683'; st.fillRect(0, 0, 32, 4);       // gris
-          st.fillStyle = '#7fc4f0'; st.fillRect(32, 0, 32, 4);      // azul claro
+          for (let x = 0; x < 512; x += 64) {                       // bandas gris/azul (4u = 64px)
+            st.fillStyle = (x / 64) % 2 ? '#7fc4f0' : '#6e7683';
+            st.fillRect(x, 0, 64, 16);
+          }
+          // Manchas de neumático reales: rayones que siguen la pista y cruzan
+          // las bandas + arcos de derrape que se salen al arcén y vuelven.
+          // Cada trazo se dibuja envuelto para que el tile no tenga corte
+          const wrapX = (x0, fn) => { fn(x0); fn(x0 - 512); fn(x0 + 512); };
+          for (let i = 0; i < 26; i++) {                          // rayones paralelos al trazado
+            const y0 = 1 + Math.random() * 13, x0 = Math.random() * 512, ln = 30 + Math.random() * 130;
+            st.strokeStyle = `rgba(10,12,16,${0.10 + Math.random() * 0.22})`;
+            st.lineWidth = 1 + Math.random() * 2.4; st.lineCap = 'round';
+            const wob = (Math.random() - 0.5) * 6, y1 = y0 + (Math.random() - 0.5) * 4;
+            wrapX(x0, X => { st.beginPath(); st.moveTo(X, y0);
+              st.quadraticCurveTo(X + ln / 2, y0 + wob, X + ln, y1); st.stroke(); });
+          }
+          for (let i = 0; i < 7; i++) {                           // arcos de salida de pista
+            const x0 = Math.random() * 512, out = 4 + Math.random() * 9, ln = 60 + Math.random() * 160;
+            const o2 = 2 + Math.random() * 4;
+            st.strokeStyle = `rgba(8,10,14,${0.14 + Math.random() * 0.2})`;
+            st.lineWidth = 1.6 + Math.random() * 2;
+            wrapX(x0, X => { st.beginPath(); st.moveTo(X, 14);
+              st.bezierCurveTo(X + ln * 0.3, 14 - out, X + ln * 0.6, o2, X + ln, 14); st.stroke(); });
+          }
+          for (let i = 0; i < 40; i++) {                          // gomazos sueltos
+            const x = Math.random() * 512, y = Math.random() * 16, r = 0.5 + Math.random() * 1.6;
+            st.fillStyle = `rgba(12,14,18,${0.05 + Math.random() * 0.14})`;
+            wrapX(x, X => { st.beginPath(); st.ellipse(X, y, r * 2.4, r, 0, 0, 7); st.fill(); });
+          }
           window._arcenTex = tex3(sc2);
           window._arcenTex.wrapS = window._arcenTex.wrapT = THREE.RepeatWrapping;
           window._arcenTex.anisotropy = 4;
@@ -2312,7 +2339,7 @@ function buildWorld() {
           // lado interior de curva: el arcén se estrecha para no plegarse
           const oP = eP + (turn > 0 ? clamp(rEst * 0.8 - eP, 0.4, W_OUT) : W_OUT);
           const oN = eN + (turn < 0 ? clamp(rEst * 0.8 - eN, 0.4, W_OUT) : W_OUT);
-          const u = cum / 8;                                       // ~4u por banda
+          const u = cum / 64;                                      // tile de 64u = 8 bandas
           uvs.push(u, 0, u, 1, u, 1, u, 0);
           pos.push(p.x + nx * (oP), 0.085 + bankYAt(i, oP), p.z + nz * oP,
                    p.x + nx * (eP - 0.5), 0.085 + bankYAt(i, eP - 0.5), p.z + nz * (eP - 0.5),
@@ -3422,7 +3449,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 252;
+const BUILD_NO = 253;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
