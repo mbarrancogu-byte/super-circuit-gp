@@ -3274,7 +3274,7 @@ function buildWorld() {
       g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
       g.setIndex(idx); g.computeVertexNormals(); return g;
     };
-    const laneMat = new THREE.MeshStandardMaterial({ color: 0x343a43, roughness: 0.9 });
+    const laneMat = new THREE.MeshStandardMaterial({ color: 0x6e6459, roughness: 0.95 });  // gris tierra
     // ENTRADA: sale de la pista antes del edificio y cae al inicio del pit lane
     const enPath = [[-BL / 2 - 34, teZ], [-BL / 2 - 12, teZ - 1.5], [-BL / 2 + 10, lmZ]];
     // SALIDA: del fondo del pit lane reincorpora a la pista tras la meta
@@ -4559,7 +4559,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 307;
+const BUILD_NO = 308;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
