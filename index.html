@@ -488,6 +488,58 @@
   @media (max-width: 860px) { #teleGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 560px) { #teleGrid { grid-template-columns: 1fr; max-height: 64vh; overflow-y: auto; } }
 
+  /* ===== FICHA TÉCNICA DEL COCHE ===== */
+  #carinfo { background:
+      radial-gradient(circle at 28% 30%, rgba(50,90,170,0.40), transparent 60%),
+      linear-gradient(180deg, #060b16 0%, #03060c 100%); }
+  #ciTitle { font-size: clamp(18px, 3.4vw, 30px); font-weight: 900; letter-spacing: 4px;
+    color: #ffd98a; text-shadow: 0 0 18px rgba(255,190,80,0.5), 0 3px 10px #000;
+    margin: 4px 0 8px; text-transform: uppercase; }
+  #ciTitle small { display: block; font-size: .5em; letter-spacing: 7px; color: #a08a58; }
+  #ciGrid { display: flex; gap: 14px; width: min(1060px, 96vw); max-height: 68vh;
+    align-items: stretch; }
+  #ciStage { position: relative; flex: 1 1 46%; min-height: 300px; border-radius: 14px;
+    overflow: hidden; border: 1px solid rgba(200,160,80,0.35);
+    background: radial-gradient(circle at 50% 44%, rgba(80,110,180,0.30), rgba(6,9,18,0.9) 75%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 8px 26px rgba(0,0,0,0.55); }
+  #ciCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #ciNum { position: absolute; left: 10px; top: 8px; font-size: 11px; font-weight: 800;
+    letter-spacing: 2px; color: #cbb26a; background: rgba(10,14,26,0.7);
+    border: 1px solid rgba(200,160,80,0.35); border-radius: 8px; padding: 3px 9px; }
+  .ciNav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+    width: 40px; height: 56px; border-radius: 10px; cursor: pointer; font-size: 20px;
+    color: #ffd98a; background: rgba(12,18,32,0.75); border: 1px solid rgba(200,160,80,0.4); }
+  .ciNav:hover { background: rgba(60,48,20,0.85); }
+  #ciPrev { left: 8px; } #ciNext { right: 8px; }
+  #ciSheet { flex: 1 1 54%; display: flex; flex-direction: column; gap: 8px;
+    padding: 12px 14px; border-radius: 14px; text-align: left;
+    background: linear-gradient(180deg, #0d1524, #080d18);
+    border: 1px solid rgba(90,150,230,0.35); overflow-y: auto; }
+  .ciSec { font-size: 11px; font-weight: 900; letter-spacing: 3px; color: #8fb8e8;
+    border-bottom: 1px solid rgba(90,150,230,0.25); padding-bottom: 4px; margin-top: 2px; }
+  .ciStat { display: grid; grid-template-columns: 128px 1fr 64px; gap: 8px;
+    align-items: center; font-size: 11px; }
+  .ciStat span { color: #9fb4d8; font-weight: 700; letter-spacing: 1px; }
+  .ciStat b { color: #ffe9b0; font-size: 13px; text-align: right; }
+  .ciBar { height: 9px; border-radius: 5px; overflow: hidden;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.10); }
+  .ciBar i { display: block; height: 100%; border-radius: 5px;
+    background: linear-gradient(90deg, #3fd0ff, #ffd040); transition: width .5s; }
+  .ciRow { display: flex; justify-content: space-between; align-items: center;
+    font-size: 11.5px; padding: 5px 2px; border-bottom: 1px dashed rgba(255,255,255,0.08); }
+  .ciRow span { color: #8ea6c8; font-weight: 700; letter-spacing: 1px; }
+  .ciRow b { color: #eef4ff; font-size: 12.5px; }
+  #car3dWrap { cursor: pointer; }
+  #car3dInfo { position: absolute; right: 8px; bottom: 7px; z-index: 4; cursor: pointer;
+    font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: #ffe9b0;
+    background: rgba(16,22,38,0.8); border: 1px solid rgba(255,200,90,0.5);
+    border-radius: 8px; padding: 4px 10px; }
+  #car3dInfo:hover { background: rgba(70,55,20,0.9); }
+  @media (max-width: 760px) {
+    #ciGrid { flex-direction: column; max-height: 74vh; overflow-y: auto; }
+    #ciStage { min-height: 220px; flex: 0 0 220px; }
+  }
+
   .resPill { background: linear-gradient(180deg, #434d63, #181e2c);
     border: 1.5px solid rgba(170,200,255,0.55); color: #e6eeff;
     font-size: 14px; padding: 11px 22px; margin: 12px 4px 0; letter-spacing: 2px;
@@ -1352,7 +1404,7 @@
     <div id="carStrip"></div>
     <div class="selArr" id="carNext"><svg><use href="#i-chev"/></svg></div>
   </div>
-  <div id="car3dWrap"><canvas id="car3dCv"></canvas></div>
+  <div id="car3dWrap" title="Ficha del coche"><canvas id="car3dCv"></canvas><button id="car3dInfo">ℹ FICHA</button></div>
   <div class="selRow">
     <div class="selArr lft" id="circPrev"><svg><use href="#i-chev"/></svg></div>
     <div id="circStrip"></div>
@@ -1543,6 +1595,37 @@
   </div>
   <div id="c3dHint">Arrastra para girar · rueda para zoom</div>
   <div class="backWrap"><button class="mbtn" id="c3dBack">VOLVER</button></div>
+  <div class="stripe"></div>
+</div>
+
+<!-- ===== FICHA TÉCNICA DEL COCHE ===== -->
+<div class="screen" id="carinfo">
+  <div class="stripe"></div>
+  <div id="ciTitle"><span id="ciTit">FICHA TÉCNICA</span><small id="ciName">AMARILLO</small></div>
+  <div id="ciGrid">
+    <div id="ciStage">
+      <canvas id="ciCv"></canvas>
+      <button class="ciNav" id="ciPrev">◀</button>
+      <button class="ciNav" id="ciNext">▶</button>
+      <div id="ciNum">1/7</div>
+    </div>
+    <div id="ciSheet">
+      <div class="ciSec" id="ciStatsT">PRESTACIONES</div>
+      <div class="ciStat"><span id="stTopL">VELOCIDAD PUNTA</span><div class="ciBar"><i id="bTop"></i></div><b id="vTop"></b></div>
+      <div class="ciStat"><span id="stAccL">ACELERACIÓN</span><div class="ciBar"><i id="bAcc"></i></div><b id="vAcc"></b></div>
+      <div class="ciStat"><span id="stGripL">AGARRE</span><div class="ciBar"><i id="bGrip"></i></div><b id="vGrip"></b></div>
+      <div class="ciStat"><span id="stResL">RESISTENCIA</span><div class="ciBar"><i id="bRes"></i></div><b id="vRes"></b></div>
+      <div class="ciSec" id="ciSpecT">ESPECIFICACIONES</div>
+      <div class="ciRow"><span id="spPowL">POTENCIA</span><b id="spPow"></b></div>
+      <div class="ciRow"><span id="spAccL">0-100 KM/H</span><b id="spAcc"></b></div>
+      <div class="ciRow"><span id="spWeightL">PESO</span><b id="spWeight"></b></div>
+      <div class="ciRow"><span id="spEngL">MOTOR</span><b id="spEng"></b></div>
+      <div class="ciRow"><span id="spGearL">CAMBIO</span><b id="spGear"></b></div>
+      <div class="ciRow"><span id="spAeroL">CARGA AERO</span><b id="spAero"></b></div>
+      <div class="ciRow"><span id="spTireL">NEUMÁTICOS</span><b id="spTire"></b></div>
+    </div>
+  </div>
+  <div class="backWrap"><button class="mbtn" id="ciBack">VOLVER</button></div>
   <div class="stripe"></div>
 </div>
 
@@ -4091,7 +4174,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 285;
+const BUILD_NO = 286;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6130,6 +6213,11 @@ const I18N = {
     tpSpd: 'VELOCIDAD Y MARCHAS', tpPow: 'UNIDAD DE POTENCIA Y ERS',
     tpLap: 'TIEMPOS POR VUELTA', tpDrv: 'ANALÍTICA DE PILOTAJE',
     teleNone: 'SIN VUELTAS COMPLETAS', brakeTxt: 'FRENO', back: 'VOLVER',
+    ciTit: 'FICHA TÉCNICA', ciStatsT: 'PRESTACIONES', ciSpecT: 'ESPECIFICACIONES',
+    stTop: 'VELOCIDAD PUNTA', stAcc: 'ACELERACIÓN', stGrip: 'AGARRE', stRes: 'RESISTENCIA',
+    spPow: 'POTENCIA', spWgt: 'PESO', spEng: 'MOTOR', spGear: 'CAMBIO',
+    spAero: 'CARGA AERO', spTireL: 'NEUMÁTICOS',
+    spEngV: 'V6 TURBO HÍBRIDO', spGearV: 'SECUENCIAL 6 VEL.', ciBtn: 'ℹ FICHA',
     shiftPerf: '¡CAMBIO PERFECTO!', shiftEarly: 'MUY PRONTO', shiftLate: 'AL CORTE',
     launchOk: '¡SALIDA PERFECTA!',
     divebomb: 'SE LANZA POR DENTRO', overtakeZone: 'ZONA DE ADELANTAMIENTO', shortcut: '¡ATAJO! +3s',
@@ -6204,6 +6292,11 @@ const I18N = {
     tpSpd: 'SPEED & GEARS', tpPow: 'POWER UNIT & ERS',
     tpLap: 'LAP TIMES', tpDrv: 'DRIVER ANALYTICS',
     teleNone: 'NO COMPLETED LAPS', brakeTxt: 'BRAKE', back: 'BACK',
+    ciTit: 'TECH SHEET', ciStatsT: 'PERFORMANCE', ciSpecT: 'SPECIFICATIONS',
+    stTop: 'TOP SPEED', stAcc: 'ACCELERATION', stGrip: 'GRIP', stRes: 'DURABILITY',
+    spPow: 'POWER', spWgt: 'WEIGHT', spEng: 'ENGINE', spGear: 'GEARBOX',
+    spAero: 'DOWNFORCE', spTireL: 'TYRES',
+    spEngV: 'V6 TURBO HYBRID', spGearV: 'SEQUENTIAL 6 SPD', ciBtn: 'ℹ SHEET',
     shiftPerf: 'PERFECT SHIFT!', shiftEarly: 'TOO EARLY', shiftLate: 'AT THE LIMIT',
     launchOk: 'PERFECT LAUNCH!',
     divebomb: 'DIVES DOWN THE INSIDE', overtakeZone: 'OVERTAKING ZONE', shortcut: 'SHORTCUT! +3s',
@@ -6320,6 +6413,12 @@ function applyLang() {
   setI('teleBtn', 'chart', T('tele')); setI('teleBack', 'back', T('back'));
   set('teleTit', T('teleTit')); set('teleSub', T('teleSub'));
   for (const k of ['Chas', 'Tyre', 'Spd', 'Pow', 'Lap', 'Drv']) set('tp' + k, T('tp' + k));
+  // Ficha técnica
+  set('ciTit', T('ciTit')); set('ciStatsT', T('ciStatsT')); set('ciSpecT', T('ciSpecT'));
+  set('stTopL', T('stTop')); set('stAccL', T('stAcc')); set('stGripL', T('stGrip')); set('stResL', T('stRes'));
+  set('spPowL', T('spPow')); set('spWeightL', T('spWgt')); set('spEngL', T('spEng'));
+  set('spGearL', T('spGear')); set('spAeroL', T('spAero')); set('spTireL', T('spTireL'));
+  set('car3dInfo', T('ciBtn')); setI('ciBack', 'back', T('back'));
   set('pauseTitle', T('pause'));
   set('resumeBtn', '▶ ' + T('resume'));
   setI('pauseExitBtn', 'back', T('menu'));
@@ -6776,6 +6875,86 @@ async function m3dShow(i) {
   }
   m3d.r.render(m3d.scene, m3d.cam);
 })();
+
+/* ===== FICHA TÉCNICA: visor 3D grande + hoja de especificaciones ===== */
+const ci3d = { r: null, scene: null, cam: null, car: null, idx: -1, rotY: 0, on: false, raf: 0 };
+function ci3dInit() {
+  if (ci3d.r) return;
+  const cv = document.getElementById('ciCv');
+  ci3d.r = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true });
+  ci3d.r.outputEncoding = THREE.sRGBEncoding;
+  ci3d.scene = new THREE.Scene();
+  ci3d.cam = new THREE.PerspectiveCamera(34, 1.6, 0.1, 120);
+  ci3d.cam.position.set(0, 4.4, 15.2); ci3d.cam.lookAt(0, 0.9, 0);
+  ci3d.scene.add(new THREE.HemisphereLight(0xd8e6ff, 0x222a3c, 1.1));
+  const key = new THREE.DirectionalLight(0xfff0d8, 1.7); key.position.set(6, 10, 6); ci3d.scene.add(key);
+  const rim = new THREE.DirectionalLight(0x7fb0ff, 1.0); rim.position.set(-7, 6, -6); ci3d.scene.add(rim);
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(6.4, 7.0, 0.4, 48),
+    new THREE.MeshStandardMaterial({ color: 0x18223a, roughness: 0.35, metalness: 0.65 }));
+  disc.position.y = -0.2; ci3d.scene.add(disc);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(6.9, 0.10, 8, 60),
+    new THREE.MeshBasicMaterial({ color: 0xffc860 }));
+  ring.rotation.x = Math.PI / 2; ring.position.y = 0.03; ci3d.scene.add(ring);
+}
+function ciBar(id, v) {                                             // st ~0.85-1.20 → 0-100%
+  document.getElementById(id).style.width = Math.round(Math.min(1, Math.max(0.02, (v - 0.85) / 0.35)) * 100) + '%';
+}
+async function ciShow(i) {
+  i = ((i % CARS.length) + CARS.length) % CARS.length;
+  ci3d.idx = i;
+  const def = CARS[i], st = def.st;
+  document.getElementById('ciName').textContent = def.name + ' · ' + (i + 1) + '/' + CARS.length;
+  document.getElementById('ciNum').textContent = (i + 1) + '/' + CARS.length;
+  // Prestaciones reales (las mismas multiplicadoras que usa el motor de carrera)
+  ciBar('bTop', st.top); ciBar('bAcc', st.acc); ciBar('bGrip', st.grip); ciBar('bRes', st.res);
+  document.getElementById('vTop').textContent = Math.round(322 * st.top) + ' km/h';
+  document.getElementById('vAcc').textContent = (2.55 / st.acc).toFixed(1) + ' s';
+  document.getElementById('vGrip').textContent = (2.05 * st.grip).toFixed(2) + ' g';
+  document.getElementById('vRes').textContent = Math.round(100 * st.res) + '%';
+  // Especificaciones derivadas de las stats reales
+  const r26 = def.img === 'f1_r26.png';
+  document.getElementById('spPow').textContent = Math.round(940 * (0.55 * st.top + 0.45 * st.acc)) + ' CV';
+  document.getElementById('spAcc').textContent = (2.55 / st.acc).toFixed(1) + ' s';
+  document.getElementById('spWeight').textContent = (r26 ? 605 : Math.round(798 - (st.res - 1) * 60)) + ' kg';
+  document.getElementById('spEng').textContent = r26 ? 'V8 2.4L · 2006' : T('spEngV');
+  document.getElementById('spGear').textContent = T('spGearV');
+  document.getElementById('spAero').textContent = Math.round(1750 * st.grip) + ' kg @250';
+  document.getElementById('spTire').textContent = OPTS.tire ? T('tireH') : T('tireS');
+  // Modelo 3D
+  ci3dInit();
+  if (ci3d.car) { ci3d.scene.remove(ci3d.car); ci3d.car = null; }
+  const wrap = c3dNorm(await c3dModel(def), 9.6);
+  if (r26) wrap.scale.multiplyScalar(0.62);
+  if (i !== ci3d.idx) return;
+  ci3d.car = wrap; ci3d.scene.add(wrap);
+}
+function ciLoop() {
+  if (!ci3d.on) return;
+  ci3d.raf = requestAnimationFrame(ciLoop);
+  if (ci3d.car) ci3d.car.rotation.y = (ci3d.rotY += 0.008);
+  const cv = document.getElementById('ciCv'), stage = document.getElementById('ciStage');
+  const cw = stage.clientWidth, ch = stage.clientHeight;
+  if (cv.width !== cw * 2) {
+    ci3d.r.setSize(cw * 2, ch * 2, false);
+    ci3d.cam.aspect = cw / ch; ci3d.cam.updateProjectionMatrix();
+  }
+  ci3d.r.render(ci3d.scene, ci3d.cam);
+}
+function ciOpen() {
+  document.getElementById('menu').classList.remove('show');
+  document.getElementById('carinfo').classList.add('show', 'play');
+  ci3d.on = true; ci3dInit(); ciLoop();
+  ciShow(OPTS.car || 0);
+}
+document.getElementById('car3dInfo').addEventListener('click', e => { e.stopPropagation(); ciOpen(); });
+document.getElementById('car3dWrap').addEventListener('click', ciOpen);
+document.getElementById('ciBack').addEventListener('click', () => {
+  ci3d.on = false; cancelAnimationFrame(ci3d.raf);
+  document.getElementById('carinfo').classList.remove('show');
+  document.getElementById('menu').classList.add('show');
+});
+document.getElementById('ciPrev').addEventListener('click', () => { selCar(ci3d.idx - 1); ciShow(OPTS.car); });
+document.getElementById('ciNext').addEventListener('click', () => { selCar(ci3d.idx + 1); ciShow(OPTS.car); });
 document.getElementById('menuBack').addEventListener('click', () => {
   const sp = document.getElementById('splash');   // "pantalla anterior" del menú = la portada
   if (sp) sp.classList.remove('hide');
