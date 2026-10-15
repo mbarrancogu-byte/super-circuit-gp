@@ -4546,7 +4546,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 302;
+const BUILD_NO = 303;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6979,7 +6979,8 @@ document.getElementById('optReset').addEventListener('click', () => {
   window.addEventListener('orientationchange', () => setTimeout(place, 300));
   const close = noIntro => {                      // se oculta pero sigue en el DOM (VOLVER del menú la recupera)
     sp.classList.add('hide');
-    if (!noIntro) introStart();                   // portada → intro cinematográfica → menú
+    // portada → intro → portada de nuevo → menú (la intro solo se ve una vez)
+    if (!noIntro && !_introDone) introStart();
   };
   // Engranaje de la portada → OPCIONES sin pasar por el menú ni la intro
   document.getElementById('splashOpts').addEventListener('pointerdown', e => {
@@ -6997,7 +6998,7 @@ document.getElementById('optReset').addEventListener('click', () => {
   });
 })();
 /* ===== INTRO cinematográfica: 5 pantallas con movimiento, caption y sonido ===== */
-let _introTm = null, _introIdx = -1;
+let _introTm = null, _introIdx = -1, _introDone = false;
 /* Banda sonora generada: drone épico + riser + boom/whoosh por transición */
 let _inBus = null, _inNodes = [];
 function introAudioStart() {
@@ -7086,6 +7087,9 @@ function introEnd() {
   const iv = document.getElementById('intro');
   iv.classList.remove('show');
   iv.querySelectorAll('.inSlide').forEach(s => s.classList.remove('on'));
+  // Tras la animación vuelve la portada como pantalla de arranque real del juego
+  _introDone = true;
+  document.getElementById('splash').classList.remove('hide');
 }
 function introStart() {
   const iv = document.getElementById('intro');
