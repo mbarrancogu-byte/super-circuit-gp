@@ -34,6 +34,11 @@
     font-size: 12px; font-weight: 900; letter-spacing: 1px; animation: drsBlink .5s infinite; }
   #ovtChip   { top: 44px; right: 80px; display: none; border-color: rgba(120,255,140,0.7); color: #7dffa0;
     font-size: 12px; font-weight: 900; letter-spacing: 1px; animation: drsBlink .5s infinite; }
+  #scChip    { top: 76px; right: 10px; display: none; border-color: rgba(255,220,60,0.8); color: #ffe860;
+    font-size: 12px; font-weight: 900; letter-spacing: 1px; animation: drsBlink .6s infinite; }
+  #formChip  { top: 76px; left: 50%; transform: translateX(-50%); display: none;
+    border-color: rgba(120,200,255,0.7); color: #9fd4ff;
+    font-size: 12px; font-weight: 900; letter-spacing: 1px; }
   /* Tutorial de primera carrera: tarjeta flotante que se apaga sola */
   #tuto { position: absolute; left: 50%; top: 24%; transform: translateX(-50%); z-index: 24;
     display: none; padding: 14px 26px; border-radius: 16px; text-align: center;
@@ -338,6 +343,25 @@
   #nitroBar { height: 100%; width: 50%; border-radius: 999px;
     background: linear-gradient(90deg, #2080ff, #50e0ff, #a0ffff); transition: width .12s; }
   #nitroWrap.full #nitroBar { box-shadow: 0 0 12px #60e0ff; }
+  #nitroWrap.hot { border-color: rgba(255,90,30,0.9); animation: hotBlink .3s steps(2) infinite; }
+  #nitroWrap.hot #nitroBar { background: linear-gradient(90deg, #ff6020, #ffb020); }
+  @keyframes hotBlink { 50% { box-shadow: 0 0 16px #ff5010; } }
+  /* Barra de carga del GLB 3D en la portada */
+  #glbLoad { position: absolute; left: 50%; bottom: 14%; transform: translateX(-50%);
+    width: min(300px, 60vw); display: none; text-align: center; z-index: 6; }
+  #glbLbl { font-size: 10px; font-weight: 900; letter-spacing: 3px; color: #9fd8ff;
+    text-shadow: 0 1px 4px #000; }
+  #glbTrack { height: 7px; margin-top: 5px; border-radius: 999px; overflow: hidden;
+    background: rgba(10,20,40,0.75); border: 1px solid rgba(90,170,255,0.45); }
+  #glbBar { display: block; height: 100%; width: 0; border-radius: 999px;
+    background: linear-gradient(90deg, #2080ff, #60e0ff, #b0ffff); transition: width .18s; }
+  /* Lobby multijugador: código de sala */
+  #mpLobby { margin-top: 12px; }
+  #mpCode { width: min(240px, 60vw); padding: 9px 12px; margin-bottom: 8px; text-align: center;
+    font: 900 14px/1 system-ui, sans-serif; letter-spacing: 3px; color: #dff4ff;
+    background: rgba(8,16,34,0.85); border: 1.5px solid rgba(90,150,255,0.55);
+    border-radius: 12px; outline: none; text-transform: uppercase; }
+  #mpCode::placeholder { color: #4a6a9a; letter-spacing: 2px; }
 
   /* ---------- Pantallas ---------- */
   .screen { position: fixed; inset: 0; z-index: 30; display: none; flex-direction: column;
@@ -1440,6 +1464,7 @@
     <div class="chip" id="dmgChip" style="border-color:rgba(255,140,60,0.5);color:#ffc090"><svg class="ic"><use href="#i-burst"/></svg>0%</div>
     <div class="chip" id="tireChip" style="display:none;border-color:rgba(120,220,255,0.5);color:#a0e0ff"><svg class="ic"><use href="#i-tire"/></svg>S 100%</div>
     <div class="chip" id="koChip" style="display:none;border-color:rgba(255,80,80,0.6);color:#ff9090"><svg class="ic"><use href="#i-clock"/></svg>25</div>
+    <div class="chip" id="fuelChip" style="display:none;border-color:rgba(255,200,60,0.55);color:#ffd870">⛽ 100%</div>
     <div class="chip" id="demoChip" style="display:none;border-color:rgba(140,255,220,0.6);color:#a0ffe0;pointer-events:auto;cursor:pointer"><svg class="ic"><use href="#i-robot"/></svg>DEMO · SALIR</div>
     <div class="chip" id="radioChip"><svg class="ic"><use href="#i-radio"/></svg><div id="radioTxt"></div></div>
   </div>
@@ -1453,6 +1478,9 @@
   <div class="chip" id="sectChip"></div>
   <div class="chip" id="drsChip">DRS</div>
   <div class="chip" id="ovtChip">⚔ ADELANTAR</div>
+  <div class="chip" id="scChip">🚩 SAFETY CAR</div>
+  <div class="chip" id="formChip"></div>
+  <div class="chip" id="reChip" style="display:none;top:76px;left:50%;transform:translateX(-50%);border-color:rgba(120,200,255,0.8);color:#9fd8ff">⏪ REPLAY</div>
   <div id="tuto"></div>
   <div class="chip" id="wrongWay"><svg class="ic"><use href="#i-warn"/></svg>SENTIDO CONTRARIO</div>
   <div id="wwBig"><svg class="ic"><use href="#i-warn"/></svg><span id="wwBigTxt">DIRECCIÓN CONTRARIA</span></div>
@@ -1506,6 +1534,7 @@
     <div class="lpFlag" id="slpES" data-flag="es"><span>ESPAÑOL</span></div>
     <div class="lpFlag" id="slpEN" data-flag="gb"><span>ENGLISH</span></div>
   </div>
+  <div id="glbLoad"><span id="glbLbl">3D</span><div id="glbTrack"><i id="glbBar"></i></div></div>
 </div>
 
 <!-- INTRO cinematográfica: 5 pantallas promocionales con transición -->
@@ -1583,6 +1612,13 @@
   <button class="mbtn vsMode" id="btBtn" style="border-color:rgba(80,255,160,0.5);color:#a0ffd0">📱 DUELO BLUETOOTH</button>
   <div class="vsDesc" id="dVsBt">rival cerca de ti (app Android)</div>
   <div id="mpStatusV"></div>
+  <div id="mpLobby">
+    <input id="mpCode" maxlength="12" autocomplete="off" placeholder="CÓDIGO DE SALA">
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="mbtn resPill" id="mpHostBtn">🏠 CREAR</button>
+      <button class="mbtn resPill" id="mpJoinBtn">🔗 UNIRSE</button>
+    </div>
+  </div>
   <div class="backWrap"><button class="mbtn" id="vsBack">VOLVER</button></div>
   <div class="stripe"></div>
 </div>
@@ -1797,7 +1833,9 @@
         <button class="optT langSel dim" id="optLangEN"><span class="miniFlag" data-flag="gb"></span> ENGLISH</button>
       </div>
       <div class="optSec" id="secRec">🏆 RÉCORDS</div>
-      <div class="optRow"><div class="lbl" id="lbRec">RÉCORDS</div><button class="optT off" id="optReset">BORRAR</button></div>
+      <div class="optRow"><div class="lbl" id="lbEndur">MODO ENDURANCE</div><button class="optT" id="optEndur">OFF</button></div>
+      <div class="optRow"><div class="lbl" id="lbRec">RÉCORDS</div><button class="optT val" id="recBtn">VER ▶</button><button class="optT off" id="optReset">BORRAR</button></div>
+      <div class="optRow"><div class="lbl" id="lbAch">LOGROS</div><button class="optT val" id="achBtn">VER ▶</button></div>
       <div class="optRow"><div class="lbl">CARS 3D</div><button class="optT val" id="cars3dBtn">VER MODELOS ▶</button></div>
     </div>
     <div class="optGrp wide">
@@ -1839,7 +1877,23 @@
   <div id="pfWrap"><div id="pfLbl">📸 PHOTO FINISH</div><img id="pfImg" alt="photo finish"></div>
   <div id="resPts"></div>
   <button class="mbtn" id="nextBtn">▶ SIGUIENTE ETAPA</button>
-  <div class="backWrap"><button class="mbtn resPill" id="photoBtn">📸 FOTO</button><button class="mbtn resPill" id="teleBtn">📊 TELEMETRÍA</button><button class="mbtn resPill" id="shareBtn">COMPARTIR</button><button class="mbtn resPill" id="menuBtn2">MENÚ</button></div>
+  <div class="backWrap"><button class="mbtn resPill" id="replayBtn">⏪ REPLAY</button><button class="mbtn resPill" id="photoBtn">📸 FOTO</button><button class="mbtn resPill" id="teleBtn">📊 TELEMETRÍA</button><button class="mbtn resPill" id="shareBtn">COMPARTIR</button><button class="mbtn resPill" id="menuBtn2">MENÚ</button></div>
+  <div class="stripe"></div>
+</div>
+
+<div class="screen" id="recScr">
+  <div class="stripe"></div>
+  <div class="resHead" style="margin-bottom:6px"><div id="recTit">🏁 RÉCORDS</div></div>
+  <div id="recList" style="width:min(92vw,430px);max-height:52vh;overflow-y:auto;margin:0 auto"></div>
+  <div class="backWrap"><button class="mbtn resPill" id="recBack">VOLVER</button></div>
+  <div class="stripe"></div>
+</div>
+
+<div class="screen" id="achScr">
+  <div class="stripe"></div>
+  <div class="resHead" style="margin-bottom:6px"><div id="achTit">🏆 LOGROS</div></div>
+  <div id="achList" style="width:min(92vw,430px);max-height:52vh;overflow-y:auto;margin:0 auto"></div>
+  <div class="backWrap"><button class="mbtn resPill" id="achBack">VOLVER</button></div>
   <div class="stripe"></div>
 </div>
 
@@ -2057,13 +2111,16 @@ let cpu = null, cpu2 = null;            // rivales CPU: {s, v, dmg, fin, tm, grp
 let cpus = [];                          // todos los rivales activos (cpu/cpu2 = alias de cpus[0..1])
 let champRivals = Math.min(6, Math.max(1, +(localStorage.getItem('af1_rivals') || 2)));  // rivales del campeonato
 // Arcade: nitro (ERS), mini-turbo por derrape, rebufo, neumáticos, clima, boxes
-let nitro = 60, nitroOn = false, inNitro = false, slipT = 0;
+let nitro = 60, nitroOn = false, inNitro = false, slipT = 0, nitroHeat = 0;
+let fuel = 100, endurMode = false;                  // ENDURANCE: combustible que obliga a repostar
 let driftT = 0, boostT = 0;
 let tireWear = 0;                       // 0-100 (solo blandos gastan rápido)
 // Telemetría: desgaste por rueda [DI, DD, TI, TD], flex del chasis por zona
 // y muestreo de sensores a ~5 Hz para las pantallas del muro de boxes
 let twW = [0, 0, 0, 0], flexZ = [0, 0, 0, 0], tele = [], teleT = 0, lapTs = [], lapT0 = 0;
-let rain = 0, rainAt = -1;              // 0-1 intensidad · segundo en que empieza (-1 = seco)
+let rain = 0, rainAt = -1, rainEnd = -1; // 0-1 intensidad · t inicio · t en que escampa
+let scT = 0;                             // SAFETY CAR: segundos de ritmo limitado por bandera amarilla
+let formT = 0;                           // vuelta de formación: rodaje lento antes del semáforo
 let pitZone = null, pitT = 0, pitUsed = false;
 let pitStop = 0, pitDur = 0, dmgBroken = false;   // parada cronometrada + motor destrozado
 let ghostRec = null, ghostPlay = null, ghostCar = null, ghostT = 0;
@@ -2076,6 +2133,7 @@ let limT = 0;                           // cadencia del petardeo del limitador
 let launchDone = false;                 // toast de salida perfecta una sola vez
 let sectT0 = 0; const sectBestLap = [null, null, null];  // cronos de sector S1/S2/S3
 const LAPS = 5; let lapsDone = 0;           // carrera = 5 vueltas; lapsDone = vueltas completadas
+let raceFastest = Infinity, cpuFastest = Infinity;  // vuelta rápida de la carrera (+1 pt bonus)
 let crowdBoost = 0;                         // subidón del público (meta, vueltas, adelantamientos)
 let goWas = false, prevGas = 1;             // flag de salida lanzada / gas del frame previo (petardeo)
 // Photo-finish: rendija vertical sobre la línea de meta que compone la foto
@@ -2172,6 +2230,8 @@ let trackCX = 0, trackCZ = 0, trackSpanX = 1, trackSpanZ = 1;
 let carGrp = null, wheelF = [], wheelR = [], beamL = null, beamR = null, tailSpr = [];
 let ledMats = [], ledFR = null, ledFL = null;         // señales LED: materiales y frames por lado
 let beacons = [];                                     // balizas rojo intenso de las curvas
+let raceBoards = [], lastBoardT = 0, craneHook = null; // pantallas gigantes + brazo de la grúa
+let reBuf = [], replaying = false, reI = 0;            // replay post-carrera: buffer + reproducción
 let skidPool = [], dustPool = [], moonLight = null, pathPts = null;
 let mmMinX = 0, mmMinZ = 0, mmScale = 1, mmSpanX = 1, mmSpanZ = 1; // encuadre justo del minimapa (cacheado por etapa)
 let ambLight = null, hemiLight = null, moonOX = 300, moonOZ = -400;
@@ -3606,6 +3666,118 @@ function buildWorld() {
     }
   }
 
+  // --- Tableros luminosos de carrera: pantallas gigantes junto a las rectas
+  // que muestran en vivo la vuelta, el Safety Car o la lluvia ---
+  raceBoards = [];
+  if (!dragMode) {
+    const postMatB = new THREE.MeshStandardMaterial({ color: 0x30363c, roughness: 0.85 });
+    const mastGeo = new THREE.CylinderGeometry(0.18, 0.28, 5.2, 8);
+    const N_B = LOW_POWER ? 4 : 6;
+    let accB = 0, bN = 0;
+    for (let i = 0; i < pathLen && bN < N_B; i++) {
+      const p = path[i], pn = path[(i + 1) % pathLen], pa = path[(i + 8) % pathLen];
+      const turn = Math.abs(p.tx * pa.tz - p.tz * pa.tx);
+      accB += Math.hypot(pn.x - p.x, pn.z - p.z);                // distancia acumulada total
+      if (turn > 0.09) continue;                                 // solo se coloca en rectas
+      if (accB < pathLen / N_B * 4) continue;                    // repartidas por la pista
+      accB = 0; bN++;
+      const s = bN % 2 ? 1 : -1;                                 // alterna lado
+      const hw = (neon ? RW / 2 + 7 : ((trackHW && trackHW[i]) || RW / 2) + 5.5);
+      const nx = -p.tz * s, nz = p.tx * s;
+      const bx = p.x + nx * hw, bz = p.z + nz * hw;
+      const c = document.createElement('canvas'); c.width = 256; c.height = 96;
+      const tex = tex3(c);
+      const scr = new THREE.Mesh(new THREE.PlaneGeometry(13, 4.9),
+        new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, fog: false }));
+      scr.position.set(bx, 5.1, bz);
+      scr.lookAt(p.x, 5.1, p.z);
+      const mast = new THREE.Mesh(mastGeo, postMatB);
+      mast.position.set(bx + nx * 0.6, 2.6, bz + nz * 0.6);
+      world.add(mast, scr);
+      raceBoards.push({ c, x: c.getContext('2d'), tex });
+    }
+  }
+
+  // --- Puestos de comisarios naranjas en la salida de curvas fuertes ---
+  {
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x33383e, roughness: 0.9 });
+    const cabMat = new THREE.MeshStandardMaterial({ color: 0xff7a10, roughness: 0.65 });
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x20242a, roughness: 0.9 });
+    const figMat = new THREE.MeshStandardMaterial({ color: 0xff9500, roughness: 0.8 });
+    const legGeo = new THREE.CylinderGeometry(0.07, 0.1, 2.2, 6);
+    const cabGeo = new THREE.BoxGeometry(2.1, 1.5, 1.7);
+    const roofGeo = new THREE.BoxGeometry(2.5, 0.18, 2.1);
+    const figGeo = new THREE.CylinderGeometry(0.22, 0.26, 0.9, 7);   // cuerpo del comisario
+    const headGeo = new THREE.SphereGeometry(0.17, 7, 6);            // casco
+    let accM = 0, mN = 0;
+    for (let i = 0; i < pathLen && mN < 5; i++) {
+      const p = path[i], pn = path[(i + 1) % pathLen], pa = path[(i + 8) % pathLen];
+      const turn = p.tx * pa.tz - p.tz * pa.tx;
+      accM += Math.hypot(pn.x - p.x, pn.z - p.z);                // distancia acumulada total
+      if (Math.abs(turn) < 0.16) continue;                       // curva de verdad
+      if (accM < pathLen / 5) continue;
+      accM = 0; mN++;
+      const s = turn > 0 ? -1 : 1;                               // exterior
+      const hw = (neon ? RW / 2 + 5 : ((trackHW && trackHW[i]) || RW / 2) + 4);
+      const nx = -p.tz * s, nz = p.tx * s;
+      const bx = p.x + nx * hw, bz = p.z + nz * hw;
+      const g = new THREE.Group();
+      for (const [lx, lz] of [[-0.8, -0.6], [0.8, -0.6], [-0.8, 0.6], [0.8, 0.6]]) {
+        const leg = new THREE.Mesh(legGeo, legMat);
+        leg.position.set(lx, 1.1, lz); g.add(leg);
+      }
+      const cab = new THREE.Mesh(cabGeo, cabMat); cab.position.y = 2.95;
+      const roof = new THREE.Mesh(roofGeo, roofMat); roof.position.y = 3.78;
+      const fig = new THREE.Mesh(figGeo, figMat); fig.position.set(0.4, 4.32, 0);  // comisario sobre el tejado
+      const head = new THREE.Mesh(headGeo, figMat); head.position.set(0.4, 4.95, 0);
+      g.add(cab, roof, fig, head);
+      g.position.set(bx, 0, bz);
+      g.rotation.y = Math.atan2(p.x - bx, p.z - bz);             // mirando a la pista
+      world.add(g);
+      obstacles.push({ x: bx, z: bz, r: 1.8 });
+    }
+  }
+
+  // --- Grúa de rescate aparcada tras la barrera junto a una curva fuerte ---
+  {
+    let craneAt = -1;
+    for (let i = Math.floor(pathLen * 0.25); i < pathLen; i++) {
+      const p = path[i], pa = path[(i + 9) % pathLen];
+      if (Math.abs(p.tx * pa.tz - p.tz * pa.tx) > 0.3) { craneAt = i; break; }
+    }
+    if (craneAt < 0) craneAt = Math.floor(pathLen * 0.4);
+    const p = path[craneAt], pa = path[(craneAt + 9) % pathLen];
+    const s = (p.tx * pa.tz - p.tz * pa.tx) > 0 ? -1 : 1;
+    const hw = (neon ? RW / 2 + 9 : ((trackHW && trackHW[craneAt]) || RW / 2) + 7.5);
+    const nx = -p.tz * s, nz = p.tx * s;
+    const bx = p.x + nx * hw, bz = p.z + nz * hw;
+    const cr = new THREE.Group();
+    const bedMat = new THREE.MeshStandardMaterial({ color: 0xffc81a, roughness: 0.6, metalness: 0.2 });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x1c2026, roughness: 0.9 });
+    const bed = new THREE.Mesh(new THREE.BoxGeometry(5.2, 1.4, 2.4), bedMat); bed.position.y = 1.2;
+    const cab2 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.3, 2.2), darkMat);
+    cab2.position.set(2.6, 1.3, 0);
+    cr.add(bed, cab2);
+    for (const [wx, wz] of [[-1.7, -1.25], [-1.7, 1.25], [1.7, -1.25], [1.7, 1.25]]) {
+      const wh = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.4, 10), darkMat);
+      wh.rotation.x = Math.PI / 2; wh.position.set(wx, 0.55, wz); cr.add(wh);
+    }
+    const pivot = new THREE.Group(); pivot.position.set(-0.6, 2.1, 0);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.5, 0.5), bedMat);
+    arm.position.x = 3.4; arm.rotation.z = 0.5; pivot.add(arm);
+    const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.6, 4),
+      new THREE.MeshBasicMaterial({ color: 0x111111 }));
+    cable.position.set(Math.cos(0.5) * 6.9, Math.sin(0.5) * 6.9 - 1.3, 0); pivot.add(cable);
+    const hook = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.09, 6, 10), darkMat);
+    hook.position.set(Math.cos(0.5) * 6.9, Math.sin(0.5) * 6.9 - 2.7, 0); pivot.add(hook);
+    cr.add(pivot);
+    craneHook = pivot;                                            // se balancea leve en el loop
+    cr.position.set(bx, 0, bz);
+    cr.rotation.y = Math.atan2(p.x - bx, p.z - bz) + Math.PI / 2;
+    world.add(cr);
+    obstacles.push({ x: bx, z: bz, r: 3.4 });
+  }
+
 
 
   // --- Puertas de control: solo marcadores invisibles (los puntos de `gates` siguen
@@ -4619,6 +4791,7 @@ addEventListener('keydown', e => {
   // Mientras la intro cinematográfica está abierta el teclado no hace nada:
   // solo el botón SALTAR la cierra
   if (document.getElementById('intro').classList.contains('show')) { e.preventDefault(); return; }
+  if (replaying && (e.key === 'Escape' || e.key === 'Enter')) { endReplay(); return; }  // saltar replay
   // En carrera ningún botón conserva el foco: sin esto Enter/Espacio re-disparaban
   // el último botón tocado (⏸ pausa, ⟳ reiniciar, ⏏ salir) en mitad de la carrera
   if (playing && document.activeElement && document.activeElement.tagName === 'BUTTON')
@@ -4746,7 +4919,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 335;
+const BUILD_NO = 336;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -4819,6 +4992,8 @@ function cpuDrive(c, dt) {
   // En curvas los mejores pilotos frenan más tarde: el castigo por curvatura
   // baja con la habilidad (k 1.0 → ×1.0 · k 1.3 → ×0.9)
   let vMax = Math.max(14, (102 - worst * 138 * (1.35 - 0.35 * clamp(c.k, 0.8, 1.3))) * (1 - c.dmg * 0.004) * 0.96 * c.k * (1 - rain * 0.12) * errMul * atk);
+  if (scT > 0) vMax = Math.min(vMax, 32);            // safety car: todos a ritmo de grupo
+  if (formT > 0) vMax = Math.min(vMax, 44);          // vuelta de formación: rodaje lento
   // Adelantamiento: si hay un coche delante abre línea por el lado con hueco;
   // si está demasiado cerca y no puede pasar, levanta el pie en vez de atravesarlo
   const others = [car];
@@ -4841,6 +5016,13 @@ function cpuDrive(c, dt) {
         c.lungeT = rnd(0.35, 0.7); showToast('⚔️ ' + (c.nm || 'CPU') + ' ' + T('divebomb'));
       }
     }
+  }
+  // Defensa de posición: con el jugador pegado por detrás llegando a una curva,
+  // el CPU toma la trazada defensiva por dentro — tapar el hueco del divebomb
+  if (c.lungeT <= 0 && c.wideT <= 0 && gap > -30 && gap < -1 && worst > 0.06 &&
+      Math.hypot(car.vx, car.vz) > c.v * 0.9) {
+    const def = wSign * 7;
+    if (Math.abs(avd) < Math.abs(def)) avd = def;
   }
   if (c.lungeT > 0) { c.lungeT -= dt; avd = wSign * 9; vMax *= 1.07; }   // estirada por dentro
   if (c.wideT > 0) avd = -wSign * 9;                                    // error: se va largo fuera
@@ -4923,7 +5105,20 @@ function cpuDrive(c, dt) {
   flameTick(c.grp, c.v > 12 && !c.fin);               // escapes echando fuego en marcha
 }
 function cpuTick(dt) {
-  for (const c of cpus) cpuDrive(c, dt);
+  for (const c of cpus) {
+    cpuDrive(c, dt);
+    // Cronometraje de vueltas de la CPU: necesario para el bonus de vuelta rápida
+    if (pathLen > 0) {
+      const lap = Math.floor(c.s / pathLen);
+      if (lap !== c._lap) {
+        if (c._lap !== undefined && c._lapT0 !== undefined) {
+          const lt = raceT - c._lapT0;
+          if (lt > 15 && lt < cpuFastest) cpuFastest = lt;
+        }
+        c._lap = lap; c._lapT0 = raceT;
+      }
+    }
+  }
   // Eliminatoria: cada KO_LIMIT s el último queda fuera
   if (koMode && playing && performance.now() >= t0) {
     koTimer -= dt;
@@ -5153,11 +5348,21 @@ function update(dt) {
   // Fuerzas longitudinales (el gas no empuja hasta el "¡YA!" — nada de salida anticipada)
   const gasEff = go ? gas : 0;
   const st = carSt();
-  // Nitro ERS: Shift/N o botón ⚡ — consume carga, se recarga con derrape y rebufo
-  nitroOn = (inNitro || pad.nitro || keys.ShiftLeft || keys.ShiftRight || keys.KeyN) && nitro > 0 && go && !dragMode;
+  // Nitro ERS: Shift/N o botón ⚡ — consume carga, se recarga con derrape y
+  // rebufo. El uso continuado SOBRECALIENTA el ERS: a 100% corta solo hasta
+  // enfriarse por debajo del umbral (como el despliegue real de un híbrido)
+  const nitroReq = (inNitro || pad.nitro || keys.ShiftLeft || keys.ShiftRight || keys.KeyN) && go && !dragMode;
+  nitroHeat = clamp(nitroHeat + (nitroOn ? 30 : -14) * dt, 0, 100);   // calienta usándolo, enfría al soltar
+  nitroOn = nitroReq && nitro > 0 && nitroHeat < 100;
+  if (nitroReq && !nitroOn && nitroHeat >= 100 && !(el('nitroWrap')._hot)) {
+    el('nitroWrap')._hot = true;
+    showToast('🌡 ' + T('nitroHot')); sfx.beep(); buzz(90);
+  }
+  if (nitroHeat < 55) el('nitroWrap')._hot = false;                   // vuelve tras enfriar
   if (nitroOn) ach('boost');
   if (nitroOn) nitro = Math.max(0, nitro - 26 * dt);
   else nitro = Math.min(100, nitro + (2.2 + slipT * 6) * dt);
+  el('nitroWrap').classList.toggle('hot', nitroHeat > 62);            // barra rojiza al recalentar
   const nb = el('nitroBar'); if (nb) nb.style.width = nitro.toFixed(0) + '%';
   const nw = el('nitroWrap'); if (nw) nw.classList.toggle('full', nitro >= 99);
   // Mini-turbo: mantener el derrape carga un impulso que se suelta al enderezar
@@ -5174,7 +5379,9 @@ function update(dt) {
   if (boostT > 0) { boostT -= dt; vf += 60 * dt; }
   const dmgMul = 1 - dmg * 0.0055;                      // el daño recorta potencia y punta (~45% al 100%)
   const boostMul = (nitroOn ? 1.24 : 1) * (boostT > 0 ? 1.16 : 1);
-  const topV = TOPV * st.top * dmgMul * boostMul;
+  // ENDURANCE: depósito vacío = motor racionado a ritmo lento hasta repostar
+  const fuelMul = (endurMode && fuel <= 0) ? 0.3 : 1;
+  const topV = TOPV * st.top * dmgMul * boostMul * fuelMul;
   // Salida lanzada: si tienes GAS pisado justo al apagarse las luces → empuje extra 0.55s
   if (launchWin > 0) launchWin -= dt;
   const launchBoost = (launchWin > 0 && gas > 0) ? 1.55 : 1;
@@ -5183,7 +5390,8 @@ function update(dt) {
   const acc = ACCEL * st.acc * (nitroOn ? 1.5 : 1) * launchBoost;
   const drag = 0.006 * vf * Math.abs(vf);
   if (gasEff) vf += acc * dmgMul * dt * (1 - spd / topV);
-  if (brake) vf -= (vf > 0 ? 95 : ACCEL * 0.5) * dt;
+  // X/↓: freno; ya parado = MARCHA ATRÁS real con tope propio (~55 km/h de retirada)
+  if (brake) vf -= (vf > 0 ? 95 : (vf > -16 ? ACCEL * 0.5 : 0)) * dt;
   if (hb) vf -= vf * 0.7 * dt;
   vf -= drag * dt * 0.5;                 // arrastre suave: deja alcanzar velocidad punta
   if (!gasEff && !brake) vf -= vf * 0.4 * dt;
@@ -5225,6 +5433,14 @@ function update(dt) {
   vl *= Math.exp(-grip * dt);
   vl += steer * spd * dt * (hb ? 0.5 : 0.14);  // el volante empuja el lateral (inicio del drift)
   if (oilT > 0) vl += rnd(-1, 1) * spd * dt * 0.5;   // tirones aleatorios sobre la mancha
+  // ANTI-TROMPO: si la zaga se va de verdad (vl enorme sin derrape voluntario)
+  // se mete contra-volante asistido — amortigua el lateral y gira el morro
+  // hacia la trayectoria para recuperar el coche antes de que se cruce
+  if (!hb && !dragMode && Math.abs(vl) > 15 && OPTS.steerAid) {
+    vl *= Math.exp(-3.2 * dt);                            // frena el lateral del trompo
+    car.a -= Math.sign(vl) * Math.min(Math.abs(vl) * 0.022, 0.9) * dt * (steer * Math.sign(vl) < 0 ? 1.6 : 1);
+    if (Math.abs(vl) > 22) { car.wheelVib = Math.max(car.wheelVib || 0, 0.5); }
+  }
 
   // Límite + recomposición
   car.vx = cf * vf - sf * vl;
@@ -5281,7 +5497,11 @@ function update(dt) {
       car.vx -= vr * nx2 * 1.5; car.vz -= vr * nz2 * 1.5;      // rebote amortiguado
       if (vr > 8) { addDamage(Math.min(14, vr * 0.35)); sfx.hit(); buzz(30);
                     car.wheelVib = Math.max(car.wheelVib || 0, Math.min(1.5, vr * 0.1));
-                    sparkBurst(car.x, car.z, nx2, nz2); }            // chispas contra el muro
+                    sparkBurst(car.x, car.z, nx2, nz2);
+                    // Golpazo contra el muro → SAFETY CAR: neutraliza la carrera unos segundos
+                    if (vr > 26 && !demoMode && !dragMode && scT <= 0 && Math.random() < 0.35) {
+                      scT = 6 + Math.random() * 3; showToast('🚩 ' + T('scOut')); sfx.beep();
+                    } }
     }
   }
 
@@ -5339,22 +5559,24 @@ function update(dt) {
     if (fwd > 5 && fwd < 34 && lat2 < 5 && spd > 30) slipTgt = 1;
   }
   slipT += (slipTgt - slipT) * Math.min(1, dt * 5);
-  const drsOn = slipT > 0.5;
-  if (drsOn) vf += 22 * dt;                                  // DRS: succión más fuerte en la estela
-  const dc = el('drsChip');
-  if (dc._on !== drsOn) { dc._on = drsOn; dc.style.display = drsOn ? 'block' : 'none'; }
-  // Zona de adelantamiento: tramo recto por delante + rival a tiro de rebufo →
-  // el empuje es mayor y sale el indicador verde "ADELANTAR"
-  let ovtOn = false;
-  if (drsOn && !dragMode && path) {
+  // DRS real: solo se abre en ZONA DRS (recta limpia por delante) yendo a <1s
+  // de un rival. Fuera de zona el rebufo da un empuje menor y sin chip.
+  let drsZone = false;
+  if (!dragMode && path) {
     const pz = path[pathIdx];
     let crMax = 0;
-    for (let k = 4; k <= 24; k += 4) {
+    for (let k = 4; k <= 28; k += 4) {
       const pz2 = path[(pathIdx + k) % pathLen];
       crMax = Math.max(crMax, Math.abs(pz.tx * pz2.tz - pz.tz * pz2.tx));
     }
-    if (crMax < 0.10) { vf += 14 * dt; ovtOn = true; }       // recta limpia: succión extra
+    drsZone = crMax < 0.10;
   }
+  const drsOn = slipT > 0.5 && drsZone;
+  if (drsOn) vf += 38 * dt;                                  // ala abierta: succión fuerte en zona
+  else if (slipT > 0.5) vf += 10 * dt;                       // rebufo residual fuera de zona
+  const dc = el('drsChip');
+  if (dc._on !== drsOn) { dc._on = drsOn; dc.style.display = drsOn ? 'block' : 'none'; }
+  const ovtOn = drsZone && slipT > 0.15 && !drsOn;           // zona detectada, casi a tiro
   const oc = el('ovtChip');
   if (oc._on !== ovtOn) { oc._on = ovtOn; oc.style.display = ovtOn ? 'block' : 'none'; }
 
@@ -5379,6 +5601,25 @@ function update(dt) {
       g1: +gasEff.toFixed(2), br: brake || hb ? 1 : 0, tw: twW.map(w => +w.toFixed(1)),
       dm: +dmg.toFixed(0), ni: +nitro.toFixed(0), sl: slipT > 0 ? 1 : 0 });
   }
+  // ENDURANCE: el depósito se vacía con el uso — repostar en boxes es obligatorio
+  if (endurMode && go) {
+    const prevFuel = fuel;
+    fuel = Math.max(0, fuel - dt * (0.5 + gasEff * 0.85 + spd * 0.004));
+    if (prevFuel > 25 && fuel <= 25) { showToast('⛽ ' + T('fuelLow')); sfx.beep(); }
+    if (prevFuel > 0 && fuel <= 0) { showToast('🔴 ' + T('fuelOut')); sfx.beep(); buzz(140); }
+    const fc2 = el('fuelChip'), fp = Math.round(fuel);
+    if (fc2._p !== fp) {
+      fc2._p = fp;
+      fc2.textContent = '⛽ ' + fp + '%';
+      fc2.style.color = fuel < 12 ? '#ff6050' : fuel < 30 ? '#ffb060' : '#ffd870';
+    }
+    fc2.style.animation = fuel <= 0 ? 'blink .4s steps(2) infinite' : '';
+  }
+  // Replay post-carrera: posiciones del coche de los últimos ~16 s (a ritmo de frame)
+  if (go) {
+    reBuf.push({ t: raceT, x: car.x, z: car.z, a: car.a });
+    while (reBuf.length && reBuf[0].t < raceT - 16) reBuf.shift();
+  }
   if (tc && tc._w !== twR) {
     tc._w = twR;
     tc.innerHTML = `${ic('tire')} ${OPTS.tire ? 'D' : 'S'} ${twR}%`;
@@ -5396,7 +5637,7 @@ function update(dt) {
       pitStop += dt;
       car.vx = car.vz = 0;
       if (pitStop >= pitDur) {
-        dmg = 0; dmgBroken = false; tireWear = 0;
+        dmg = 0; dmgBroken = false; tireWear = 0; fuel = 100;   // boxes también reposta
         for (let i = 0; i < 4; i++) twW[i] = 0;
         pitStop = 0; pitDur = 0; pitT = 0; addDamage(0);
         showToast('✅ ' + T('pitDone')); sfx.fin(); ach('pit');
@@ -5411,10 +5652,39 @@ function update(dt) {
     } else if (pd > pitZone.r + 4) pitT = 0;
   }
 
-  // Lluvia dinámica: en etapas nocturnas puede empezar a mitad de carrera
+  // Clima dinámico: la lluvia puede empezar Y PARAR a mitad de carrera;
+  // al escampar el asfalto se seca y el agarre vuelve gradualmente
   if (rainAt > 0 && raceT > rainAt && rain < 1) {
     rain = Math.min(1, rain + dt / 6);
     if (rain - dt / 6 <= 0.01) showToast('🌧 ' + T('rain'));
+  } else if (rainEnd > 0 && raceT > rainEnd && rain > 0) {
+    rain = Math.max(0, rain - dt / 14);                       // la pista se seca despacio
+    if (rain + dt / 14 >= 1 - 1e-4 && rain < 1) {}            // transición silenciosa
+    if (rain === 0) { rainEnd = -1; showToast('☀️ ' + T('rainEnd')); }
+  }
+
+  // SAFETY CAR: tras un golpe grande se neutraliza la carrera unos segundos —
+  // velocidad tope para todos mientras dura la bandera amarilla (vf ya se
+  // consumió en la recomposición → el tope se aplica sobre la velocidad real)
+  if (scT > 0) {
+    scT -= dt;
+    const vAbs = Math.hypot(car.vx, car.vz);
+    if (vAbs > 30) { const k = 30 / vAbs; car.vx *= k; car.vz *= k; }
+    if (scT <= 0) showToast('🟢 ' + T('scIn'));
+  }
+  const sc = el('scChip');
+  if (sc._on !== (scT > 0)) { sc._on = scT > 0; sc.style.display = scT > 0 ? 'block' : 'none'; }
+
+  // VUELTA DE FORMACIÓN (campeonato): los primeros segundos se rueda lento en
+  // fila antes de que el semáforo libere la carrera de verdad
+  if (formT > 0) {
+    formT -= dt;
+    const vAbs = Math.hypot(car.vx, car.vz);
+    if (vAbs > 42) { const k = 42 / vAbs; car.vx *= k; car.vz *= k; }
+    const fc = el('formChip');
+    const ft = Math.ceil(formT);
+    if (fc._t !== ft) { fc._t = ft; fc.textContent = '🚗 ' + T('formLap') + ' ' + ft; fc.style.display = 'block'; }
+    if (formT <= 0) fc.style.display = 'none';
   }
   // Petardeo del escape al levantar el pie con el motor caliente
   if (playing && !gas && spd > 55 && Math.random() < dt * 7)
@@ -5465,7 +5735,14 @@ function update(dt) {
     cpIdx++;
     if (cpIdx >= gates.length) {                         // meta cruzada: vuelta completada
       lapsDone++; cpIdx = 0;
-      if (lapT0 > 0) lapTs.push(raceT - lapT0);          // telemetría: tiempo de la vuelta
+      if (lapT0 > 0) {
+        const lt = raceT - lapT0;
+        lapTs.push(lt);                                  // telemetría: tiempo de la vuelta
+        if (lt < raceFastest) {                          // VUELTA RÁPIDA de la carrera
+          raceFastest = lt;
+          showToast('🟣 ' + T('fastLap') + ' ' + lt.toFixed(1) + 's'); sfx.cp();
+        }
+      }
       lapT0 = raceT;
       if (lapsDone >= LAPS) {
         // ¿Llegada ajustada? La distancia se mide por progreso en pista (c.s),
@@ -5564,6 +5841,14 @@ function update(dt) {
                  car.vx * 0.35, car.vz * 0.35,
                  Math.random() < 0.7 ? 0xffffff : 0xe8e8e8, rnd(1.3, 1.9), rnd(6, 9), 0.78);
   }
+  // Bloqueo de rueda delantera: frenada fuerte a alta velocidad echa humo
+  // blanco de goma en las dos ruedas de delante (no en las traseras)
+  if (brake && spd > 38 && offroad < 0.4 && dustT <= 0) {
+    dustT = 0.045;
+    for (const s of [-1, 1])
+      dustPuff(car.x + cf * 3.7 - sf * s * 1.5, car.z + sf * 3.7 + cf * s * 1.5,
+               car.vx * 0.3, car.vz * 0.3, 0xf6f6f6, rnd(0.7, 1.1), rnd(3.5, 5.5), 0.7);
+  }
   // Humo de aceleración: quema de rueda al lanzar (blanco de neumático mezclado
   // con negro) y bocanadas oscuras del escape. Con la flecha ↑/teclado sale
   // algo menos de humo que con el pedal (factor gasK)
@@ -5651,7 +5936,8 @@ function update(dt) {
   // HUD (solo se reescribe el DOM cuando el valor cambia → sin layout thrash)
   const kmh = Math.round(spd * 3.4);
   if (kmh !== lastKmh) { lastKmh = kmh; el('speedNum').innerHTML = kmh + '<small> km/h</small>'; }
-  if (gear !== lastGear) { lastGear = gear; el('gearNum').textContent = T('gear') + ' ' + gear; }
+  const gearShow = vf < -1 ? 'R' : gear;                                   // marcha atrás
+  if (gearShow !== lastGear) { lastGear = gearShow; el('gearNum').textContent = T('gear') + ' ' + gearShow; }
   // Tacómetro del drag + aviso de ventana de cambio (antes del ¡YA! muestra el motor revolucionado)
   const rpmNow = dragMode && !go && gas > 0 ? 0.9
                : Math.max(0, (kmh0 - (gear - 1) * GEAR_SPAN) / GEAR_SPAN);
@@ -5772,6 +6058,28 @@ function draw(now) {
       bc.g.opacity = on ? 0.9 : 0.06;
     }
   }
+  // Tableros luminosos: refresco ~3 Hz — vuelta, SC parpadeante o lluvia
+  if (raceBoards.length && now - lastBoardT > 320) {
+    lastBoardT = now;
+    const ph = Math.floor(now / 400) % 2;                          // fase de parpadeo
+    for (const b of raceBoards) {
+      const x = b.x, W = b.c.width, H = b.c.height;
+      x.fillStyle = '#04070d'; x.fillRect(0, 0, W, H);
+      let txt, col;
+      if (scT > 0)          { txt = 'SC';  col = ph ? '#ffe400' : '#101010'; }
+      else if (formT > 0)   { txt = 'FORMATION'; col = '#9fd8ff'; }
+      else if (rain > 0.35) { txt = 'WET'; col = '#58c8ff'; }
+      else if (!playing)    { txt = 'SCGP'; col = '#58c8ff'; }
+      else                  { txt = 'LAP ' + Math.min(lapsDone + 1, LAPS) + '/' + LAPS; col = '#f4faff'; }
+      x.strokeStyle = col; x.lineWidth = 5; x.strokeRect(4, 4, W - 8, H - 8);
+      x.fillStyle = col; x.font = '900 44px system-ui,Arial';
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText(txt, W / 2, H / 2 + 2);
+      b.tex.needsUpdate = true;
+    }
+  }
+  // La grúa de rescate balancea el brazo muy leve — vida en el decorado
+  if (craneHook) craneHook.rotation.z = Math.sin(now * 0.0008) * 0.05;
 
 
   // Coche rival: interpolación suave hacia la última posición recibida
@@ -6365,6 +6673,25 @@ function mpLeave() {
   if (net) { netSend({ t: 'bye' }); try { net.close(); } catch (e) {} }
   net = null; mpMode = false; remote = null;
 }
+// Lobby por código: CREAR abre la sala con ese nombre y espera; UNIRSE entra en ella
+const mpRoom = () => document.getElementById('mpCode').value.trim().toLowerCase()
+  .replace(/[^a-z0-9-]/g, '').slice(0, 12);
+document.getElementById('mpHostBtn').addEventListener('click', async () => {
+  initAudio();
+  const code = mpRoom() || ('mesa' + ((Math.random() * 900 | 0) + 100));
+  document.getElementById('mpCode').value = code;
+  mpStatus('Creando sala «' + code + '»…');
+  try { await hostRoom(MP_PREFIX + code); }
+  catch (e) { mpStatus('La sala ya existe — pulsa UNIRSE'); }
+});
+document.getElementById('mpJoinBtn').addEventListener('click', async () => {
+  initAudio();
+  const code = mpRoom();
+  if (!code) { mpStatus('Escribe el código de la sala'); return; }
+  mpStatus('Buscando sala «' + code + '»…');
+  try { await tryJoin(MP_PREFIX + code, 6000); }
+  catch (e) { mpStatus('Sala no encontrada — el anfitrión debe CREAR primero'); }
+});
 document.getElementById('onlineBtn').addEventListener('click', raceOnline);
 document.getElementById('btBtn').addEventListener('click', () => {
   if (!hasBT()) { showToast('Bluetooth solo en la app Android'); return; }
@@ -6409,11 +6736,19 @@ function startStage(n, seed, mp, mode) {
     tt.innerHTML = T('tuto1') + '<br><span style="color:#8fb8ff">' + T('tuto2') + '</span>';
     tt.style.display = 'block';
   } else { tutoT = 0; tt.style.display = 'none'; }
-  tireWear = 0; rain = 0; pitT = 0; pitUsed = false; ghostT = 0; koTimer = KO_LIMIT;
+  tireWear = 0; rain = 0; rainEnd = -1; pitT = 0; pitUsed = false; ghostT = 0; koTimer = KO_LIMIT;
+  scT = 0; formT = (champMode || mode === 'champ') ? 7 : 0;   // campeonato: vuelta de formación
   twW = [0, 0, 0, 0]; flexZ = [0, 0, 0, 0]; tele = []; teleT = 0; lapTs = []; lapT0 = 0;   // telemetría limpia
+  raceFastest = cpuFastest = Infinity;                // la vuelta rápida empieza de cero
+  reBuf = []; replaying = false; reI = 0;             // buffer de replay limpio
+  fuel = 100;                                          // depósito lleno al salir
+  endurMode = !!(OPTS.endur && !demoMode && !dragMode && !ttMode && !mpMode && !p2Mode);
+  el('fuelChip').style.display = endurMode ? 'block' : 'none';
   ghostRec = (ttMode || (!mpMode && !demoMode)) ? [] : null;   // grabar para el fantasma
-  // Lluvia: posible en etapas procedurales a partir de la 2ª
+  // Lluvia: posible en etapas procedurales a partir de la 2ª; si llueve, puede
+  // escampar de nuevo más tarde (la pista se va secando)
   rainAt = (!circAt(n) && n >= 2 && Math.random() < 0.5) ? 18 + Math.random() * 30 : -1;
+  rainEnd = rainAt > 0 && Math.random() < 0.45 ? rainAt + 22 + Math.random() * 28 : -1;
   genTrack(seed);
   const _c = circAt(stage);
   const day = !!(_c && _c.img);                   // con foto aérea = diurno; sin foto = nocturno
@@ -6598,6 +6933,9 @@ function finishStage() {
     const PTST = [25, 18, 15, 12, 10, 8, 6];
     const pts = PTST[pos - 1] || 6;
     champPts += pts; champRaces++;
+    // Bonus de vuelta rápida: +1 pt si el jugador firmó el mejor giro de la carrera
+    const fastBonus = champMode && raceFastest <= cpuFastest && raceFastest < Infinity;
+    if (fastBonus) champPts++;
     // Puntos de cada rival según su llegada (persisten entre carreras del campeonato)
     cpus.filter(c => c && !c.elim)
         .sort((a, b) => (a.fin ? a.tm : 9e9) - (b.fin ? b.tm : 9e9))
@@ -6614,7 +6952,7 @@ function finishStage() {
     document.getElementById('resNew').style.display = isBest ? 'block' : 'none';
     document.getElementById('resNew').textContent = T('newRec');
     document.getElementById('resInfo').textContent = champMode
-      ? `${T('champPts')}: ${YOU()} ${champPts} · CPU ${champCpuPts} · ${T('race')} ${champRaces}/3`
+      ? `${T('champPts')}: ${YOU()} ${champPts} · CPU ${champCpuPts} · ${T('race')} ${champRaces}/3${fastBonus ? ' · 🟣 ' + T('fastLap') : ''}`
       : `${tStr} · ${T('dmgTxt')} ${Math.round(dmg)}%`;
     document.getElementById('nextBtn').textContent = champOver ? T('menu') : T('nextRace');
     if (isBest) ghostSave();
@@ -6670,7 +7008,7 @@ function fmtT(s) {
 }
 /* ================== OPCIONES ================== */
 const OPTS = { sound: 1, shadow: 1, skid: 1, dust: 1, cam: 0, brakeAid: 1, steerAid: 1, car: 0,
-               lefty: 0, vib: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0 };   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
+               lefty: 0, vib: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0 };   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
 try { Object.assign(OPTS, JSON.parse(localStorage.getItem('af1_opts') || '{}')); } catch (e) {}
 function saveOpts() { try { localStorage.setItem('af1_opts', JSON.stringify(OPTS)); } catch (e) {} }
 /* ---- Puntuación global: cada victoria suma al total persistente ---- */
@@ -6854,6 +7192,13 @@ const I18N = {
     shiftPerf: '¡CAMBIO PERFECTO!', shiftEarly: 'MUY PRONTO', shiftLate: 'AL CORTE',
     launchOk: '¡SALIDA PERFECTA!',
     divebomb: 'SE LANZA POR DENTRO', overtakeZone: 'ZONA DE ADELANTAMIENTO', shortcut: '¡ATAJO! +3s',
+    fastLap: 'VUELTA RÁPIDA', drsOpen: 'DRS ABIERTO',
+    scOut: '¡SAFETY CAR! Ritmo de grupo', scIn: 'SAFETY CAR ENTRA — VERDE',
+    rainEnd: '¡ESCAMPA! — la pista se seca', formLap: 'VUELTA DE FORMACIÓN',
+    nitroHot: 'NITRO SOBRECALENTADO',
+    endur: 'MODO ENDURANCE', achs: 'LOGROS', fuelLow: '¡POCO COMBUSTIBLE! — ve a boxes',
+    fuelOut: '¡SIN COMBUSTIBLE! — reposta',
+    mpHost: '🏠 CREAR', mpJoin: '🔗 UNIRSE', mpCodePh: 'CÓDIGO DE SALA',
     perfMode: '⚙️ MODO RENDIMIENTO',
     allCars: 'TODOS LOS COCHES', allBtn: 'TODOS', oneBtn: 'UNO',
     tuto1: 'Mantén GAS · frena antes de la curva', tuto2: 'HB derrapa · ⚡ nitro en la recta',
@@ -6941,6 +7286,13 @@ const I18N = {
     shiftPerf: 'PERFECT SHIFT!', shiftEarly: 'TOO EARLY', shiftLate: 'AT THE LIMIT',
     launchOk: 'PERFECT LAUNCH!',
     divebomb: 'DIVES DOWN THE INSIDE', overtakeZone: 'OVERTAKING ZONE', shortcut: 'SHORTCUT! +3s',
+    fastLap: 'FASTEST LAP', drsOpen: 'DRS OPEN',
+    scOut: 'SAFETY CAR! Bunch up', scIn: 'SAFETY CAR IN — GREEN',
+    rainEnd: 'RAIN STOPS! — track is drying', formLap: 'FORMATION LAP',
+    nitroHot: 'NITRO OVERHEATED',
+    endur: 'ENDURANCE MODE', achs: 'ACHIEVEMENTS', fuelLow: 'LOW FUEL! — pit now',
+    fuelOut: 'OUT OF FUEL! — refuel',
+    mpHost: '🏠 CREATE', mpJoin: '🔗 JOIN', mpCodePh: 'ROOM CODE',
     allCars: 'ALL CARS', allBtn: 'ALL', oneBtn: 'ONE',
     perfMode: '⚙️ PERFORMANCE MODE',
     tuto1: 'Hold GAS · brake before the corner', tuto2: 'HB to drift · ⚡ nitro on straights',
@@ -7020,7 +7372,10 @@ function applyLang() {
   set('lbTire', T('tire')); paintTire();
   set('lbTouch', T('touchUi')); set('lbLefty', T('lefty')); set('lbVib', T('vib')); set('lbSens', T('sens'));
   paintSens();
-  set('lbRec', T('records'));
+  set('lbRec', T('records')); set('lbEndur', T('endur')); set('lbAch', T('achs'));
+  set('recTit', '🏁 ' + T('records')); set('achTit', '🏆 ' + T('achs'));
+  const oe = document.getElementById('optEndur');
+  if (oe) { oe.textContent = OPTS.endur ? 'ON' : 'OFF'; oe.classList.toggle('off', !OPTS.endur); }
   set('optReset', T('erase')); setI('optBack', 'back', T('back')); setI('menuBack', 'back', T('back'));
   paintOpt('optCam', OPTS.cam, T('track'), T('near'));
   document.getElementById('optLangES').classList.toggle('dim', LANG !== 'es');
@@ -7030,6 +7385,8 @@ function applyLang() {
   setI('champTitle', 'trophy', T('champ')); set('rivLbl', T('rivals'));
   setI('champGo', 'flag', T('play')); setI('champBack', 'back', T('back'));
   setI('vsBtn', 'helmet', T('vs')); setI('onlineBtn', 'globe', T('online')); setI('btBtn', 'bt', T('bt'));
+  set('mpHostBtn', T('mpHost')); set('mpJoinBtn', T('mpJoin'));
+  const mpc = document.getElementById('mpCode'); if (mpc) mpc.placeholder = T('mpCodePh');
   setI('vsTitle', 'swords', T('versus')); set('vsSub', T('vsSub')); setI('vsBack', 'back', T('back'));
   set('dVsCpu', T('dVsCpu')); set('dVsOn', T('dVsOn')); set('dVsBt', T('dVsBt'));
   setI('vs2Btn', 'vs', T('p2')); set('dVsP2', T('dVsP2'));
@@ -7104,6 +7461,55 @@ function paintTire() {
 }
 document.getElementById('optTire').addEventListener('click', () => {
   OPTS.tire = OPTS.tire ? 0 : 1; saveOpts(); paintTire();
+});
+document.getElementById('optEndur').addEventListener('click', () => {
+  OPTS.endur = OPTS.endur ? 0 : 1; saveOpts();
+  const b = document.getElementById('optEndur');
+  b.textContent = OPTS.endur ? 'ON' : 'OFF'; b.classList.toggle('off', !OPTS.endur);
+});
+// RÉCORDS: tabla por circuito con el mejor tiempo guardado en localStorage
+document.getElementById('recBtn').addEventListener('click', () => {
+  const L = document.getElementById('recList');
+  L.innerHTML = '';
+  const row = (nm, tm) => {
+    const d = document.createElement('div');
+    d.style.cssText = 'display:flex;justify-content:space-between;padding:8px 14px;margin:4px 0;' +
+      'background:rgba(255,255,255,0.05);border-radius:10px;font-size:13px;letter-spacing:1px';
+    d.innerHTML = `<b style="color:#9fd8ff">${nm}</b><span style="color:${tm ? '#ffd060' : '#556'}">${tm ? fmtT(tm) : '—'}</span>`;
+    L.appendChild(d);
+  };
+  (window.CIRCUITOS || []).forEach((c, i) => {
+    row((c.name || ('CIRCUITO ' + (i + 1))).toUpperCase(), +localStorage.getItem('af1_best_' + (i + 1)) || 0);
+  });
+  row('RALLY', +localStorage.getItem('af1_best_rally') || 0);
+  document.getElementById('opts').classList.remove('show');
+  document.getElementById('recScr').classList.add('show');
+});
+document.getElementById('recBack').addEventListener('click', () => {
+  document.getElementById('recScr').classList.remove('show');
+  document.getElementById('opts').classList.add('show');
+});
+// LOGROS: todos los disponibles, desbloqueados iluminados
+const ACH_ALL = [['win', '🏆'], ['champ', '👑'], ['pit', '🔧'], ['boost', '⚡'], ['drift', '🔥'], ['speed300', '🚀']];
+document.getElementById('achBtn').addEventListener('click', () => {
+  const L = document.getElementById('achList');
+  L.innerHTML = '';
+  for (const [id, emo] of ACH_ALL) {
+    const got = !!localStorage.getItem('af1_ach_' + id);
+    const d = document.createElement('div');
+    d.style.cssText = 'display:flex;align-items:center;gap:10px;padding:9px 14px;margin:4px 0;' +
+      `background:rgba(255,255,255,0.05);border-radius:10px;font-size:12px;letter-spacing:1px;opacity:${got ? 1 : 0.38}`;
+    d.innerHTML = `<span style="font-size:20px;filter:${got ? 'none' : 'grayscale(1)'}">${emo}</span>` +
+      `<span style="color:${got ? '#ffd060' : '#667'}">${T('ach_' + id).replace(/^LOGRO · |^ACHIEVEMENT · /, '')}</span>` +
+      `<span style="margin-left:auto">${got ? '✅' : '🔒'}</span>`;
+    L.appendChild(d);
+  }
+  document.getElementById('opts').classList.remove('show');
+  document.getElementById('achScr').classList.add('show');
+});
+document.getElementById('achBack').addEventListener('click', () => {
+  document.getElementById('achScr').classList.remove('show');
+  document.getElementById('opts').classList.add('show');
 });
 /* Selector de circuito: tarjetas con miniatura de la foto aérea (o rally procedural) */
 function rallyThumb(cv2) {
@@ -7441,7 +7847,15 @@ async function c3dR26() {
   if (c3d.r26) return c3d.r26;
   if (!c3d.r26p) c3d.r26p = (async () => {
     if (typeof THREE.GLTFLoader === 'undefined') await c3dScript('gltfloader.js');
-    const g = await new Promise((res, rej) => new THREE.GLTFLoader().load('r26.glb', res, undefined, rej));
+    const gl = document.getElementById('glbLoad');                 // barra de carga en portada
+    if (gl) gl.style.display = 'block';
+    const g = await new Promise((res, rej) => new THREE.GLTFLoader().load('r26.glb', res, ev => {
+      const bar = document.getElementById('glbBar');
+      if (bar) bar.style.width = Math.min(100, ev.loaded / (ev.total || 22600000) * 100).toFixed(0) + '%';
+    }, rej));
+    if (gl) { const b = document.getElementById('glbBar'); if (b) b.style.width = '100%';
+      setTimeout(() => { gl.style.transition = 'opacity .5s'; gl.style.opacity = '0';
+        setTimeout(() => gl.style.display = 'none', 550); }, 400); }
     const m = g.scene;
     const TL = new THREE.TextureLoader(), texP = {};
     const getTex = f => texP[f] || (texP[f] = new Promise(r =>
@@ -8026,6 +8440,20 @@ document.getElementById('nextBtn').addEventListener('click', () => {
   else if (vsMode) startStage(stage, (Math.random() * 1e9) | 0, false, dragMode ? 'drag' : 'vs');
   else startStage(stage + 1);
 });
+// REPLAY: reproduce los últimos segundos de carrera (buffer de posiciones)
+let reClk = 0;
+function endReplay() {
+  replaying = false;
+  el('reChip').style.display = 'none';
+  document.getElementById('results').classList.add('show');
+}
+document.getElementById('replayBtn').addEventListener('click', () => {
+  if (replaying || reBuf.length < 20) return;
+  sfx.click && sfx.click();
+  document.getElementById('results').classList.remove('show');
+  reClk = reBuf[0].t; reI = 0; replaying = true;
+  el('reChip').style.display = 'block';
+});
 document.getElementById('menuBtn2').addEventListener('click', () => {
   mpLeave();
   document.getElementById('results').classList.remove('show');
@@ -8293,6 +8721,24 @@ function loop(now) {
   padPoll();
   if (pad._startT) { pad._startT = false; if (playing) setPaused(!paused); }
   if (playing && !paused && performance.now() >= t0 - 3600) update(dt);   // inputs vivos desde ya, motor corre tras GO
+  if (replaying) {
+    // Replay post-carrera: interpola el buffer de posiciones grabado en meta
+    reClk += dt;
+    while (reI < reBuf.length - 2 && reBuf[reI + 1].t <= reClk) reI++;
+    const f0 = reBuf[reI], f1 = reBuf[reI + 1];
+    if (f1) {
+      const k = clamp((reClk - f0.t) / Math.max(0.001, f1.t - f0.t), 0, 1);
+      car.x = f0.x + (f1.x - f0.x) * k;
+      car.z = f0.z + (f1.z - f0.z) * k;
+      let da = f1.a - f0.a;
+      while (da > Math.PI) da -= 2 * Math.PI;
+      while (da < -Math.PI) da += 2 * Math.PI;
+      car.a = f0.a + da * k;
+      car.vx = (f1.x - f0.x) / Math.max(0.001, f1.t - f0.t);
+      car.vz = (f1.z - f0.z) / Math.max(0.001, f1.t - f0.t);
+    }
+    if (!f1 || reI >= reBuf.length - 2) endReplay();
+  }
   draw(now);
   requestAnimationFrame(loop);
 }
