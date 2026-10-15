@@ -2045,6 +2045,70 @@ function makeWaterTex() {
   }
   const tx = tex3(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; return tx;
 }
+// Fachada del edificio de boxes: rótulo arriba, ventanales del piso superior
+// y 8 puertas de garaje con persiana, toldo de equipo y hueco oscuro abierto
+function makePitFacadeTex() {
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 160;
+  const t = c.getContext('2d');
+  // Hormigón base con panelado vertical
+  const bg = t.createLinearGradient(0, 0, 0, 160);
+  bg.addColorStop(0, '#9ba1ab'); bg.addColorStop(0.5, '#878d97'); bg.addColorStop(1, '#6e747e');
+  t.fillStyle = bg; t.fillRect(0, 0, 1024, 160);
+  for (let x = 0; x <= 1024; x += 128) {
+    t.fillStyle = 'rgba(70,78,92,0.28)'; t.fillRect(x, 0, 2, 160);
+    t.fillStyle = 'rgba(255,255,255,0.12)'; t.fillRect(x + 2, 0, 1, 160);
+  }
+  // Banda del rótulo: azul noche con letras del circuito
+  t.fillStyle = '#101d3c'; t.fillRect(0, 0, 1024, 24);
+  t.fillStyle = '#ffd058'; t.font = '900 15px Arial'; t.textAlign = 'center';
+  t.fillText('SUPER  CIRCUIT   GP   ·   PIT  LANE', 512, 18);
+  // Piso superior: ventanales de los boxes (cristal azulado con marco)
+  for (let i = 0; i < 8; i++) {
+    const x = i * 128 + 12, w = 104;
+    const wg = t.createLinearGradient(0, 30, 0, 66);
+    wg.addColorStop(0, '#5d7a9e'); wg.addColorStop(0.5, '#33506e'); wg.addColorStop(1, '#233a54');
+    t.fillStyle = '#3a414d'; t.fillRect(x - 3, 27, w + 6, 42);          // marco
+    t.fillStyle = wg; t.fillRect(x, 30, w, 36);                        // cristal
+    t.fillStyle = 'rgba(255,255,255,0.20)';                            // reflejo diagonal
+    t.beginPath(); t.moveTo(x + 6, 66); t.lineTo(x + 34, 30);
+    t.lineTo(x + 52, 30); t.lineTo(x + 24, 66); t.fill();
+    t.fillStyle = 'rgba(8,12,20,0.5)'; t.fillRect(x + w / 2 - 1, 30, 2, 36);   // montante
+  }
+  // Franja divisoria de hormigón entre pisos
+  t.fillStyle = '#7c828d'; t.fillRect(0, 70, 1024, 8);
+  t.fillStyle = 'rgba(255,255,255,0.15)'; t.fillRect(0, 70, 1024, 2);
+  // Planta baja: 8 garajes — persiana alta + hueco abierto con interior oscuro
+  const teamCols = ['#c43030', '#2850c8', '#e8a020', '#18a058', '#c43030', '#8040c8', '#2850c8', '#d86018'];
+  for (let i = 0; i < 8; i++) {
+    const x = i * 128 + 8, w = 112;
+    // Toldo del equipo sobre la puerta
+    t.fillStyle = teamCols[i]; t.fillRect(x - 4, 80, w + 8, 9);
+    t.fillStyle = 'rgba(0,0,0,0.25)'; t.fillRect(x - 4, 86, w + 8, 3);
+    // Marco de la puerta
+    t.fillStyle = '#b4bac2'; t.fillRect(x, 89, w, 68);
+    // Persiana metálica (lamas) en la mitad superior de la abertura
+    const sh = t.createLinearGradient(0, 92, 0, 122);
+    sh.addColorStop(0, '#9aa2ae'); sh.addColorStop(1, '#767e8a');
+    t.fillStyle = sh; t.fillRect(x + 5, 92, w - 10, 30);
+    for (let y = 95; y < 122; y += 4) {
+      t.fillStyle = 'rgba(40,46,58,0.45)'; t.fillRect(x + 5, y, w - 10, 1.4);
+    }
+    // Hueco abierto: interior oscuro con brillo del suelo y equipo dentro
+    const ig = t.createLinearGradient(0, 122, 0, 157);
+    ig.addColorStop(0, '#04060a'); ig.addColorStop(0.6, '#11161f'); ig.addColorStop(1, '#2a3140');
+    t.fillStyle = ig; t.fillRect(x + 5, 122, w - 10, 35);
+    t.fillStyle = teamCols[i] + '55'; t.fillRect(x + 8, 149, w - 16, 8);   // resalte de color en el suelo
+    // Siluetas de equipo dentro de algunos garajes
+    if (i % 3 !== 1) {
+      t.fillStyle = 'rgba(180,190,205,0.5)';
+      t.fillRect(x + 18, 138, 7, 19); t.fillRect(x + w - 30, 140, 9, 17);
+    }
+    // Número del box sobre el toldo
+    t.fillStyle = '#fff'; t.font = '900 9px Arial'; t.textAlign = 'left';
+    t.fillText('BOX ' + (i + 1), x + 2, 79);
+  }
+  return tex3(c);
+}
 // Funde varias geometrías en una sola (para instanciar árboles completos en un draw call)
 function mergeGeos(list) {
   const pos = [], nor = [], uv = [];
@@ -2877,6 +2941,73 @@ function buildWorld() {
     fl.rotation.x = -Math.PI / 2; fl.rotation.y = -Math.atan2(p.tz, p.tx);
     fl.position.set(p.x, 0.135, p.z);
     world.add(fl);
+  }
+
+  // --- Edificio de BOXES junto a la recta de meta (todos los circuitos, no drag) ---
+  if (!dragMode) {
+    const pi = Math.floor(pathLen * 0.055);                    // centro a mitad de la recta de meta
+    const p = path[pi], nx = -p.tz, nz = p.tx;                 // normal izquierda = lado de boxes
+    const BL = 130, BD = 15, BH = 12;                          // largo × fondo × alto (~65×7.5×6 m)
+    const off = RW / 2 + 8.5 + BD / 2;                         // hueco del pit lane + mitad del fondo
+    const bcx = p.x + nx * off, bcz = p.z + nz * off;
+    const pit = new THREE.Group();
+    pit.position.set(bcx, 0, bcz);
+    pit.lookAt(p.x, 0, p.z);                                   // +z local (fachada) mira a la pista
+    // Cuerpo: fachada con garajes delante, hormigón en el resto de caras
+    const facTex = makePitFacadeTex();
+    const facadeMat = new THREE.MeshStandardMaterial({ map: facTex,
+      roughness: 0.85, metalness: 0.05, emissive: 0x506a90, emissiveMap: facTex,
+      emissiveIntensity: 0.09 });                              // ventanales/garajes lucen de noche
+    const concMat = new THREE.MeshStandardMaterial({ map: makeConcreteTex(),
+      color: 0x3e444e, roughness: 0.95 });
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x1a1e26, roughness: 0.95 });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(BL, BH, BD),
+      [concMat, concMat, roofMat, concMat, facadeMat, concMat]);
+    body.position.y = BH / 2; body.castShadow = true; pit.add(body);
+    // Peto del tejado: moldura oscura que sobresale coronando el edificio
+    const parapet = new THREE.Mesh(new THREE.BoxGeometry(BL + 1.4, 1.1, BD + 1.4),
+      new THREE.MeshStandardMaterial({ color: 0x181c24, roughness: 0.9 }));
+    parapet.position.y = BH + 0.35; pit.add(parapet);
+    // Marquesina sobre las puertas: losa volada con pilares cada box
+    const canopy = new THREE.Mesh(new THREE.BoxGeometry(BL, 0.5, 4.6),
+      new THREE.MeshStandardMaterial({ color: 0x2c313a, roughness: 0.7, metalness: 0.4 }));
+    canopy.position.set(0, BH * 0.62, BD / 2 + 2.3); canopy.castShadow = true; pit.add(canopy);
+    const colGeo = new THREE.CylinderGeometry(0.28, 0.34, BH * 0.62, 8);
+    const colMat = new THREE.MeshStandardMaterial({ color: 0x848b96, roughness: 0.5, metalness: 0.6 });
+    for (let i = 0; i <= 8; i++) {
+      const col = new THREE.Mesh(colGeo, colMat);
+      col.position.set(-BL / 2 + i * (BL / 8), BH * 0.31, BD / 2 + 4.2);
+      pit.add(col);
+    }
+    // Casetones de climatización y antena en el tejado
+    const acGeo = new THREE.BoxGeometry(4.5, 1.6, 3.4);
+    const acMat = new THREE.MeshStandardMaterial({ color: 0x5c626c, roughness: 0.8, metalness: 0.3 });
+    for (let i = 0; i < 4; i++) {
+      const ac = new THREE.Mesh(acGeo, acMat);
+      ac.position.set(-BL / 2 + 20 + i * 34, BH + 1.7, -BD / 4);
+      ac.rotation.y = rnd(-0.15, 0.15); ac.castShadow = true; pit.add(ac);
+    }
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.22, 12, 6), colMat);
+    mast.position.set(BL / 2 - 8, BH + 6, -BD / 4); pit.add(mast);
+    const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 6),
+      new THREE.MeshBasicMaterial({ color: 0xff3020 }));
+    beacon.position.set(BL / 2 - 8, BH + 12.2, -BD / 4); pit.add(beacon);
+    // Murete de boxes: muro bajo blanco entre la pista y el pit lane
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(BL, 1.35, 0.9),
+      new THREE.MeshStandardMaterial({ color: 0x666e7a, roughness: 0.85 }));
+    wall.position.set(0, 0.68, off - RW / 2 - 3.5); wall.castShadow = true; pit.add(wall);
+    const wallTop = new THREE.Mesh(new THREE.BoxGeometry(BL, 0.3, 0.95),
+      new THREE.MeshStandardMaterial({ color: 0xd42020, roughness: 0.6 }));
+    wallTop.position.set(0, 1.42, off - RW / 2 - 3.5); pit.add(wallTop);
+    // Calle de boxes: franja de asfalto oscuro entre el muro y la fachada
+    const lane = new THREE.Mesh(new THREE.BoxGeometry(BL + 4, 0.12, off - RW / 2 - BD / 2 + 2),
+      new THREE.MeshStandardMaterial({ color: 0x14161c, roughness: 0.9 }));
+    lane.position.set(0, 0.02, BD / 2 + (off - RW / 2 - BD / 2) / 2 + 1);
+    pit.add(lane);
+    world.add(pit);
+    // Colisión: círculos a lo largo del edificio — el muro y el cuerpo frenan al coche
+    for (let k = -3; k <= 3; k++)
+      obstacles.push({ x: bcx + p.tx * k * (BL / 7), z: bcz + p.tz * k * (BL / 7), r: BD * 0.85 });
   }
 
   // Flechas de dirección: chevrones pintados sobre el asfalto cada ~60u (todos los circuitos)
@@ -3906,7 +4037,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 282;
+const BUILD_NO = 283;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
