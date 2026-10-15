@@ -12,6 +12,8 @@
 - Juego de carreras Three.js en `index.html` (archivo único: CSS+JS inline).
 - Circuitos trazados en `circuitos.js`; `trazar.html` = herramienta de trazado.
 - `sw.js` = service worker network-first; bump de caché al tocar assets.
+- **Versión**: `BUILD_NO` en `index.html` (~línea 3412) se muestra en el menú como
+  `Ver.01-2026-0XXX`. **Sumar +1 por cada cambio entregado** (petición del usuario).
 
 ## Verificación
 - Servidor de pruebas: `python -m http.server` o el ya activo en 127.0.0.1:52793.
