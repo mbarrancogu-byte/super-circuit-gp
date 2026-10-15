@@ -3258,6 +3258,24 @@ function buildWorld() {
     const rocks = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(2.4, 0),
       new THREE.MeshStandardMaterial({ color: 0x3a4048, roughness: 1, flatShading: true }), 60);
     const pm = new THREE.Matrix4(), tCol = new THREE.Color();
+    // Sombra de contacto propia bajo cada árbol: mancha suave desplazada levemente
+    // al contrario de la luz — los árboles NO proyectan sombra direccional, que
+    // con las colinas cruzaba la pista como rayas oscuras sobre el asfalto
+    if (!window._shadeTex) {
+      const sc4 = document.createElement('canvas'); sc4.width = sc4.height = 64;
+      const s4 = sc4.getContext('2d');
+      const g4 = s4.createRadialGradient(32, 32, 2, 32, 32, 31);
+      g4.addColorStop(0, 'rgba(4,10,4,0.5)'); g4.addColorStop(0.7, 'rgba(4,10,4,0.28)');
+      g4.addColorStop(1, 'rgba(4,10,4,0)');
+      s4.fillStyle = g4; s4.fillRect(0, 0, 64, 64);
+      window._shadeTex = tex3(sc4);
+    }
+    const shadeGeo = new THREE.PlaneGeometry(1, 1); shadeGeo.rotateX(-Math.PI / 2);
+    const shades = new THREE.InstancedMesh(shadeGeo,
+      new THREE.MeshBasicMaterial({ map: window._shadeTex, transparent: true, depthWrite: false }), nTrees);
+    shades.renderOrder = 1;
+    const shadeR = [5.4, 6.8, 2.4];                        // radio de sombra por especie
+    const sOff = { x: -0.6, z: 0.8 };                      // la luz viene de (+x,-z): la sombra cae al contrario
     let ti = 0, nP = 0, nO = 0, nC = 0, rk = 0, guard = 0;
     while (ti < nTrees && guard++ < 6000) {
       const x = rnd(-900, 900), z = rnd(-900, 900);
@@ -3282,15 +3300,17 @@ function buildWorld() {
         cyps.setColorAt(nC, tCol.setHSL(0.33 + rnd(-0.03, 0.03), rnd(0.5, 0.7), rnd(0.45, 0.62)));
         nC++;
       }
+      const sr = shadeR[kind] * s * rnd(0.9, 1.15);
+      pm.makeScale(sr * 2, 1, sr * 2);
+      pm.setPosition(x + sOff.x * sr * 0.35, hAt(x, z) + 0.12, z + sOff.z * sr * 0.35);
+      shades.setMatrixAt(ti, pm);
       obstacles.push({ x, z, r: 3 * s });
       ti++;
     }
-    pines.count = nP; oaks.count = nO; cyps.count = nC;
+    pines.count = nP; oaks.count = nO; cyps.count = nC; shades.count = ti;
     trunksP.count = nP; trunksO.count = nO; trunksC.count = nC;
-    pines.castShadow = trunksP.castShadow = oaks.castShadow = trunksO.castShadow =
-      cyps.castShadow = trunksC.castShadow = true;
     for (const m of [pines, oaks, cyps]) if (m.instanceColor) m.instanceColor.needsUpdate = true;
-    for (const m of [pines, oaks, cyps, trunksP, trunksO, trunksC]) m.instanceMatrix.needsUpdate = true;
+    for (const m of [pines, oaks, cyps, trunksP, trunksO, trunksC, shades]) m.instanceMatrix.needsUpdate = true;
     world.add(trunksP, trunksO, trunksC);
     guard = 0;
     while (rk < 60 && guard++ < 2000) {
@@ -3304,7 +3324,7 @@ function buildWorld() {
     }
     rocks.castShadow = true;
     rocks.instanceMatrix.needsUpdate = true;
-    world.add(pines, oaks, cyps, rocks);
+    world.add(pines, oaks, cyps, shades, rocks);
   }
 
   // --- Montañas lejanas + cielo estrellado + luna (solo de noche) ---
@@ -3843,7 +3863,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 275;
+const BUILD_NO = 276;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
