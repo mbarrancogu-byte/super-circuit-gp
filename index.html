@@ -466,6 +466,28 @@
     border: 2px solid #f0c060; color: #ffe4a8;
     box-shadow: 0 0 24px rgba(255,180,50,0.4), inset 0 1px 0 rgba(255,255,255,0.15),
       0 6px 0 #3a240a, 0 12px 22px rgba(0,0,0,0.6); }
+  /* ===== TELEMETRÍA: muro de boxes con paneles de datos reales ===== */
+  #telemetry { background:
+      radial-gradient(circle at 50% 0%, rgba(30,60,110,0.5), transparent 60%),
+      linear-gradient(180deg, #060b16 0%, #03060c 100%); }
+  #teleTitle { font-size: clamp(18px, 3.4vw, 30px); font-weight: 900; letter-spacing: 4px;
+    color: #bfe0ff; text-shadow: 0 0 18px rgba(80,170,255,0.55), 0 3px 10px #000;
+    margin: 4px 0 10px; }
+  #teleTitle small { display: block; font-size: .42em; letter-spacing: 6px; color: #5f7fa8; }
+  #teleGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px; width: min(1180px, 96vw); max-height: 72vh; }
+  .telePan { position: relative; border-radius: 10px; overflow: hidden;
+    background: linear-gradient(180deg, #0d1524, #080d18);
+    border: 1px solid rgba(90,150,230,0.35);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 20px rgba(0,0,0,0.5); }
+  .tpT { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: #8fb8e8;
+    padding: 7px 10px 4px; border-bottom: 1px solid rgba(90,150,230,0.22);
+    display: flex; justify-content: space-between; }
+  .tpT b { color: #cfe6ff; }
+  .telePan canvas { display: block; width: 100%; height: auto; }
+  @media (max-width: 860px) { #teleGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { #teleGrid { grid-template-columns: 1fr; max-height: 64vh; overflow-y: auto; } }
+
   .resPill { background: linear-gradient(180deg, #434d63, #181e2c);
     border: 1.5px solid rgba(170,200,255,0.55); color: #e6eeff;
     font-size: 14px; padding: 11px 22px; margin: 12px 4px 0; letter-spacing: 2px;
@@ -1183,6 +1205,13 @@
   <circle cx="17.4" cy="5.6" r="3.3" fill="url(#gCyan)"/>
   <circle cx="17.4" cy="18.4" r="3.3" fill="url(#gCyan)"/>
 </symbol>
+<!-- gráfica de telemetría: barras ascendentes sobre eje -->
+<symbol id="i-chart" viewBox="0 0 24 24">
+  <path d="M4 20 H20 M4 4 V20" stroke="url(#gSilv)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <rect x="6.5" y="13" width="3" height="6" fill="url(#gCyan)"/>
+  <rect x="11" y="9" width="3" height="10" fill="url(#gGold)"/>
+  <rect x="15.5" y="5" width="3" height="14" fill="url(#gRed)"/>
+</symbol>
 <!-- medalla récords -->
 <symbol id="i-medal" viewBox="0 0 24 24">
   <path d="M8 3 L10.4 8 M16 3 L13.6 8" stroke="url(#gRed)" stroke-width="3" fill="none"/>
@@ -1589,8 +1618,21 @@
   <div id="pfWrap"><div id="pfLbl">📸 PHOTO FINISH</div><img id="pfImg" alt="photo finish"></div>
   <div id="resPts"></div>
   <button class="mbtn" id="nextBtn">▶ SIGUIENTE ETAPA</button>
-  <div class="backWrap"><button class="mbtn resPill" id="photoBtn">📸 FOTO</button><button class="mbtn resPill" id="shareBtn">COMPARTIR</button><button class="mbtn resPill" id="menuBtn2">MENÚ</button></div>
+  <div class="backWrap"><button class="mbtn resPill" id="photoBtn">📸 FOTO</button><button class="mbtn resPill" id="teleBtn">📊 TELEMETRÍA</button><button class="mbtn resPill" id="shareBtn">COMPARTIR</button><button class="mbtn resPill" id="menuBtn2">MENÚ</button></div>
   <div class="stripe"></div>
+</div>
+
+<div class="screen" id="telemetry">
+  <div id="teleTitle"><span id="teleTit">MURO DE BOXES</span><small id="teleSub">TELEMETRÍA DE CARRERA</small></div>
+  <div id="teleGrid">
+    <div class="telePan"><div class="tpT"><b id="tpChas">CHASIS · MAPA DE CALOR DE FLEX</b><span>FLEX</span></div><canvas id="tpChasC" width="360" height="210"></canvas></div>
+    <div class="telePan"><div class="tpT"><b id="tpTyre">NEUMÁTICOS · DESGASTE DI/DD/TI/TD</b><span>DESGASTE</span></div><canvas id="tpTyreC" width="360" height="210"></canvas></div>
+    <div class="telePan"><div class="tpT"><b id="tpSpd">VELOCIDAD Y MARCHAS</b><span>KM/H</span></div><canvas id="tpSpdC" width="360" height="210"></canvas></div>
+    <div class="telePan"><div class="tpT"><b id="tpPow">UNIDAD DE POTENCIA Y ERS</b><span>PU</span></div><canvas id="tpPowC" width="360" height="210"></canvas></div>
+    <div class="telePan"><div class="tpT"><b id="tpLap">TIEMPOS POR VUELTA</b><span>VUELTAS</span></div><canvas id="tpLapC" width="360" height="210"></canvas></div>
+    <div class="telePan"><div class="tpT"><b id="tpDrv">ANALÍTICA DE PILOTAJE</b><span>RADAR</span></div><canvas id="tpDrvC" width="360" height="210"></canvas></div>
+  </div>
+  <div class="backWrap"><button class="mbtn" id="teleBack">VOLVER</button></div>
 </div>
 
 <div class="screen" id="pause">
@@ -1797,6 +1839,9 @@ let champRivals = Math.min(6, Math.max(1, +(localStorage.getItem('af1_rivals') |
 let nitro = 60, nitroOn = false, inNitro = false, slipT = 0;
 let driftT = 0, boostT = 0;
 let tireWear = 0;                       // 0-100 (solo blandos gastan rápido)
+// Telemetría: desgaste por rueda [DI, DD, TI, TD], flex del chasis por zona
+// y muestreo de sensores a ~5 Hz para las pantallas del muro de boxes
+let twW = [0, 0, 0, 0], flexZ = [0, 0, 0, 0], tele = [], teleT = 0, lapTs = [], lapT0 = 0;
 let rain = 0, rainAt = -1;              // 0-1 intensidad · segundo en que empieza (-1 = seco)
 let pitZone = null, pitT = 0, pitUsed = false;
 let ghostRec = null, ghostPlay = null, ghostCar = null, ghostT = 0;
@@ -4037,7 +4082,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 283;
+const BUILD_NO = 284;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -4633,6 +4678,24 @@ function update(dt) {
   // Desgaste de neumáticos: blandos gastan rápido, duros aguantan toda la carrera
   tireWear = Math.min(100, tireWear + dt * (0.55 + (slidingNow ? 2.6 : 0) + offroad * 1.4) * (OPTS.tire ? 0.42 : 1));
   const tc = el('tireChip'), twR = Math.round(100 - tireWear);
+  // ---- Telemetría por rueda: delanteras gastan al girar, traseras al deslizar/acelerar ----
+  const wk = (OPTS.tire ? 0.42 : 1), stA = Math.abs(car.steer || 0);
+  twW[0] = Math.min(100, twW[0] + dt * (0.55 + stA * 1.9 + (slidingNow ? 2.0 : 0) + offroad * 1.4) * wk);   // DI
+  twW[1] = Math.min(100, twW[1] + dt * (0.55 + stA * 1.9 + (slidingNow ? 2.0 : 0) + offroad * 1.4) * wk);   // DD
+  twW[2] = Math.min(100, twW[2] + dt * (0.55 + (slidingNow ? 3.0 : 0) + gasEff * 0.5 + offroad * 1.4) * wk); // TI
+  twW[3] = Math.min(100, twW[3] + dt * (0.55 + (slidingNow ? 3.0 : 0) + gasEff * 0.5 + offroad * 1.4) * wk); // TD
+  // Flex del chasis por zonas: carga lateral delantera/lateral/trasera + baches
+  flexZ[0] += stA * spd * dt * 0.02;                                       // morro: giros
+  flexZ[1] += stA * spd * dt * 0.014 * (steer > 0 ? 1 : 0.25);             // pontón der.
+  flexZ[2] += stA * spd * dt * 0.014 * (steer < 0 ? 1 : 0.25);             // pontón izq.
+  flexZ[3] += (slidingNow ? spd * dt * 0.03 : 0) + Math.abs(car.bump || 0) * dt * 8; // zaga: derrapes/baches
+  // Muestra ~5 Hz: velocidad, marcha, mandos y estados para las gráficas post-carrera
+  if (go && raceT - teleT > 0.2 && tele.length < 4500) {
+    teleT = raceT;
+    tele.push({ t: +raceT.toFixed(2), v: +kmh0.toFixed(0), g: gear, st: +(car.steer || steer || 0).toFixed(2),
+      g1: +gasEff.toFixed(2), br: brake || hb ? 1 : 0, tw: twW.map(w => +w.toFixed(1)),
+      dm: +dmg.toFixed(0), ni: +nitro.toFixed(0), sl: slipT > 0 ? 1 : 0 });
+  }
   if (tc && tc._w !== twR) {
     tc._w = twR;
     tc.innerHTML = `${ic('tire')} ${OPTS.tire ? 'D' : 'S'} ${twR}%`;
@@ -4648,6 +4711,7 @@ function update(dt) {
       const was = dmg;
       dmg = Math.max(0, dmg - 55 * dt);
       tireWear = Math.max(0, tireWear - 70 * dt);
+      for (let i = 0; i < 4; i++) twW[i] = Math.max(0, twW[i] - 70 * dt);
       if (pitT > 0.2 && pitT - dt <= 0.2) { showToast('🔧 ' + T('pitting')); sfx.pit(); }
       if (was > 0 && dmg === 0) { showToast('✅ ' + T('pitDone')); sfx.fin(); ach('pit'); }
     } else pitT = 0;
@@ -4707,6 +4771,8 @@ function update(dt) {
     cpIdx++;
     if (cpIdx >= gates.length) {                         // meta cruzada: vuelta completada
       lapsDone++; cpIdx = 0;
+      if (lapT0 > 0) lapTs.push(raceT - lapT0);          // telemetría: tiempo de la vuelta
+      lapT0 = raceT;
       if (lapsDone >= LAPS) {
         // ¿Llegada ajustada? La distancia se mide por progreso en pista (c.s),
         // no en línea recta: en curvas el euclidiano engaña — 100u de pista
@@ -5635,6 +5701,7 @@ function startStage(n, seed, mp, mode) {
     tt.style.display = 'block';
   } else { tutoT = 0; tt.style.display = 'none'; }
   tireWear = 0; rain = 0; pitT = 0; pitUsed = false; ghostT = 0; koTimer = KO_LIMIT;
+  twW = [0, 0, 0, 0]; flexZ = [0, 0, 0, 0]; tele = []; teleT = 0; lapTs = []; lapT0 = 0;   // telemetría limpia
   ghostRec = (ttMode || (!mpMode && !demoMode)) ? [] : null;   // grabar para el fantasma
   // Lluvia: posible en etapas procedurales a partir de la 2ª
   rainAt = (!circAt(n) && n >= 2 && Math.random() < 0.5) ? 18 + Math.random() * 30 : -1;
@@ -6049,6 +6116,11 @@ const I18N = {
     demoEnd: 'DEMO', you: 'Tú', rival: 'Rival', dnf: 'sin terminar', dmgTxt: 'daño',
     next: '▶ SIGUIENTE ETAPA', nextDemo: '▶ SIGUIENTE DEMO', rematch: 'REVANCHA', ptsTot: 'TOTAL',
     photo: 'FOTO', share: 'COMPARTIR', imgSaved: 'IMAGEN GUARDADA',
+    tele: 'TELEMETRÍA', teleTit: 'MURO DE BOXES', teleSub: 'TELEMETRÍA DE CARRERA',
+    tpChas: 'CHASIS · MAPA DE CALOR DE FLEX', tpTyre: 'NEUMÁTICOS · DESGASTE DI/DD/TI/TD',
+    tpSpd: 'VELOCIDAD Y MARCHAS', tpPow: 'UNIDAD DE POTENCIA Y ERS',
+    tpLap: 'TIEMPOS POR VUELTA', tpDrv: 'ANALÍTICA DE PILOTAJE',
+    teleNone: 'SIN VUELTAS COMPLETAS', brakeTxt: 'FRENO', back: 'VOLVER',
     shiftPerf: '¡CAMBIO PERFECTO!', shiftEarly: 'MUY PRONTO', shiftLate: 'AL CORTE',
     launchOk: '¡SALIDA PERFECTA!',
     divebomb: 'SE LANZA POR DENTRO', overtakeZone: 'ZONA DE ADELANTAMIENTO', shortcut: '¡ATAJO! +3s',
@@ -6118,6 +6190,11 @@ const I18N = {
     demoEnd: 'DEMO', you: 'You', rival: 'Rival', dnf: 'DNF', dmgTxt: 'damage',
     next: '▶ NEXT STAGE', nextDemo: '▶ NEXT DEMO', rematch: 'REMATCH', ptsTot: 'TOTAL',
     photo: 'PHOTO', share: 'SHARE', imgSaved: 'IMAGE SAVED',
+    tele: 'TELEMETRY', teleTit: 'PIT WALL', teleSub: 'RACE TELEMETRY',
+    tpChas: 'CHASSIS · FLEX HEAT MAP', tpTyre: 'TYRES · WEAR FL/FR/RL/RR',
+    tpSpd: 'SPEED & GEARS', tpPow: 'POWER UNIT & ERS',
+    tpLap: 'LAP TIMES', tpDrv: 'DRIVER ANALYTICS',
+    teleNone: 'NO COMPLETED LAPS', brakeTxt: 'BRAKE', back: 'BACK',
     shiftPerf: 'PERFECT SHIFT!', shiftEarly: 'TOO EARLY', shiftLate: 'AT THE LIMIT',
     launchOk: 'PERFECT LAUNCH!',
     divebomb: 'DIVES DOWN THE INSIDE', overtakeZone: 'OVERTAKING ZONE', shortcut: 'SHORTCUT! +3s',
@@ -6230,6 +6307,10 @@ function applyLang() {
   setI('demoChip', 'robot', T('demoOut'));
   setI('menuBtn2', 'back', T('menu'));
   setI('photoBtn', 'cam', T('photo')); setI('shareBtn', 'share', T('share'));
+  // Telemetría: título, paneles y botones
+  setI('teleBtn', 'chart', T('tele')); setI('teleBack', 'back', T('back'));
+  set('teleTit', T('teleTit')); set('teleSub', T('teleSub'));
+  for (const k of ['Chas', 'Tyre', 'Spd', 'Pow', 'Lap', 'Drv']) set('tp' + k, T('tp' + k));
   set('pauseTitle', T('pause'));
   set('resumeBtn', '▶ ' + T('resume'));
   setI('pauseExitBtn', 'back', T('menu'));
@@ -6820,6 +6901,208 @@ document.getElementById('shareBtn').addEventListener('click', async () => {
   a.href = url; a.download = 'SuperCircuitGP-' + Date.now() + '.png';
   document.body.appendChild(a); a.click(); a.remove();
   showToast(T('imgSaved'));
+});
+
+/* ================== TELEMETRÍA: muro de boxes con datos reales de la carrera ================== */
+function teleDraw() {
+  const D = tele, N = D.length;
+  const pad2 = { l: 34, r: 10, t: 8, b: 22 };
+  const ctxOf = id => { const c = el(id); return c ? c.getContext('2d') : null; };
+  const grid = (c, W, H) => {
+    c.strokeStyle = 'rgba(110,160,230,0.13)'; c.lineWidth = 1;
+    for (let x = pad2.l; x <= W - pad2.r; x += (W - pad2.l - pad2.r) / 5) { c.beginPath(); c.moveTo(x, pad2.t); c.lineTo(x, H - pad2.b); c.stroke(); }
+    for (let y = pad2.t; y <= H - pad2.b; y += (H - pad2.t - pad2.b) / 4) { c.beginPath(); c.moveTo(pad2.l, y); c.lineTo(W - pad2.r, y); c.stroke(); }
+  };
+  const axis = (c, W, H, xLbl, yMax, yLbl) => {
+    if (!N) return;
+    c.fillStyle = '#5d7ca8'; c.font = '9px monospace'; c.textAlign = 'center';
+    for (let i = 0; i <= 4; i++) c.fillText(yLbl(yMax * (4 - i) / 4), pad2.l - 4, pad2.t + 3 + (H - pad2.t - pad2.b) * i / 4);
+    c.textAlign = 'center';
+    for (let i = 0; i <= 5; i++) c.fillText(xLbl(N ? D[Math.floor(i * (N - 1) / 5)].t : 0), pad2.l + (W - pad2.l - pad2.r) * i / 5, H - 8);
+  };
+  const XY = (W, H, tMax, yMax) => [t => pad2.l + (W - pad2.l - pad2.r) * t / tMax,
+                                    v => H - pad2.b - (H - pad2.t - pad2.b) * v / yMax];
+  const line = (c, W, H, fx, col, fill) => {
+    if (!N) return;
+    c.strokeStyle = col; c.lineWidth = 1.6; c.beginPath();
+    let started = false;
+    for (const s of D) { const [x, y] = fx(s); started ? c.lineTo(x, y) : c.moveTo(x, y); started = true; }
+    c.stroke();
+    if (fill) { c.lineTo(fx(D[N-1])[0], H - pad2.b); c.lineTo(pad2.l, H - pad2.b); c.closePath();
+      c.fillStyle = col.startsWith('rgb') ? col.replace(')', ',0.16)').replace('rgb', 'rgba')
+        : col + '28'; c.fill(); }
+  };
+  const tMax = N ? D[N - 1].t : 1;
+
+  // 1) CHASIS: mapa de calor de flex — silueta del F1 vista cenital con zonas calientes
+  {
+    const c = ctxOf('tpChasC'); if (c) {
+      const W = 360, H = 210;
+      c.clearRect(0, 0, W, H); grid(c, W, H);
+      // Silueta del coche (cabeza arriba): alerón delantero, morro, pontones, alerón trasero, ruedas
+      const cx = 150, cy = H / 2;
+      c.save(); c.translate(cx, cy);
+      c.fillStyle = '#1a2334';
+      c.beginPath();
+      c.moveTo(0, -66); c.lineTo(9, -52); c.lineTo(14, -14); c.lineTo(20, 8); c.lineTo(20, 40);   // derecha: morro→pontón→zaga
+      c.lineTo(14, 58); c.lineTo(-14, 58); c.lineTo(-20, 40); c.lineTo(-20, 8); c.lineTo(-14, -14);
+      c.lineTo(-9, -52); c.closePath(); c.fill();
+      // Alerones
+      c.fillStyle = '#141c2c'; c.fillRect(-52, -62, 104, 9); c.fillRect(-46, 50, 92, 10);
+      // Ruedas
+      c.fillStyle = '#0c0f16';
+      for (const [x, y] of [[-34, -42], [34, -42], [-36, 40], [36, 40]]) c.fillRect(x - 7, y - 12, 14, 24);
+      // Zonas de calor: flex acumulado normalizado → verde→amarillo→rojo
+      const mx = Math.max(1, ...flexZ);
+      const hot = (x, y, r, v) => {
+        const g = c.createRadialGradient(x, y, 2, x, y, r);
+        const f = clamp(v / mx, 0, 1);
+        g.addColorStop(0, `rgba(${f > 0.5 ? 255 : f * 510},${f > 0.5 ? 510 - f * 510 : 255},60,${0.35 + f * 0.6})`);
+        g.addColorStop(1, 'rgba(0,80,255,0)');
+        c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+      };
+      hot(0, -50, 46, flexZ[0]);          // morro
+      hot(17, 10, 34, flexZ[1]);          // pontón derecho
+      hot(-17, 10, 34, flexZ[2]);         // pontón izquierdo
+      hot(0, 48, 42, flexZ[3]);           // zaga
+      c.restore();
+      c.fillStyle = '#5d7ca8'; c.font = '9px monospace'; c.textAlign = 'left';
+      c.fillText('FLEX ' + flexZ.reduce((a, b) => a + b, 0).toFixed(0) + ' u', 240, H - 26);
+      c.fillText('MAX ' + mx.toFixed(0), 240, H - 14);
+    }
+  }
+  // 2) NEUMÁTICOS: 4 curvas de desgaste + etiquetas DI/DD/TI/TD
+  {
+    const c = ctxOf('tpTyreC'); if (c) {
+      const W = 360, H = 210; c.clearRect(0, 0, W, H); grid(c, W, H);
+      const [X, Y] = XY(W, H, tMax, 100);
+      const cols = ['#58b0ff', '#ffd040', '#ff8050', '#c080ff'], nm = ['DI', 'DD', 'TI', 'TD'];
+      for (let w = 0; w < 4; w++) { line(c, W, H, s => [X(s.t), Y(s.tw[w])], cols[w], true); }
+      axis(c, W, H, t => t.toFixed(0) + 's', 100, v => v.toFixed(0));
+      c.font = 'bold 10px monospace'; c.textAlign = 'left';
+      for (let w = 0; w < 4; w++) {
+        c.fillStyle = cols[w];
+        c.fillText(nm[w] + ' ' + twW[w].toFixed(0) + '%', 42 + w * 74, 18);
+      }
+    }
+  }
+  // 3) VELOCIDAD: traza km/h + banda de marchas coloreada abajo
+  {
+    const c = ctxOf('tpSpdC'); if (c) {
+      const W = 360, H = 210; c.clearRect(0, 0, W, H); grid(c, W, H);
+      const [X, Y] = XY(W, H, tMax, 360);
+      // Rebufo marcado como zona sombreada cian
+      c.fillStyle = 'rgba(60,200,255,0.10)';
+      for (let i = 0; i < N; i++) if (D[i].sl) c.fillRect(X(D[i].t), pad2.t, X(0.2) - X(0) + 1, H - pad2.t - pad2.b);
+      line(c, W, H, s => [X(s.t), Y(s.v)], 'rgb(120,220,255)', true);
+      axis(c, W, H, t => t.toFixed(0) + 's', 360, v => v.toFixed(0));
+      // Banda de marchas
+      const gc = ['#4050a0', '#4870c0', '#40a0d0', '#48c8a0', '#70d070', '#ffd040'];
+      for (let i = 0; i < N; i++) {
+        c.fillStyle = gc[Math.min(5, D[i].g - 1)];
+        c.fillRect(X(D[i].t), H - pad2.b - 4, X(0.25) - X(0) + 1, 4);
+      }
+      const vMax2 = N ? Math.max(...D.map(s => s.v)) : 0;
+      c.fillStyle = '#9fd8ff'; c.font = 'bold 10px monospace'; c.textAlign = 'right';
+      c.fillText('V.MAX ' + vMax2 + ' km/h', W - 14, 18);
+    }
+  }
+  // 4) UNIDAD DE POTENCIA: nitro/ERS (verde) + daño del motor (rojo)
+  {
+    const c = ctxOf('tpPowC'); if (c) {
+      const W = 360, H = 210; c.clearRect(0, 0, W, H); grid(c, W, H);
+      const [X, Y] = XY(W, H, tMax, 100);
+      line(c, W, H, s => [X(s.t), Y(s.ni)], 'rgb(80,230,140)', true);
+      line(c, W, H, s => [X(s.t), Y(s.dm)], 'rgb(255,90,70)', false);
+      axis(c, W, H, t => t.toFixed(0) + 's', 100, v => v.toFixed(0) + '%');
+      c.font = 'bold 10px monospace'; c.textAlign = 'left';
+      c.fillStyle = '#50e68c'; c.fillText('ERS ' + nitro.toFixed(0) + '%', 42, 18);
+      c.fillStyle = '#ff5a46'; c.fillText(T('dmgTxt') + ' ' + dmg.toFixed(0) + '%', 42, 32);
+      // Barras tipo el panel de la foto: uso medio de gas/freno
+      if (N) {
+        const gAvg = D.reduce((a, s) => a + s.g1, 0) / N, bAvg = D.reduce((a, s) => a + s.br, 0) / N;
+        c.fillStyle = '#2a3a55'; c.fillRect(230, 30, 100, 10); c.fillRect(230, 52, 100, 10);
+        c.fillStyle = '#50e68c'; c.fillRect(230, 30, 100 * gAvg, 10);
+        c.fillStyle = '#ff8050'; c.fillRect(230, 52, 100 * bAvg, 10);
+        c.fillStyle = '#8fb8e8'; c.font = '9px monospace';
+        c.fillText('GAS ' + (gAvg * 100).toFixed(0) + '%', 230, 26);
+        c.fillText(T('brakeTxt') + ' ' + (bAvg * 100).toFixed(0) + '%', 230, 48);
+      }
+    }
+  }
+  // 5) TIEMPOS POR VUELTA: barras + línea de mejor vuelta
+  {
+    const c = ctxOf('tpLapC'); if (c) {
+      const W = 360, H = 210; c.clearRect(0, 0, W, H); grid(c, W, H);
+      const L = lapTs;
+      if (!L.length) { c.fillStyle = '#5d7ca8'; c.font = '11px monospace'; c.textAlign = 'center'; c.fillText(T('teleNone'), W / 2, H / 2); }
+      else {
+        const mn = Math.min(...L), mx = Math.max(...L), sp = Math.max(0.5, mx - mn);
+        const bw = (W - pad2.l - pad2.r) / Math.max(5, L.length);
+        c.font = '9px monospace'; c.textAlign = 'center';
+        L.forEach((v, i) => {
+          const h = (H - pad2.t - pad2.b) * (0.25 + 0.75 * (v - mn) / sp);
+          const best = v === mn;
+          c.fillStyle = best ? '#50e68c' : '#4a7ac0';
+          c.fillRect(pad2.l + 4 + i * bw, H - pad2.b - h, bw * 0.62, h);
+          c.fillStyle = best ? '#7dffb0' : '#7d9cc8';
+          c.fillText(v.toFixed(1) + 's', pad2.l + 4 + i * bw + bw * 0.31, H - pad2.b - h - 4);
+          c.fillText('V' + (i + 1), pad2.l + 4 + i * bw + bw * 0.31, H - 8);
+        });
+      }
+    }
+  }
+  // 6) PILOTAJE: radar de 5 ejes — gas, freno, dirección, rebufo, nitro
+  {
+    const c = ctxOf('tpDrvC'); if (c) {
+      const W = 360, H = 210; c.clearRect(0, 0, W, H);
+      const cx = W / 2, cy = H / 2 + 4, R = 74;
+      const met = N ? [
+        D.reduce((a, s) => a + s.g1, 0) / N,                                   // gas medio
+        D.reduce((a, s) => a + s.br, 0) / N,                                   // frenos usados
+        clamp(D.reduce((a, s) => a + Math.abs(s.st), 0) / N * 1.6, 0, 1),      // trabajo de dirección
+        clamp(D.reduce((a, s) => a + s.sl, 0) / N * 3.5, 0, 1),                // tiempo en rebufo
+        clamp(1 - nitro / 100, 0, 1),                                          // ERS gastado
+      ] : [0, 0, 0, 0, 0];
+      // Malla pentagonal
+      c.strokeStyle = 'rgba(110,160,230,0.25)'; c.lineWidth = 1;
+      for (let ring = 1; ring <= 3; ring++) {
+        c.beginPath();
+        for (let i = 0; i <= 5; i++) {
+          const a = -Math.PI / 2 + i * 2 * Math.PI / 5, r = R * ring / 3;
+          const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+          i ? c.lineTo(x, y) : c.moveTo(x, y);
+        }
+        c.stroke();
+      }
+      // Polígono de datos
+      c.beginPath();
+      for (let i = 0; i <= 5; i++) {
+        const a = -Math.PI / 2 + i * 2 * Math.PI / 5, r = R * met[i % 5];
+        const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+        i ? c.lineTo(x, y) : c.moveTo(x, y);
+      }
+      c.closePath();
+      c.fillStyle = 'rgba(80,180,255,0.28)'; c.fill();
+      c.strokeStyle = '#58b0ff'; c.lineWidth = 1.8; c.stroke();
+      // Etiquetas
+      const lab = ['GAS', T('brakeTxt'), 'DIR', 'SLIP', 'ERS'];
+      c.fillStyle = '#8fb8e8'; c.font = 'bold 10px monospace'; c.textAlign = 'center';
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + i * 2 * Math.PI / 5;
+        c.fillText(lab[i], cx + Math.cos(a) * (R + 16), cy + Math.sin(a) * (R + 16) + 4);
+      }
+    }
+  }
+}
+document.getElementById('teleBtn').addEventListener('click', () => {
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('telemetry').classList.add('show');
+  teleDraw();
+});
+document.getElementById('teleBack').addEventListener('click', () => {
+  document.getElementById('telemetry').classList.remove('show');
+  document.getElementById('results').classList.add('show');
 });
 // Mejor marca en el menú
 (() => {
