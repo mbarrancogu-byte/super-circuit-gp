@@ -4686,7 +4686,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 326;
+const BUILD_NO = 327;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -7189,9 +7189,9 @@ document.getElementById('optReset').addEventListener('click', () => {
     // Portada ya cerrada: ignorar — sin esto, cualquier tecla en el menú
     // (flechas incluidas) relanzaba la intro cinematográfica
     if (sp.classList.contains('hide')) return;
-    // Solo teclas de "comenzar": Enter/Espacio/flechas. W y demás letras se usan
-    // en carrera — antes pulsar W en la portada lanzaba la intro ("la demo")
-    if (e.code !== 'Enter' && e.code !== 'Space' && !e.code.startsWith('Arrow')) return;
+    // Solo Enter/Espacio cierran la portada. Las flechas y las letras (WASD…)
+    // son controles de carrera — antes cualquiera de ellas lanzaba la intro
+    if (e.code !== 'Enter' && e.code !== 'Space') return;
     close();
   });
 })();
