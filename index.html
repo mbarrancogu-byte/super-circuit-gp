@@ -2198,6 +2198,34 @@ function buildWorld() {
         if (cyl.instanceColor) cyl.instanceColor.needsUpdate = true;
         world.add(cyl);
       }
+      // Arcén de escapatoria rojo vino: banda plana continua pegada al borde
+      // del asfalto, que sigue bajo el muro y asoma al exterior — estilo Paul Ricard
+      {
+        const W_OUT = 4.6, pos = [], idx = []; let q = 0;
+        for (let i = 0; i <= pathLen; i++) {
+          const p = path[i % pathLen], pn = path[(i + 1) % pathLen];
+          const nx = -p.tz, nz = p.tx;
+          const segLen = Math.hypot(pn.x - p.x, pn.z - p.z) || 1;
+          const turn = p.tx * pn.tz - p.tz * pn.tx;
+          const rEst = segLen / Math.max(Math.abs(turn), 1e-3);
+          const eP = turn > 0 ? clamp(rEst * 0.8, 3, RW / 2) : RW / 2;
+          const eN = turn < 0 ? clamp(rEst * 0.8, 3, RW / 2) : RW / 2;
+          // lado interior de curva: el arcén se estrecha para no plegarse
+          const oP = eP + (turn > 0 ? clamp(rEst * 0.8 - eP, 0.4, W_OUT) : W_OUT);
+          const oN = eN + (turn < 0 ? clamp(rEst * 0.8 - eN, 0.4, W_OUT) : W_OUT);
+          pos.push(p.x + nx * (oP), 0.085, p.z + nz * oP,  p.x + nx * (eP - 0.5), 0.085, p.z + nz * (eP - 0.5),
+                   p.x - nx * (eN - 0.5), 0.085, p.z - nz * (eN - 0.5),  p.x - nx * oN, 0.085, p.z - nz * oN);
+          if (i < pathLen) { const b = q * 4; idx.push(b, b + 1, b + 4, b + 1, b + 5, b + 4,
+                                                b + 2, b + 3, b + 6, b + 3, b + 7, b + 6); q++; }
+        }
+        const ag = new THREE.BufferGeometry();
+        ag.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        ag.setIndex(idx);
+        const arcen = new THREE.Mesh(ag, new THREE.MeshBasicMaterial({
+          color: 0x8a1e2c, side: THREE.DoubleSide }));            // vino fijo: no depende de la luz
+        arcen.receiveShadow = true;
+        world.add(arcen);
+      }
       // Carril central discontinuo: trazos cortos ~largo del coche, con hueco amplio
       {
         const pos = [], idx = []; let q = 0;
