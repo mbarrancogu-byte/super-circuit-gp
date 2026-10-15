@@ -4521,11 +4521,11 @@ function buildCar(paintHex, withLight) {
 const CARS = [
   { name: 'AMARILLO', tint: 0xffc818, img: 'f1_amarillo.png', glb: 'coche01.glb',
     st: { top: 1.00, acc: 1.00, grip: 1.00, res: 1.00 } },
-  { name: 'ROJO',     tint: 0xff4538, img: 'f1_scarlet.png', st: { top: 1.05, acc: 0.97, grip: 0.96, res: 0.95 } },
+  { name: 'NARANJA',  tint: 0xff8c20, img: 'f1_naranja.png', st: { top: 1.05, acc: 0.97, grip: 0.96, res: 0.95 } },
   { name: 'VERDE',    tint: 0x30d070, img: 'f1_verde.png', st: { top: 0.96, acc: 1.08, grip: 1.02, res: 1.00 } },
   { name: 'NEGRO',    tint: 0x707890, img: 'f1_negro.png', st: { top: 0.95, acc: 0.96, grip: 0.98, res: 1.18 } },
   { name: 'ROSA',     tint: 0xff58c8, img: 'f1_rosa.png', st: { top: 0.98, acc: 1.02, grip: 1.06, res: 0.98 } },
-  { name: 'NARANJA',  tint: 0xff8c20, img: 'f1_naranja.png', st: { top: 1.02, acc: 1.04, grip: 0.97, res: 0.96 } },
+  { name: 'ROJO',     tint: 0xff4538, img: 'f1_scarlet.png', st: { top: 1.02, acc: 1.04, grip: 0.97, res: 0.96 } },
   { name: 'R26',      tint: 0x2a5fd0, img: 'f1_r26.png', shx: 64,
     sh: [[48, 29], [80, 29], [48, 93], [80, 93]],
     st: { top: 1.04, acc: 1.06, grip: 1.04, res: 0.97 } },
@@ -4927,7 +4927,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 341;
+const BUILD_NO = 342;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
