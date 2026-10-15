@@ -148,13 +148,11 @@
   /* ---------- Tres zonas de la pantalla de juego ---------- */
   /* Zona superior: ventana de telemetría — chips, crono, minimapa */
   #zoneTop { position: absolute; top: 0; left: 0; right: 0; height: 78px; pointer-events: none;
-    background: linear-gradient(180deg, rgba(6,10,22,0.88), rgba(6,10,22,0.5) 68%, transparent);
-    border-bottom: 1px solid rgba(255,200,80,0.28); }
+    background: linear-gradient(180deg, rgba(6,10,22,0.88), rgba(6,10,22,0.5) 68%, transparent); }
   /* Zona inferior: consola de control — pedales, pad, velocímetro, nitro */
   #zoneBot { position: absolute; bottom: 0; left: 0; right: 0; height: clamp(150px, 26vh, 230px);
     pointer-events: none;
-    background: linear-gradient(0deg, rgba(6,10,22,0.88), rgba(6,10,22,0.45) 70%, transparent);
-    border-top: 1px solid rgba(255,200,80,0.28); }
+    background: linear-gradient(0deg, rgba(6,10,22,0.88), rgba(6,10,22,0.55) 45%, rgba(6,10,22,0.18) 78%, transparent); }
   /* La zona central queda libre: la vista del circuito ocupa casi toda la pantalla */
   /* Viñeta de velocidad: oscurece los bordes al correr — efecto túnel */
   #speedVig { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 5;
@@ -1941,39 +1939,53 @@ function makeWheelShadowTex() {
 }
 function makeGroundTex(neon) {
   // Suelo realista en mosaico: grava/asfalto oscuro de noche o hierba seca de día.
-  // Tres escalas de ruido (manchas grandes, grano medio y piedritas) + vetas de tierra
+  // Tres escalas de ruido (manchas grandes, grano medio y piedritas) + vetas de tierra.
+  // Todo se dibuja envuelto en los 9 tiles vecinos → textura enlosable, sin uniones
   const c = document.createElement('canvas'); c.width = c.height = 512;
   const t = c.getContext('2d');
+  const wrap = (x, y, rad, fn) => {
+    for (let dx = -512; dx <= 512; dx += 512) for (let dy = -512; dy <= 512; dy += 512) {
+      if (x + dx + rad < 0 || x + dx - rad > 512 || y + dy + rad < 0 || y + dy - rad > 512) continue;
+      fn(x + dx, y + dy);
+    }
+  };
   t.fillStyle = neon ? '#0c0f15' : '#263a1a'; t.fillRect(0, 0, 512, 512);
   for (let i = 0; i < 110; i++) {                        // manchas grandes difusas
     const x = Math.random() * 512, y = Math.random() * 512, r = 24 + Math.random() * 110;
-    const g = t.createRadialGradient(x, y, 0, x, y, r);
     const lt = Math.random() < 0.45, a = 0.04 + Math.random() * 0.1;
-    g.addColorStop(0, lt ? (neon ? `rgba(52,60,74,${a})` : `rgba(70,96,46,${a})`)
-                         : (neon ? `rgba(4,6,9,${a})` : `rgba(14,22,10,${a})`));
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    t.fillStyle = g; t.beginPath(); t.arc(x, y, r, 0, 7); t.fill();
+    wrap(x, y, r, (X, Y) => {
+      const g = t.createRadialGradient(X, Y, 0, X, Y, r);
+      g.addColorStop(0, lt ? (neon ? `rgba(52,60,74,${a})` : `rgba(70,96,46,${a})`)
+                           : (neon ? `rgba(4,6,9,${a})` : `rgba(14,22,10,${a})`));
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      t.fillStyle = g; t.beginPath(); t.arc(X, Y, r, 0, 7); t.fill();
+    });
   }
   for (let i = 0; i < 26; i++) {                         // vetas alargadas de tierra
     const x = Math.random() * 512, y = Math.random() * 512;
     const w = 30 + Math.random() * 120, h = 4 + Math.random() * 14, an = Math.random() * Math.PI;
-    t.save(); t.translate(x, y); t.rotate(an);
-    t.fillStyle = neon ? `rgba(30,34,42,${0.05 + Math.random() * 0.08})`
-                       : `rgba(58,74,40,${0.05 + Math.random() * 0.09})`;
-    t.beginPath(); t.ellipse(0, 0, w, h, 0, 0, 7); t.fill(); t.restore();
+    const cl = neon ? `rgba(30,34,42,${0.05 + Math.random() * 0.08})`
+                    : `rgba(58,74,40,${0.05 + Math.random() * 0.09})`;
+    wrap(x, y, w + h, (X, Y) => {
+      t.save(); t.translate(X, Y); t.rotate(an);
+      t.fillStyle = cl;
+      t.beginPath(); t.ellipse(0, 0, w, h, 0, 0, 7); t.fill(); t.restore();
+    });
   }
   for (let i = 0; i < 11000; i++) {                      // grano fino de grava
     const x = Math.random() * 512, y = Math.random() * 512, v = Math.random();
-    t.fillStyle = neon ? `rgba(${28 + v * 40},${32 + v * 40},${40 + v * 44},${0.04 + v * 0.09})`
-                       : `rgba(${26 + v * 46},${48 + v * 56},${22 + v * 34},${0.05 + v * 0.13})`;
-    t.fillRect(x, y, 1 + Math.random() * 2, 1 + Math.random() * 2);
+    const cl = neon ? `rgba(${28 + v * 40},${32 + v * 40},${40 + v * 44},${0.04 + v * 0.09})`
+                    : `rgba(${26 + v * 46},${48 + v * 56},${22 + v * 34},${0.05 + v * 0.13})`;
+    const s = 1 + Math.random() * 2;
+    t.fillStyle = cl;
+    wrap(x, y, s, (X, Y) => t.fillRect(X, Y, s, s));
   }
   for (let i = 0; i < 140; i++) {                        // piedritas sueltas (tenues)
     const x = Math.random() * 512, y = Math.random() * 512, r = 0.6 + Math.random() * 1.6;
     const g2 = 52 + Math.random() * 55;
     t.fillStyle = neon ? `rgba(${g2},${g2 + 5},${g2 + 12},0.2)`
                        : `rgba(${g2 * 0.78},${g2},${g2 * 0.58},0.26)`;
-    t.beginPath(); t.arc(x, y, r, 0, 7); t.fill();
+    wrap(x, y, r, (X, Y) => { t.beginPath(); t.arc(X, Y, r, 0, 7); t.fill(); });
   }
   return c;
 }
@@ -1997,8 +2009,17 @@ function makeRubberTex() {
 let rubberTex = null;
 let groundTexN = null, groundTexD = null;
 function groundTex(neon) {
-  if (neon) { if (!groundTexN) { groundTexN = tex3(makeGroundTex(true)); groundTexN.wrapS = groundTexN.wrapT = THREE.RepeatWrapping; groundTexN.repeat.set(11, 11); } return groundTexN; }
-  if (!groundTexD) { groundTexD = tex3(makeGroundTex(false)); groundTexD.wrapS = groundTexD.wrapT = THREE.RepeatWrapping; groundTexD.repeat.set(11, 11); }
+  const mk = n => {
+    const t = tex3(makeGroundTex(n));
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(11, 11);
+    // Anisotropía alta: sin ella el corte de nivel mipmap dibuja una línea
+    // recta sobre la hierba y el grano hace moiré a lo lejos
+    t.anisotropy = renderer3 ? Math.min(16, renderer3.capabilities.getMaxAnisotropy()) : 8;
+    return t;
+  };
+  if (neon) { if (!groundTexN) groundTexN = mk(true); return groundTexN; }
+  if (!groundTexD) groundTexD = mk(false);
   return groundTexD;
 }
 let wheelShTex = null;
@@ -2625,15 +2646,10 @@ function buildWorld() {
   // definiendo los checkpoints para el progreso de vuelta; ya no se dibujan postes ni flechas) ---
 
   // --- Terreno: llanura oscura con manchas ---
+  // Sin colores de vértice: la rejilla de interpolación dejaba facetas visibles
+  // en la hierba — la variedad la da la textura enlosable
   const terGeo = new THREE.PlaneGeometry(2600, 2600, 40, 40);
-  const tp = terGeo.attributes.position.array, tc = [];
-  for (let i = 0; i < tp.length; i += 3) {
-    const n = Math.sin(tp[i] * 0.01 + 2) * Math.cos(tp[i + 1] * 0.013 - 1) + Math.sin(tp[i] * 0.03) * 0.5;
-    const k = clamp(0.78 + n * 0.22, 0.55, 1);
-    tc.push(0.86 * k, k, 0.72 * k);                 // modula la hierba (leve tinte verde)
-  }
-  terGeo.setAttribute('color', new THREE.Float32BufferAttribute(tc, 3));
-  const ter = new THREE.Mesh(terGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
+  const ter = new THREE.Mesh(terGeo, new THREE.MeshStandardMaterial({ roughness: 1 }));
   ter.rotation.x = -Math.PI / 2; ter.position.y = -0.05; ter.receiveShadow = true;
   if (traced) {
     // Hierba lisa oscura bajo la foto: lo que quede fuera de la imagen es campo
@@ -2654,7 +2670,7 @@ function buildWorld() {
     world.add(bgp);
   } else {
     // Suelo realista: hierba verde en todos los trazados — como en las fotos aéreas
-    ter.material = new THREE.MeshStandardMaterial({ map: groundTex(false), vertexColors: true, roughness: 1 });
+    ter.material = new THREE.MeshStandardMaterial({ map: groundTex(false), roughness: 1 });
     world.add(ter);
     // Emblema GP pintado sobre el césped del interior del circuito, como los
     // logos que se ven desde el aire en los circuitos reales
@@ -3176,8 +3192,10 @@ function init3() {
   moonLight.position.set(300, 500, -400);
   moonLight.castShadow = true;
   moonLight.shadow.mapSize.set(LOW_POWER ? 512 : 1024, LOW_POWER ? 512 : 1024);
+  moonLight.shadow.bias = -0.0002;
+  moonLight.shadow.normalBias = 1.6;               // sin acné: el borde del mapa de sombras no se ve
   const sc = moonLight.shadow.camera;
-  sc.left = sc.bottom = -120; sc.right = sc.top = 120; sc.near = 50; sc.far = 1200;
+  sc.left = sc.bottom = -150; sc.right = sc.top = 150; sc.near = 50; sc.far = 1200;
   sc.updateProjectionMatrix();
   scene3.add(moonLight, moonLight.target);
   // Pools de marcas de derrape y polvo
