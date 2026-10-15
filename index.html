@@ -3899,7 +3899,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 280;
+const BUILD_NO = 281;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6751,14 +6751,29 @@ requestAnimationFrame(loop);
   grp.add(mesh);
   new THREE.TextureLoader().load('logo_gp.webp', t => {
     t.colorSpace = THREE.SRGBColorSpace;
-    // UVs: el extrude usa coords XY -> normalizamos al bounding box de la silueta
+    // La imagen es más ancha que el escudo: las letras SUPER CIRCUIT sobresalen.
+    // La cara solo mapea la región del escudo (u 0.077–0.969) — sin eso el texto
+    // se comprimía y quedaba ilegible
     exg.computeBoundingBox();
     const bb = exg.boundingBox, sx = bb.max.x - bb.min.x, sy = bb.max.y - bb.min.y;
+    const U0 = 0.077, U1 = 0.969;
     const pos = exg.attributes.position, uv = exg.attributes.uv;
     for (let i = 0; i < pos.count; i++)
-      uv.setXY(i, (pos.getX(i) - bb.min.x) / sx, (pos.getY(i) - bb.min.y) / sy);
+      uv.setXY(i, U0 + (pos.getX(i) - bb.min.x) / sx * (U1 - U0),
+                  (pos.getY(i) - bb.min.y) / sy);
     uv.needsUpdate = true;
     faceMat.map = t; faceMat.transparent = true; faceMat.alphaTest = 0.15; faceMat.needsUpdate = true;
+    // Placa de texto delante del escudo: banda "SUPER CIRCUIT" recortada de la
+    // imagen a su ancho real — sobresale por los lados como en el logo original
+    const bc = document.createElement('canvas'); bc.width = 520; bc.height = 78;
+    bc.getContext('2d').drawImage(t.image, 0, 138, 520, 78, 0, 0, 520, 78);
+    const bt = new THREE.CanvasTexture(bc); bt.colorSpace = THREE.SRGBColorSpace;
+    const scale = sx / (U1 - U0) / 520;                      // unidades por px de imagen
+    const pw = sx / (U1 - U0), ph = pw * 78 / 520;
+    const bmesh = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph),
+      new THREE.MeshBasicMaterial({ map: bt, transparent: true }));
+    bmesh.position.set(0, (331 - 177) * scale, 0.075);
+    grp.add(bmesh);
   });
   let vel = 0.35, dragging = false, lastX = 0, lastY = 0, rotX = 0;
   host.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; host.setPointerCapture(e.pointerId); });
@@ -6810,13 +6825,25 @@ requestAnimationFrame(loop);
   grp.add(new THREE.Mesh(exg, [faceMat, edgeMat]));
   new THREE.TextureLoader().load('logo_gp.webp', t => {
     t.colorSpace = THREE.SRGBColorSpace;
+    // Solo la región del escudo en la cara; las letras van en placa aparte
     exg.computeBoundingBox();
     const bb = exg.boundingBox, sx = bb.max.x - bb.min.x, sy = bb.max.y - bb.min.y;
+    const U0 = 0.077, U1 = 0.969;
     const pos = exg.attributes.position, uv = exg.attributes.uv;
     for (let i = 0; i < pos.count; i++)
-      uv.setXY(i, (pos.getX(i) - bb.min.x) / sx, (pos.getY(i) - bb.min.y) / sy);
+      uv.setXY(i, U0 + (pos.getX(i) - bb.min.x) / sx * (U1 - U0),
+                  (pos.getY(i) - bb.min.y) / sy);
     uv.needsUpdate = true;
     faceMat.map = t; faceMat.transparent = true; faceMat.alphaTest = 0.15; faceMat.needsUpdate = true;
+    const bc = document.createElement('canvas'); bc.width = 520; bc.height = 78;
+    bc.getContext('2d').drawImage(t.image, 0, 138, 520, 78, 0, 0, 520, 78);
+    const bt = new THREE.CanvasTexture(bc); bt.colorSpace = THREE.SRGBColorSpace;
+    const scale = sx / (U1 - U0) / 520;
+    const pw = sx / (U1 - U0), ph = pw * 78 / 520;
+    const bmesh = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph),
+      new THREE.MeshBasicMaterial({ map: bt, transparent: true }));
+    bmesh.position.set(0, (331 - 177) * scale, 0.075);
+    grp.add(bmesh);
   });
   const place = () => {                                    // ancla el lienzo al hueco del póster
     const r = img.getBoundingClientRect();
