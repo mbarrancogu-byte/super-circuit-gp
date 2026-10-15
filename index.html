@@ -4470,6 +4470,8 @@ let inGas2 = 0, inShift2 = 0, shiftHeld2 = false;   // entradas del JUGADOR 2 (m
 addEventListener('keydown', e => {
   keys[e.code] = true;
   if (e.code === 'Space') e.preventDefault();
+  // En carrera las flechas son controles (↑ gas · ↓ freno · ◀▶ dirección): no scroll
+  if (playing && e.code.startsWith('Arrow')) e.preventDefault();
   if (e.code === 'Escape' && playing) setPaused(!paused);           // ESC pausa/reanuda
   if (e.code === 'Equal' || e.code === 'NumpadAdd') camZoom = Math.max(0, camZoom - 0.12);
   if (e.code === 'Minus' || e.code === 'NumpadSubtract') camZoom = Math.min(1, camZoom + 0.12);
@@ -4587,7 +4589,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 313;
+const BUILD_NO = 314;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
