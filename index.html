@@ -2504,31 +2504,8 @@ function buildWorld() {
             st.fillStyle = (x / 64) % 2 ? '#7fc4f0' : '#6e7683';
             st.fillRect(x, 0, 64, 16);
           }
-          // Manchas de neumático reales: rayones que siguen la pista y cruzan
-          // las bandas + arcos de derrape que se salen al arcén y vuelven.
-          // Cada trazo se dibuja envuelto para que el tile no tenga corte
-          const wrapX = (x0, fn) => { fn(x0); fn(x0 - 512); fn(x0 + 512); };
-          for (let i = 0; i < 26; i++) {                          // rayones paralelos al trazado
-            const y0 = 1 + Math.random() * 13, x0 = Math.random() * 512, ln = 30 + Math.random() * 130;
-            st.strokeStyle = `rgba(10,12,16,${0.10 + Math.random() * 0.22})`;
-            st.lineWidth = 1 + Math.random() * 2.4; st.lineCap = 'round';
-            const wob = (Math.random() - 0.5) * 6, y1 = y0 + (Math.random() - 0.5) * 4;
-            wrapX(x0, X => { st.beginPath(); st.moveTo(X, y0);
-              st.quadraticCurveTo(X + ln / 2, y0 + wob, X + ln, y1); st.stroke(); });
-          }
-          for (let i = 0; i < 7; i++) {                           // arcos de salida de pista
-            const x0 = Math.random() * 512, out = 4 + Math.random() * 9, ln = 60 + Math.random() * 160;
-            const o2 = 2 + Math.random() * 4;
-            st.strokeStyle = `rgba(8,10,14,${0.14 + Math.random() * 0.2})`;
-            st.lineWidth = 1.6 + Math.random() * 2;
-            wrapX(x0, X => { st.beginPath(); st.moveTo(X, 14);
-              st.bezierCurveTo(X + ln * 0.3, 14 - out, X + ln * 0.6, o2, X + ln, 14); st.stroke(); });
-          }
-          for (let i = 0; i < 40; i++) {                          // gomazos sueltos
-            const x = Math.random() * 512, y = Math.random() * 16, r = 0.5 + Math.random() * 1.6;
-            st.fillStyle = `rgba(12,14,18,${0.05 + Math.random() * 0.14})`;
-            wrapX(x, X => { st.beginPath(); st.ellipse(X, y, r * 2.4, r, 0, 0, 7); st.fill(); });
-          }
+          // La textura queda LIMPIA: las manchas de frenada son decals dinámicos
+          // colocados por tramos (abajo), no dibujos repetidos cada 64u
           window._arcenTex = tex3(sc2);
           window._arcenTex.wrapS = window._arcenTex.wrapT = THREE.RepeatWrapping;
           window._arcenTex.anisotropy = 4;
@@ -2563,6 +2540,84 @@ function buildWorld() {
           map: window._arcenTex, side: THREE.DoubleSide }));     // color fijo: no depende de la luz
         arcen.receiveShadow = true;
         world.add(arcen);
+
+        // Frenadas sobre el arcén: decals dinámicos por tramos. Hay zonas
+        // limpias y otras con manchas sueltas; en las curvas pronunciadas
+        // SIEMPRE cae un abanico de estelas dobles en el exterior — ahí es
+        // donde los coches se van largos de verdad
+        {
+          if (!window._frenTex) {
+            const fc = document.createElement('canvas'); fc.width = 128; fc.height = 64;
+            const ft = fc.getContext('2d');
+            // Par de estelas de neumático: dos líneas oscuras suaves alargadas
+            for (const yy of [21, 43]) {
+              const g = ft.createLinearGradient(0, yy - 8, 0, yy + 8);
+              g.addColorStop(0, 'rgba(6,8,11,0)');
+              g.addColorStop(0.5, 'rgba(6,8,11,0.9)');
+              g.addColorStop(1, 'rgba(6,8,11,0)');
+              ft.fillStyle = g; ft.fillRect(0, yy - 8, 128, 16);
+            }
+            // Extremos difusos: la estela nace y se desvanece
+            const ge = ft.createLinearGradient(0, 0, 128, 0);
+            ge.addColorStop(0, 'rgba(0,0,0,0)'); ge.addColorStop(0.14, 'rgba(0,0,0,1)');
+            ge.addColorStop(0.86, 'rgba(0,0,0,1)'); ge.addColorStop(1, 'rgba(0,0,0,0)');
+            ft.globalCompositeOperation = 'destination-in';
+            ft.fillStyle = ge; ft.fillRect(0, 0, 128, 64);
+            window._frenTex = tex3(fc); window._frenTex.anisotropy = 4;
+          }
+          const sp = [], suv = [], sidx = [], scol = [];
+          const put = (i, x, z, dx, dz, w, l, lat, a) => {
+            const b = sp.length / 3, px = -dz, pz = dx;
+            const y = 0.10 + bankYAt(i, lat);
+            sp.push(x - dx * l - px * w, y, z - dz * l - pz * w,
+                    x + dx * l - px * w, y, z + dz * l - pz * w,
+                    x + dx * l + px * w, y, z + dz * l + pz * w,
+                    x - dx * l + px * w, y, z - dz * l + pz * w);
+            suv.push(0, 0, 1, 0, 1, 1, 0, 1);
+            sidx.push(b, b + 1, b + 2, b, b + 2, b + 3);
+            for (let k = 0; k < 4; k++) scol.push(a, a, a);   // oscuridad por vértice
+          };
+          let run = 0;
+          for (let i = 0; i < pathLen; i += 2) {
+            const p = path[i], pn = path[(i + 1) % pathLen];
+            const nx = -p.tz, nz = p.tx;
+            const segLen = Math.hypot(pn.x - p.x, pn.z - p.z) || 1;
+            const turn = p.tx * pn.tz - p.tz * pn.tx;
+            const rEst = segLen / Math.max(Math.abs(turn), 1e-3);
+            if (rEst < 34 && rnd(0, 1) < 0.9) {              // curva cerrada → siempre goma
+              const side = turn > 0 ? -1 : 1;                // exterior de la curva
+              for (let k = 0, n = 1 + (rnd(0, 1) * 3 | 0); k < n; k++) {
+                const lat = RW / 2 + 0.5 + rnd(0, 1) * (W_OUT - 1.1);
+                const drift = rnd(-0.05, 0.13);              // leve deriva hacia fuera
+                let dx = p.tx + nx * side * drift, dz = p.tz + nz * side * drift;
+                const dl = Math.hypot(dx, dz); dx /= dl; dz /= dl;
+                put(i, p.x + nx * side * lat, p.z + nz * side * lat,
+                    dx, dz, 0.55 + rnd(0, 1) * 0.55, 2.5 + rnd(0, 1) * 6.5,
+                    side * lat, rnd(0.55, 1));
+              }
+              continue;
+            }
+            // Rectas y curvas suaves: tramos aleatorios con/sin manchas
+            if (run <= 0 && rnd(0, 1) < 0.09) run = 4 + (rnd(0, 1) * 11 | 0);
+            if (run-- > 0 && rnd(0, 1) < 0.6) {
+              const sd = rnd(0, 1) < 0.5 ? 1 : -1;
+              const lat = RW / 2 + 0.5 + rnd(0, 1) * (W_OUT - 1);
+              put(i, p.x + nx * sd * lat, p.z + nz * sd * lat,
+                  p.tx, p.tz, 0.5 + rnd(0, 1) * 0.6, 2 + rnd(0, 1) * 7,
+                  sd * lat, rnd(0.35, 0.8));
+            }
+          }
+          const sg = new THREE.BufferGeometry();
+          sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+          sg.setAttribute('uv', new THREE.Float32BufferAttribute(suv, 2));
+          sg.setAttribute('color', new THREE.Float32BufferAttribute(scol, 3));
+          sg.setIndex(sidx);
+          const fren = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({
+            map: window._frenTex, transparent: true, vertexColors: true,
+            depthWrite: false, polygonOffset: true, polygonOffsetFactor: -5 }));
+          fren.renderOrder = 2;
+          world.add(fren);
+        }
       }
       // Goma acumulada en la línea de carrera: overlay translúcido con rayas
       // longitudinales — el asfalto "engomado" de las fotos aéreas
@@ -3785,7 +3840,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 271;
+const BUILD_NO = 272;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
