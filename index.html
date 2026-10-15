@@ -2275,10 +2275,19 @@ function buildWorld() {
         if (cyl.instanceColor) cyl.instanceColor.needsUpdate = true;
         world.add(cyl);
       }
-      // Arcén de escapatoria rojo vino: banda plana continua pegada al borde
-      // del asfalto, que sigue bajo el muro y asoma al exterior — estilo Paul Ricard
+      // Arcén de escapatoria con bandas transversales gris/azul claro,
+      // pegado al borde del asfalto y asomando bajo el muro — estilo Paul Ricard
       {
-        const W_OUT = 4.6, pos = [], idx = []; let q = 0;
+        if (!window._arcenTex) {
+          const sc2 = document.createElement('canvas'); sc2.width = 64; sc2.height = 4;
+          const st = sc2.getContext('2d');
+          st.fillStyle = '#6e7683'; st.fillRect(0, 0, 32, 4);       // gris
+          st.fillStyle = '#7fc4f0'; st.fillRect(32, 0, 32, 4);      // azul claro
+          window._arcenTex = tex3(sc2);
+          window._arcenTex.wrapS = window._arcenTex.wrapT = THREE.RepeatWrapping;
+          window._arcenTex.anisotropy = 4;
+        }
+        const W_OUT = 4.6, pos = [], uvs = [], idx = []; let q = 0, cum = 0;
         for (let i = 0; i <= pathLen; i++) {
           const p = path[i % pathLen], pn = path[(i + 1) % pathLen];
           const nx = -p.tz, nz = p.tx;
@@ -2290,18 +2299,22 @@ function buildWorld() {
           // lado interior de curva: el arcén se estrecha para no plegarse
           const oP = eP + (turn > 0 ? clamp(rEst * 0.8 - eP, 0.4, W_OUT) : W_OUT);
           const oN = eN + (turn < 0 ? clamp(rEst * 0.8 - eN, 0.4, W_OUT) : W_OUT);
+          const u = cum / 8;                                       // ~4u por banda
+          uvs.push(u, 0, u, 1, u, 1, u, 0);
           pos.push(p.x + nx * (oP), 0.085 + bankYAt(i, oP), p.z + nz * oP,
                    p.x + nx * (eP - 0.5), 0.085 + bankYAt(i, eP - 0.5), p.z + nz * (eP - 0.5),
                    p.x - nx * (eN - 0.5), 0.085 + bankYAt(i, -(eN - 0.5)), p.z - nz * (eN - 0.5),
                    p.x - nx * oN, 0.085 + bankYAt(i, -oN), p.z - nz * oN);
+          cum += segLen;
           if (i < pathLen) { const b = q * 4; idx.push(b, b + 1, b + 4, b + 1, b + 5, b + 4,
                                                 b + 2, b + 3, b + 6, b + 3, b + 7, b + 6); q++; }
         }
         const ag = new THREE.BufferGeometry();
         ag.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        ag.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
         ag.setIndex(idx);
         const arcen = new THREE.Mesh(ag, new THREE.MeshBasicMaterial({
-          color: 0x8a1e2c, side: THREE.DoubleSide }));            // vino fijo: no depende de la luz
+          map: window._arcenTex, side: THREE.DoubleSide }));     // color fijo: no depende de la luz
         arcen.receiveShadow = true;
         world.add(arcen);
       }
