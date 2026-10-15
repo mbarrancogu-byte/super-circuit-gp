@@ -488,6 +488,30 @@
   @media (max-width: 860px) { #teleGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 560px) { #teleGrid { grid-template-columns: 1fr; max-height: 64vh; overflow-y: auto; } }
 
+  /* ===== INTRO cinematográfica (portada → menú) ===== */
+  #intro { position: fixed; inset: 0; z-index: 88; background: #02040a;
+    opacity: 0; pointer-events: none; transition: opacity 0.55s ease; }
+  #intro.show { opacity: 1; pointer-events: auto; }
+  .inSlide { position: absolute; inset: 0; opacity: 0;
+    transition: opacity 0.85s ease; overflow: hidden; }
+  .inSlide img { position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; transform: scale(1.03); transition: transform 3.4s ease-out;
+    filter: saturate(1.06) contrast(1.03); }
+  .inSlide.on { opacity: 1; }
+  .inSlide.on img { transform: scale(1.10); }          /* ken burns suave */
+  .inSlide::after { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 45%, transparent 55%, rgba(2,4,10,0.55) 100%); }
+  #introExit { position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px;
+    z-index: 3; cursor: pointer; font-size: 13px; font-weight: 900; letter-spacing: 2px;
+    color: #ffe9b0; background: rgba(10,14,26,0.72); border: 1px solid rgba(255,200,90,0.55);
+    border-radius: 10px; padding: 9px 16px; backdrop-filter: blur(4px); }
+  #introExit:hover { background: rgba(70,55,20,0.9); }
+  #introDots { position: absolute; left: 0; right: 0; bottom: 16px; z-index: 3;
+    display: flex; justify-content: center; gap: 7px; }
+  #introDots i { width: 26px; height: 4px; border-radius: 2px;
+    background: rgba(255,255,255,0.22); transition: background .3s, width .3s; }
+  #introDots i.on { background: #ffd040; width: 40px; }
+
   /* ===== FICHA TÉCNICA DEL COCHE ===== */
   #carinfo { background:
       radial-gradient(circle at 28% 30%, rgba(50,90,170,0.40), transparent 60%),
@@ -1388,6 +1412,17 @@
     <div class="lpFlag" id="slpES" data-flag="es"><span>ESPAÑOL</span></div>
     <div class="lpFlag" id="slpEN" data-flag="gb"><span>ENGLISH</span></div>
   </div>
+</div>
+
+<!-- INTRO cinematográfica: 5 pantallas promocionales con transición -->
+<div id="intro">
+  <div class="inSlide"><img src="intro1.jpg" alt=""></div>
+  <div class="inSlide"><img src="intro2.jpg" alt=""></div>
+  <div class="inSlide"><img src="intro3.jpg" alt=""></div>
+  <div class="inSlide"><img src="intro4.jpg" alt=""></div>
+  <div class="inSlide"><img src="intro5.jpg" alt=""></div>
+  <button id="introExit">✕ SALTAR</button>
+  <div id="introDots"><i></i><i></i><i></i><i></i><i></i></div>
 </div>
 
 <div class="screen show" id="menu">
@@ -4187,7 +4222,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 289;
+const BUILD_NO = 290;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6231,6 +6266,7 @@ const I18N = {
     spPow: 'POTENCIA', spWgt: 'PESO', spEng: 'MOTOR', spGear: 'CAMBIO',
     spAero: 'CARGA AERO', spTireL: 'NEUMÁTICOS',
     spEngV: 'V6 TURBO HÍBRIDO', spGearV: 'SECUENCIAL 6 VEL.', ciBtn: 'ℹ FICHA',
+    inSkip: '✕ SALTAR',
     shiftPerf: '¡CAMBIO PERFECTO!', shiftEarly: 'MUY PRONTO', shiftLate: 'AL CORTE',
     launchOk: '¡SALIDA PERFECTA!',
     divebomb: 'SE LANZA POR DENTRO', overtakeZone: 'ZONA DE ADELANTAMIENTO', shortcut: '¡ATAJO! +3s',
@@ -6310,6 +6346,7 @@ const I18N = {
     spPow: 'POWER', spWgt: 'WEIGHT', spEng: 'ENGINE', spGear: 'GEARBOX',
     spAero: 'DOWNFORCE', spTireL: 'TYRES',
     spEngV: 'V6 TURBO HYBRID', spGearV: 'SEQUENTIAL 6 SPD', ciBtn: 'ℹ SHEET',
+    inSkip: '✕ SKIP',
     shiftPerf: 'PERFECT SHIFT!', shiftEarly: 'TOO EARLY', shiftLate: 'AT THE LIMIT',
     launchOk: 'PERFECT LAUNCH!',
     divebomb: 'DIVES DOWN THE INSIDE', overtakeZone: 'OVERTAKING ZONE', shortcut: 'SHORTCUT! +3s',
@@ -6432,6 +6469,7 @@ function applyLang() {
   set('spPowL', T('spPow')); set('spWeightL', T('spWgt')); set('spEngL', T('spEng'));
   set('spGearL', T('spGear')); set('spAeroL', T('spAero')); set('spTireL', T('spTireL'));
   set('car3dInfo', T('ciBtn')); setI('ciBack', 'back', T('back'));
+  set('introExit', T('inSkip'));
   set('pauseTitle', T('pause'));
   set('resumeBtn', '▶ ' + T('resume'));
   setI('pauseExitBtn', 'back', T('menu'));
@@ -6600,19 +6638,53 @@ document.getElementById('optReset').addEventListener('click', () => {
   if (im.complete) place(); else im.addEventListener('load', place);
   window.addEventListener('resize', place);
   window.addEventListener('orientationchange', () => setTimeout(place, 300));
-  const close = () => sp.classList.add('hide');   // se oculta pero sigue en el DOM (el botón VOLVER del menú la recupera)
-  // Engranaje de la portada → OPCIONES sin pasar por el menú
+  const close = noIntro => {                      // se oculta pero sigue en el DOM (VOLVER del menú la recupera)
+    sp.classList.add('hide');
+    if (!noIntro) introStart();                   // portada → intro cinematográfica → menú
+  };
+  // Engranaje de la portada → OPCIONES sin pasar por el menú ni la intro
   document.getElementById('splashOpts').addEventListener('pointerdown', e => {
     e.stopPropagation(); e.preventDefault();
-    close();
+    close(1);
     document.getElementById('optsBtn').click();   // misma animación de entrada que desde el menú
   });
-  sp.addEventListener('pointerdown', close);
+  sp.addEventListener('pointerdown', () => close());   // wrapper: el evento no se cuele como noIntro
   window.addEventListener('keydown', function k(e) {
     if (!sp.isConnected) return window.removeEventListener('keydown', k);
     close();
   });
 })();
+/* ===== INTRO cinematográfica: 5 pantallas ~2.4s con crossfade+Ken Burns ===== */
+let _introTm = null, _introIdx = -1;
+function introStep() {                                   // avanza a la siguiente diapositiva
+  const slides = document.querySelectorAll('#intro .inSlide');
+  const dots = document.querySelectorAll('#introDots i');
+  clearTimeout(_introTm);
+  if (_introIdx >= 0 && slides[_introIdx]) slides[_introIdx].classList.remove('on');
+  _introIdx++;
+  dots.forEach((d, k) => d.classList.toggle('on', k === _introIdx));
+  if (_introIdx >= slides.length) { introEnd(); return; }   // fin → menú
+  slides[_introIdx].classList.add('on');
+  _introTm = setTimeout(introStep, 2400);                // ~2.4s por pantalla
+}
+function introEnd() {
+  clearTimeout(_introTm); _introTm = null; _introIdx = -1;
+  const iv = document.getElementById('intro');
+  iv.classList.remove('show');
+  iv.querySelectorAll('.inSlide').forEach(s => s.classList.remove('on'));
+}
+function introStart() {
+  const iv = document.getElementById('intro');
+  if (iv.classList.contains('show')) return;
+  _introIdx = -1;
+  iv.classList.add('show');
+  introStep();
+}
+document.getElementById('introExit').addEventListener('pointerdown', e => {
+  e.stopPropagation(); e.preventDefault(); introEnd();
+});
+// tocar la imagen avanza a la siguiente diapositiva; en la última, cierra
+document.getElementById('intro').addEventListener('pointerdown', () => introStep());
 document.getElementById('optsBtn').addEventListener('click', () => {
   buildCircStrip();
   document.getElementById('menu').classList.remove('show');
