@@ -2681,11 +2681,11 @@ function buildWorld() {
       bd = Math.sqrt(bd);
       if (bd > 16) {
         const ASP = 0.783;
-        const lh = Math.min(bd * 2 * 0.92 / Math.hypot(1, ASP), 150);
+        const lh = Math.min(bd * 2 * 0.62 / Math.hypot(1, ASP), 105);
         const lm = new THREE.Mesh(
           new THREE.PlaneGeometry(lh * ASP, lh),
           new THREE.MeshStandardMaterial({ transparent: true, alphaTest: 0.06,
-            opacity: 0.82, roughness: 1, metalness: 0, color: 0xb8c0b0,
+            opacity: 0.55, roughness: 1, metalness: 0, color: 0x9fae90,
             polygonOffset: true, polygonOffsetFactor: -2 }));
         new THREE.TextureLoader().load('logo_gp.webp', t => {
           t.colorSpace = THREE.SRGBColorSpace; lm.material.map = t; lm.material.needsUpdate = true;
