@@ -129,6 +129,11 @@
   #nitroBtn { right: 14px; bottom: 128px; width: 70px; height: 70px; font-size: 26px; }
   #pitBtn { right: 126px; bottom: 118px; width: 64px; height: 64px; font-size: 13px;
     border-color: rgba(255,230,140,0.7); color: #ffe8b0; }
+  /* Pulsador pequeño de faros, encima del PIT */
+  #lightsBtn { right: 126px; bottom: 190px; width: 42px; height: 42px; font-size: 17px;
+    border-color: rgba(255,235,150,0.45); color: #8a8f9c; }
+  #lightsBtn.on { color: #ffe878; border-color: rgba(255,230,120,0.95);
+    background: rgba(96,74,18,0.85); box-shadow: 0 0 14px rgba(255,222,90,0.55); transform: none; }
   #hbBtn  { right: 14px; bottom: 208px; width: 58px; height: 58px; font-size: 12px; border-color: rgba(120,200,255,0.6); color: #a0d8ff; }
   .zbtn { position: absolute; z-index: 20; width: 44px; height: 40px; border-radius: 10px;
     background: rgba(10,18,38,0.6); border: 2px solid rgba(120,200,255,0.6);
@@ -144,6 +149,7 @@
   body.lefty #brkBtn { right: auto; left: 126px; }
   body.lefty #nitroBtn { right: auto; left: 14px; }
   body.lefty #pitBtn { right: auto; left: 126px; }
+  body.lefty #lightsBtn { right: auto; left: 126px; }
   body.lefty #hbBtn { right: auto; left: 14px; }
   /* ---------- Tres zonas de la pantalla de juego ---------- */
   /* Zona superior: ventana de telemetría — chips, crono, minimapa */
@@ -629,6 +635,7 @@
     #brkBtn { right: 102px; bottom: 14px; font-size: 12px; }
     #nitroBtn { width: 58px; height: 58px; font-size: 20px; right: 10px; bottom: 108px; }
     #pitBtn { width: 56px; height: 56px; font-size: 11px; right: 102px; bottom: 100px; }
+    #lightsBtn { width: 36px; height: 36px; font-size: 14px; right: 102px; bottom: 164px; }
     #hbBtn { width: 52px; height: 52px; font-size: 11px; right: 10px; bottom: 174px; }
     body.lefty #stPad { left: auto; right: 10px; }
     body.lefty #speedBox { left: auto; right: 94px; }
@@ -636,6 +643,7 @@
     body.lefty #brkBtn { left: 102px; }
     body.lefty #nitroBtn { left: 10px; }
     body.lefty #pitBtn { left: 102px; }
+    body.lefty #lightsBtn { left: 102px; }
     body.lefty #hbBtn { left: 10px; }
     .zbtn { width: 38px; height: 34px; font-size: 22px; }
     #zoomIn { right: 52px; top: 100px; }
@@ -672,8 +680,10 @@
     #brkBtn { right: 96px; }
     #nitroBtn { width: 52px; height: 52px; bottom: 96px; right: 14px; }
     #pitBtn { width: 48px; height: 48px; bottom: 92px; right: 96px; font-size: 10px; }
+    #lightsBtn { width: 32px; height: 32px; font-size: 12px; right: 96px; bottom: 148px; }
     #hbBtn { width: 48px; height: 48px; bottom: 158px; }
     body.lefty #pitBtn { left: 96px; }
+    body.lefty #lightsBtn { left: 96px; }
     body.lefty #brkBtn { left: 96px; }
     body.lefty #nitroBtn { left: 14px; }
     #resTime { margin: 8px 0; }
@@ -1178,6 +1188,7 @@
 <div class="tbtn" id="shift2Btn" style="display:none">▲<br><span style="font-size:10px">J2</span></div>
 <div class="tbtn" id="hbBtn">HB</div>
 <div class="tbtn" id="pitBtn">PIT</div>
+<div class="tbtn" id="lightsBtn">💡</div>
 <div class="tbtn" id="nitroBtn" style="border-color:rgba(80,200,255,0.7);color:#80d8ff">⚡</div>
 <div class="zbtn" id="zoomIn">+</div>
 <div class="zbtn" id="zoomOut">−</div>
@@ -3309,6 +3320,19 @@ function bindBtn(id, on, off) {
   pad.addEventListener('pointercancel', off);
 })();
 let pitReq = false;                                   // botón PIT mantenido
+let lightsOn = null;                                  // faros: null = automático (noche on / día off)
+function applyLights() {
+  const on = lightsOn === null ? !dayMode : lightsOn;
+  if (carGrp) {
+    if (carGrp.userData.spot) carGrp.userData.spot.intensity = on ? 3.6 : 0;
+    carGrp.traverse(o => { if (o.userData && o.userData.isHeadlight) o.visible = on; });
+  }
+  const lb = el('lightsBtn'); if (lb) lb.classList.toggle('on', on);
+}
+document.getElementById('lightsBtn').addEventListener('click', () => {
+  lightsOn = !(lightsOn === null ? !dayMode : lightsOn);
+  applyLights(); buzz(18);
+});
 bindBtn('gasBtn', () => inGas = 1, () => inGas = 0);
 bindBtn('shiftBtn', () => inShift = 1, () => inShift = 0);
 bindBtn('gas2Btn', () => inGas2 = 1, () => inGas2 = 0);
@@ -4911,8 +4935,7 @@ function startStage(n, seed, mp, mode) {
   carGrp.traverse(o => {
     if (o.material && o.material.uniforms && o.material.uniforms.op) o.material.uniforms.op.value = day ? 0.13 : 0.16;
   });
-  if (carGrp.userData.spot) carGrp.userData.spot.intensity = day ? 0 : 3.6;   // faros solo de noche
-  carGrp.traverse(o => { if (o.userData && o.userData.isHeadlight) o.visible = !day; });
+  lightsOn = null; applyLights();                     // faros automáticos: solo de noche
   // Salida sobre la pista mirando la tangente (en drag: carril izquierdo, tras la línea)
   const p0 = path[0];
   if (dragMode) {
@@ -5167,7 +5190,7 @@ function addPts(n) {
 }
 const SENS_MULT = [0.7, 1.0, 1.35];                  // sensibilidad de giro: BAJA/NORMAL/ALTA
 const SENS_KEYS = ['sensLow', 'sensMid', 'sensHigh'];
-const TOUCH_IDS = ['stPad', 'gasBtn', 'brkBtn', 'pitBtn', 'hbBtn', 'nitroBtn', 'shiftBtn', 'gas2Btn', 'shift2Btn', 'zoomIn', 'zoomOut'];
+const TOUCH_IDS = ['stPad', 'gasBtn', 'brkBtn', 'pitBtn', 'lightsBtn', 'hbBtn', 'nitroBtn', 'shiftBtn', 'gas2Btn', 'shift2Btn', 'zoomIn', 'zoomOut'];
 function paintSens() {
   const b = document.getElementById('optSens');
   b.textContent = T(SENS_KEYS[OPTS.steerSens] || 'sensMid');
