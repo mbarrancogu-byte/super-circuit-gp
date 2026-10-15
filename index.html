@@ -3115,7 +3115,7 @@ function buildWorld() {
     const pi = Math.floor(pathLen * 0.055);                    // centro a mitad de la recta de meta
     const p = path[pi], nx = -p.tz, nz = p.tx;                 // normal izquierda = lado de boxes
     const BL = 130, BD = 14, BH = 8.5;                         // largo × fondo × alto — bajo: no tapa la cámara
-    const off = RW / 2 + 10 + BD / 2;                          // hueco del pit lane + mitad del fondo
+    const off = RW / 2 + 16 + BD / 2;                          // hueco del pit lane + mitad del fondo (edificio alejado)
     const bcx = p.x - nx * off, bcz = p.z - nz * off;        // lado de la cámara: no tapa la vista
     const pit = new THREE.Group();
     pit.position.set(bcx, 0, bcz);
@@ -3159,11 +3159,12 @@ function buildWorld() {
     const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 6),
       new THREE.MeshBasicMaterial({ color: 0xff3020 }));
     beacon.position.set(BL / 2 - 8, BH + 12.2, -BD / 4); pit.add(beacon);
-    // Murete de boxes: muro bajo blanco entre la pista y el pit lane
-    const wall = new THREE.Mesh(new THREE.BoxGeometry(BL, 1.35, 0.9),
+    // Murete de boxes: tramo central — extremos abiertos para la entrada/salida
+    const wallLen = BL - 68;
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(wallLen, 1.35, 0.9),
       new THREE.MeshStandardMaterial({ color: 0x666e7a, roughness: 0.85 }));
     wall.position.set(0, 0.68, off - RW / 2 - 3.5); wall.castShadow = true; pit.add(wall);
-    const wallTop = new THREE.Mesh(new THREE.BoxGeometry(BL, 0.3, 0.95),
+    const wallTop = new THREE.Mesh(new THREE.BoxGeometry(wallLen, 0.3, 0.95),
       new THREE.MeshStandardMaterial({ color: 0xd42020, roughness: 0.6 }));
     wallTop.position.set(0, 1.42, off - RW / 2 - 3.5); pit.add(wallTop);
     // Calle de boxes: franja de asfalto oscuro entre el muro y la fachada
@@ -3171,6 +3172,104 @@ function buildWorld() {
       new THREE.MeshStandardMaterial({ color: 0x14161c, roughness: 0.9 }));
     lane.position.set(0, 0.02, BD / 2 + (off - RW / 2 - BD / 2) / 2 + 1);
     pit.add(lane);
+
+    // ==== ENTRADA y SALIDA de boxes: cintas de asfalto siguiendo el trazado ====
+    // Local: +x = sentido de marcha · +z = hacia la pista · lane a z≈7..(off−RW/2−...)
+    const teZ = off - RW / 2 + 1.2;                        // borde de pista en local
+    const lmZ = BD / 2 + (off - RW / 2 - BD / 2) / 2 - 1;  // centro del pit lane
+    // Cinta asfáltica a lo largo de una bezier cuadrática (a→b→c), ancho w
+    const ribbon = (a, b, c, w, y) => {
+      const pos = [], idx = [], N = 18, pv = (t) => {
+        const u = 1 - t;
+        return [u * u * a[0] + 2 * u * t * b[0] + t * t * c[0],
+                u * u * a[1] + 2 * u * t * b[1] + t * t * c[1]];
+      };
+      for (let k = 0; k <= N; k++) {
+        const t = k / N, [x, z] = pv(t), [x2, z2] = pv(Math.min(1, t + 0.01));
+        let dx = x2 - x, dz = z2 - z; const dl = Math.hypot(dx, dz) || 1;
+        dx /= dl; dz /= dl;
+        const px = -dz, pz = dx;
+        pos.push(x - px * w / 2, y, z - pz * w / 2, x + px * w / 2, y, z + pz * w / 2);
+        if (k < N) { const b2 = k * 2; idx.push(b2, b2 + 1, b2 + 2, b2 + 1, b2 + 3, b2 + 2); }
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.setIndex(idx); return g;
+    };
+    const laneMat = new THREE.MeshStandardMaterial({ color: 0x181b22, roughness: 0.9 });
+    // ENTRADA: sale de la pista antes del edificio y cae al inicio del pit lane
+    const enPath = [[-BL / 2 - 34, teZ], [-BL / 2 - 12, teZ - 1.5], [-BL / 2 + 10, lmZ]];
+    // SALIDA: del fondo del pit lane reincorpora a la pista tras la meta
+    const exPath = [[BL / 2 - 10, lmZ], [BL / 2 + 12, teZ - 1.5], [BL / 2 + 34, teZ]];
+    const enGeo = ribbon(enPath[0], enPath[1], enPath[2], 8.5, 0.115);
+    const exGeo = ribbon(exPath[0], exPath[1], exPath[2], 8.5, 0.115);
+    const enM = new THREE.Mesh(enGeo, laneMat); pit.add(enM);
+    const exM = new THREE.Mesh(exGeo, laneMat); pit.add(exM);
+
+    // ==== Puntos de luz NEÓN AZUL a lo largo de entrada, pit lane y salida ====
+    const lampPts = [];
+    const along = (a, b, c, side) => {
+      const N = 9;
+      for (let k = 0; k <= N; k++) {
+        const t = k / N, u = 1 - t;
+        const x = u * u * a[0] + 2 * u * t * b[0] + t * t * c[0];
+        const z = u * u * a[1] + 2 * u * t * b[1] + t * t * c[1];
+        const t2 = Math.min(1, t + 0.02), u2 = 1 - t2;
+        let dx = u2 * u2 * a[0] + 2 * u2 * t2 * b[0] + t2 * t2 * c[0] - x;
+        let dz = u2 * u2 * a[1] + 2 * u2 * t2 * b[1] + t2 * t2 * c[1] - z;
+        const dl = Math.hypot(dx, dz) || 1;
+        lampPts.push([x - dz / dl * side * 4.9, z + dx / dl * side * 4.9]);
+      }
+    };
+    along(enPath[0], enPath[1], enPath[2], 1); along(enPath[0], enPath[1], enPath[2], -1);
+    along(exPath[0], exPath[1], exPath[2], 1); along(exPath[0], exPath[1], exPath[2], -1);
+    // y a lo largo de TODO el pit lane, por ambos bordes
+    for (let x = -BL / 2 - 2; x <= BL / 2 + 2; x += 6.2) {
+      lampPts.push([x, lmZ - 5.2], [x, lmZ + 3.6]);   // borde fachada + borde muro
+    }
+    const lampGeo = new THREE.SphereGeometry(0.34, 10, 8);
+    const lampMat = new THREE.MeshBasicMaterial({ color: 0x3fb8ff });
+    const lampHaloGeo = new THREE.SphereGeometry(0.85, 10, 8);
+    const lampHaloMat = new THREE.MeshBasicMaterial({ color: 0x1878ff, transparent: true,
+      opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false });
+    const lamps = new THREE.InstancedMesh(lampGeo, lampMat, lampPts.length);
+    const halos = new THREE.InstancedMesh(lampHaloGeo, lampHaloMat, lampPts.length);
+    const _lm = new THREE.Matrix4();
+    const postGeo = new THREE.CylinderGeometry(0.07, 0.09, 1.0, 6);
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x22262e, roughness: 0.8, metalness: 0.5 });
+    const posts = new THREE.InstancedMesh(postGeo, postMat, lampPts.length);
+    lampPts.forEach(([x, z], i) => {
+      _lm.makeTranslation(x, 1.05, z); lamps.setMatrixAt(i, _lm);
+      _lm.makeTranslation(x, 1.05, z); halos.setMatrixAt(i, _lm);
+      _lm.makeTranslation(x, 0.5, z); posts.setMatrixAt(i, _lm);
+    });
+    lamps.frustumCulled = halos.frustumCulled = posts.frustumCulled = false;
+    pit.add(posts, lamps, halos);
+
+    // ==== Cartel "BOXES →" junto a la entrada, mirando al que llega ====
+    const signTex = tex3((() => {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 96;
+      const x = c.getContext('2d');
+      x.fillStyle = '#0a1424'; x.fillRect(0, 0, 256, 96);
+      x.strokeStyle = '#35b0ff'; x.lineWidth = 7; x.strokeRect(5, 5, 246, 86);
+      x.fillStyle = '#eaf6ff'; x.font = '900 46px system-ui,Arial';
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.shadowColor = '#35b0ff'; x.shadowBlur = 14;
+      x.fillText('BOXES ➜', 128, 52);
+      return c;
+    })());
+    const sign = new THREE.Group();
+    const sp2 = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 3.4, 8),
+      new THREE.MeshStandardMaterial({ color: 0x3a4048, metalness: 0.6, roughness: 0.5 }));
+    sp2.position.y = 1.7; sign.add(sp2);
+    const sb = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 2.0),
+      new THREE.MeshBasicMaterial({ map: signTex, side: THREE.DoubleSide }));
+    sb.position.y = 3.1; sb.rotation.y = -Math.PI / 2;       // cara mirando a −x (el que llega)
+    sign.add(sb);
+    sign.position.set(-BL / 2 - 36, 0, teZ - 3.5);
+    sign.rotation.z = 0; sign.rotation.y = 0;
+    pit.add(sign);
+
     world.add(pit);
     // Colisión: círculos a lo largo del edificio — el muro y el cuerpo frenan al coche
     for (let k = -3; k <= 3; k++)
@@ -4222,7 +4321,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 290;
+const BUILD_NO = 291;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
