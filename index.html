@@ -3714,7 +3714,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 266;
+const BUILD_NO = 267;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -5843,12 +5843,12 @@ const I18N = {
   },
 };
 let LANG = 'es';
-try { LANG = localStorage.getItem('af1_lang') || 'es'; } catch (e) {}
+try { LANG = localStorage.getItem('af1_lang2') || 'es'; } catch (e) {}
 if (!I18N[LANG]) LANG = 'es';
 function T(k) { return I18N[LANG][k] !== undefined ? I18N[LANG][k] : k; }
 function setLang(l) {
   LANG = I18N[l] ? l : 'es';
-  try { localStorage.setItem('af1_lang', LANG); } catch (e) {}
+  try { localStorage.setItem('af1_lang2', LANG); } catch (e) {}
   applyLang();
 }
 function applyLang() {
@@ -6509,7 +6509,8 @@ requestAnimationFrame(loop);
   const shape = new THREE.Shape(LOGO_SHAPE.map(p => new THREE.Vector2(p[0] * sc, p[1] * sc)));
   const DEPTH = 0.045;
   const exg = new THREE.ExtrudeGeometry(shape, {
-    depth: DEPTH, bevelEnabled: true, bevelThickness: 0.010, bevelSize: 0.014, bevelSegments: 3 });
+    depth: DEPTH, bevelEnabled: true, bevelThickness: 0.020, bevelSize: 0.030, bevelSegments: 6,
+    curveSegments: 18 });
   exg.center();
   // caras con la textura del escudo; canto metálico oscuro
   const faceMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.25, roughness: 0.45 });
