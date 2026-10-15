@@ -4572,7 +4572,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 309;
+const BUILD_NO = 310;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6281,7 +6281,7 @@ function startStage(n, seed, mp, mode) {
     pitZone = { x: pp.x - pnx * (RW / 2 + 6), z: pp.z - pnz * (RW / 2 + 6), r: 13 };
   }
   cam3.position.set(car.x, 62, car.z);
-  camZoom = OPTS.cam ? 1 : 0.12;               // vista inicial: CERCA o CIRCUITO entero
+  camZoom = (OPTS.cam && !demoMode) ? 1 : 0.12;   // la DEMO siempre arranca con ZOOM IN (cerca)
   pathIdx = 0; lastIdx = 0; cpIdx = 0; lapsDone = 0; wrongWay = 0; offroad = 0; gear = 1; shiftT = 0; shiftCd = 0; launchWin = 0;
   goWas = false; prevGas = 1;
   pfOn = false; pfCols = 0; pfSlowT = 0; pfGap = 0; pfFired = false; pfMark = -1;
