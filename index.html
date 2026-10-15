@@ -517,7 +517,10 @@
     transition: opacity 0.85s ease, transform 1.1s cubic-bezier(0.2,0.8,0.25,1);
     transform-origin: 50% 50%; }
   .inSlide img { position: absolute; inset: 0; width: 100%; height: 100%;
-    object-fit: contain; transform: scale(1); transition: transform 3.4s ease-out;
+    /* contain: la imagen entera siempre visible; padding reserva la zona del
+       botón SALTAR (arriba) y del titular + puntos (abajo) — nunca se solapa */
+    object-fit: contain; padding: 64px 12px 120px; box-sizing: border-box;
+    transform: scale(1); transition: transform 3.4s ease-out;
     filter: saturate(1.06) contrast(1.03); }
   .inSlide.on { opacity: 1; transform: none; }
   /* Entrada distinta por pantalla + Ken Burns con dirección propia —
@@ -4683,7 +4686,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 324;
+const BUILD_NO = 326;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6668,6 +6671,7 @@ paintSnd();
 // Selector de F1: tarjetas con la miniatura teñida del sprite real
 const carStripEl = document.getElementById('carStrip');
 const f1Thumb = new Image(); f1Thumb.src = 'f1sel.png';
+const r26Thumb = new Image(); r26Thumb.src = 'f1_r26.png';   // todas las fichas usan el R26
 // Liveries con imagen real (p. ej. SCARLET): se cargan a la vez que el sprite base
 for (const c of CARS) if (c.img) { c._im = new Image(); c._im.src = c.img; }
 let f1Box = null;                                  // bbox del alfa de f1sel.png (sin margen transparente)
@@ -6691,15 +6695,16 @@ function imgBox(im) {                                // recuadro del contenido o
 }
 function tintThumb(tintHex) {
   const cdef = CARS.find(c => c.tint === tintHex);
-  const im = (cdef && cdef._im && cdef._im.complete && cdef._im.naturalWidth) ? cdef._im : f1Thumb;
-  const real = im !== f1Thumb;
+  const isR26 = cdef && cdef.img === 'f1_r26.png';
+  // Todas las fichas montan la silueta del R26; las demás van teñidas a su color
+  const im = (r26Thumb.complete && r26Thumb.naturalWidth) ? r26Thumb : f1Thumb;
   const box = imgBox(im);
   const dh = 62, dw = Math.max(20, Math.round(box.w * dh / box.h));
   const c = document.createElement('canvas');
   c.width = dw; c.height = dh + 6;
   const x = c.getContext('2d');
   x.drawImage(im, box.x, box.y, box.w, box.h, 0, 3, dw, dh);
-  if (!real && tintHex !== 0xffffff) {              // liveries reales y ORIGINAL: sin velo
+  if (!isR26 && tintHex !== 0xffffff) {             // el R26 conserva su librea azul
     x.globalCompositeOperation = 'source-atop';
     x.fillStyle = '#' + tintHex.toString(16).padStart(6, '0') + 'b8';   // tinte ~72% conserva el detalle
     x.fillRect(0, 0, dw, dh + 6);
@@ -6726,6 +6731,10 @@ function buildCarStrip() {
     if (c2._im && !c2._im.complete) c2._im.addEventListener('load',
       () => { card.querySelector('img').src = tintThumb(c2.tint); });
   });
+  // El R26 puede llegar tarde: repinta todas las tarjetas con su silueta
+  if (!r26Thumb.complete) r26Thumb.addEventListener('load', () =>
+    [...carStripEl.children].forEach((el, j) =>
+      el.querySelector('img').src = tintThumb(CARS[j].tint)));
 }
 if (f1Thumb.complete && f1Thumb.naturalWidth) { buildCarStrip(); m3dShow(OPTS.car || 0); }
 else f1Thumb.onload = () => { buildCarStrip(); m3dShow(OPTS.car || 0); };
