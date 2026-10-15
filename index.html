@@ -1912,22 +1912,40 @@ function mergeGeos(list) {
 }
 // Copa de árbol vista desde arriba: grumos de follaje irregular en verdes naturales
 function makeFoliageTex() {
-  // Follaje de conífera: miles de agujas cortas verdes + huecos oscuros entre ramas
+  // Follaje de conífera ENLOSABLE: miles de agujas cortas verdes + huecos oscuros
+  // entre ramas. Cada trazo se dibuja también en los 8 tiles vecinos para que
+  // las uniones del repeat desaparezcan — las manchas rompen el patrón
   const c = document.createElement('canvas'); c.width = c.height = 256;
   const t = c.getContext('2d');
   t.fillStyle = '#3d5c2c'; t.fillRect(0, 0, 256, 256);
+  const OFF = [0, -256, 256];
   for (let i = 0; i < 3000; i++) {
     const x = Math.random() * 256, y = Math.random() * 256, a = Math.random() * 6.28, l = 3 + Math.random() * 7;
     const g = 55 + Math.random() * 95 | 0;
     t.strokeStyle = `rgba(${g * 0.55 | 0},${g},${g * 0.4 | 0},${0.45 + Math.random() * 0.5})`;
     t.lineWidth = 1 + Math.random() * 1.7;
-    t.beginPath(); t.moveTo(x, y); t.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); t.stroke();
+    const x2 = x + Math.cos(a) * l, y2 = y + Math.sin(a) * l;
+    for (const ox of OFF) for (const oy of OFF) {
+      t.beginPath(); t.moveTo(x + ox, y + oy); t.lineTo(x2 + ox, y2 + oy); t.stroke();
+    }
   }
   for (let i = 0; i < 170; i++) {                                 // sombras entre las hojas
     const x = Math.random() * 256, y = Math.random() * 256, r = 4 + Math.random() * 15;
-    const g = t.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, 'rgba(14,28,12,0.55)'); g.addColorStop(1, 'rgba(14,28,12,0)');
-    t.fillStyle = g; t.beginPath(); t.arc(x, y, r, 0, 7); t.fill();
+    for (const ox of OFF) for (const oy of OFF) {
+      const g = t.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r);
+      g.addColorStop(0, 'rgba(14,28,12,0.55)'); g.addColorStop(1, 'rgba(14,28,12,0)');
+      t.fillStyle = g; t.beginPath(); t.arc(x + ox, y + oy, r, 0, 7); t.fill();
+    }
+  }
+  // Manchas de musgo/rama seca envueltas: rompen la periodicidad del tile
+  for (let i = 0; i < 40; i++) {
+    const x = Math.random() * 256, y = Math.random() * 256, r = 8 + Math.random() * 20;
+    for (const ox of OFF) for (const oy of OFF) {
+      const g = t.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r);
+      g.addColorStop(0, `rgba(${ri(64, 96)},${ri(96, 128)},${ri(40, 60)},0.22)`);
+      g.addColorStop(1, 'rgba(70,100,50,0)');
+      t.fillStyle = g; t.beginPath(); t.arc(x + ox, y + oy, r, 0, 7); t.fill();
+    }
   }
   const tx = new THREE.CanvasTexture(c);
   tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(3, 2);
@@ -1935,17 +1953,21 @@ function makeFoliageTex() {
   return tx;
 }
 function makeBarkTex() {
-  // Corteza: vetas verticales marrones con grietas oscuras
+  // Corteza ENLOSABLE: vetas verticales marrones con grietas oscuras
   const c = document.createElement('canvas'); c.width = c.height = 128;
   const t = c.getContext('2d');
   t.fillStyle = '#4a3120'; t.fillRect(0, 0, 128, 128);
+  const OFF = [0, -128, 128];
   for (let i = 0; i < 260; i++) {
     const x = Math.random() * 128, y = Math.random() * 128, l = 8 + Math.random() * 26;
     const v = Math.random();
     t.strokeStyle = v < 0.45 ? `rgba(28,18,10,${0.4 + Math.random() * 0.45})`
       : `rgba(${96 + Math.random() * 50 | 0},${64 + Math.random() * 30 | 0},${34 + Math.random() * 18 | 0},${0.3 + Math.random() * 0.4})`;
     t.lineWidth = 1 + Math.random() * 2.2;
-    t.beginPath(); t.moveTo(x, y); t.lineTo(x + (Math.random() - 0.5) * 3, y + l); t.stroke();
+    const x2 = x + (Math.random() - 0.5) * 3;
+    for (const ox of OFF) for (const oy of OFF) {
+      t.beginPath(); t.moveTo(x + ox, y + oy); t.lineTo(x2 + ox, y + oy + l); t.stroke();
+    }
   }
   const tx = new THREE.CanvasTexture(c);
   tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(2, 3);
@@ -2964,7 +2986,7 @@ function buildWorld() {
     const trunkGeo = new THREE.CylinderGeometry(0.5, 0.8, 9, 6);
     if (!foliageTex) { foliageTex = makeFoliageTex(); barkTex = makeBarkTex(); }
     const trees = new THREE.InstancedMesh(leafGeo,
-      new THREE.MeshStandardMaterial({ color: 0xd8e0c8, roughness: 0.95, flatShading: true, map: foliageTex }), nTrees);
+      new THREE.MeshStandardMaterial({ color: 0xd8e0c8, roughness: 0.95, map: foliageTex }), nTrees);
     const trunks = new THREE.InstancedMesh(trunkGeo,
       new THREE.MeshStandardMaterial({ color: 0xc8b8a0, roughness: 1, map: barkTex }), nTrees);
     const rocks = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(2.4, 0),
@@ -3539,7 +3561,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 259;
+const BUILD_NO = 260;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
