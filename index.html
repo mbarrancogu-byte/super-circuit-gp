@@ -3219,7 +3219,7 @@ function buildWorld() {
   if (!traced && !dragMode) {
     // Bosque variado: pinos (4 conos), ROBLES de copa redondeada y CIPRESES
     // altos y finos — tres especies instanciadas repartidas por el entorno
-    const nTrees = 130;
+    const nTrees = 160;
     const _m = (x, y, z, sx, sy, sz) => new THREE.Matrix4().compose(
       new THREE.Vector3(x, y, z), new THREE.Quaternion(), new THREE.Vector3(sx, sy, sz));
     // Copa de pino: conos superpuestos de abajo arriba — cada uno cubre la base del siguiente
@@ -3248,7 +3248,7 @@ function buildWorld() {
     const oakMat = new THREE.MeshStandardMaterial({ color: 0xcfe0a8, roughness: 0.95, map: foliageTex });
     const cypMat = new THREE.MeshStandardMaterial({ color: 0x9ab88e, roughness: 0.95, map: foliageTex });
     const barkMat = new THREE.MeshStandardMaterial({ color: 0xc8b8a0, roughness: 1, map: barkTex });
-    const CAP = { pine: 60, oak: 50, cyp: 40 };
+    const CAP = { pine: 78, oak: 66, cyp: 44 };
     const pines = new THREE.InstancedMesh(leafGeo, leafMat, CAP.pine);
     const oaks = new THREE.InstancedMesh(oakGeo, oakMat, CAP.oak);
     const cyps = new THREE.InstancedMesh(cypGeo, cypMat, CAP.cyp);
@@ -3283,7 +3283,7 @@ function buildWorld() {
       const pick = Math.random();
       const kind = pick < 0.44 ? 0 : pick < 0.82 ? 1 : 2;    // 44% pino / 38% roble / 18% ciprés
       if (kind === 0 && nP >= CAP.pine || kind === 1 && nO >= CAP.oak || kind === 2 && nC >= CAP.cyp) continue;
-      const s = rnd(1.1, 2.3);                                   // altura real: ~32-66u
+      const s = rnd(0.40, 0.75);                                 // ~12-23u ≈ 6-12m: coherente con coche/pista
       pm.makeRotationY(rnd(0, Math.PI * 2));                     // cada árbol con su orientación
       pm.scale(new THREE.Vector3(s * rnd(0.9, 1.1), s * (kind === 1 ? rnd(0.8, 1) : 1), s * rnd(0.9, 1.1)));
       pm.setPosition(x, hAt(x, z) - 0.15, z);                    // posado sobre su colina
@@ -3872,7 +3872,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 277;
+const BUILD_NO = 278;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
