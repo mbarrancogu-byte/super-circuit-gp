@@ -1036,6 +1036,9 @@
   @keyframes wheelSpin { to { transform: rotate(360deg); } }
   /* Niebla progresiva del burnout: crece hasta cubrir toda la pantalla y se disipa (bucle 16s) */
   #splashFog { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0;
+    /* desvanece hacia abajo: no tapa las banderas ni el START de la zona baja */
+    -webkit-mask-image: linear-gradient(180deg, #000 38%, rgba(0,0,0,0.45) 52%, transparent 66%);
+    mask-image: linear-gradient(180deg, #000 38%, rgba(0,0,0,0.45) 52%, transparent 66%);
     animation: fogBuild 16s ease-in-out infinite; }
   #splashFog::before { content: ''; position: absolute; inset: 0;
     background: radial-gradient(ellipse at 50% 105%, rgba(238,242,249,0.92), rgba(232,238,246,0.6) 45%, rgba(228,235,245,0.3) 72%, transparent 100%); }
@@ -1070,6 +1073,9 @@
     100% { transform: translateY(-4%) scale(1.55); } }
   /* Humo blanco animado sobre las ruedas del coche de la portada */
   #splashSmoke { position: absolute; z-index: 2; pointer-events: none; overflow: visible;
+    /* el humo se corta antes de llegar a la zona de selección de abajo */
+    -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 75%);
+    mask-image: linear-gradient(180deg, #000 55%, transparent 75%);
     transform-origin: 50% 100%; animation: smokeBuild 16s ease-in-out infinite; }
   @keyframes smokeBuild {
     0%   { opacity: 0.55; transform: scaleY(0.85); }
@@ -4971,7 +4977,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 346;
+const BUILD_NO = 347;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
