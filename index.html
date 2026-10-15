@@ -3248,7 +3248,7 @@ function buildWorld() {
     const oakMat = new THREE.MeshStandardMaterial({ color: 0xcfe0a8, roughness: 0.95, map: foliageTex });
     const cypMat = new THREE.MeshStandardMaterial({ color: 0x9ab88e, roughness: 0.95, map: foliageTex });
     const barkMat = new THREE.MeshStandardMaterial({ color: 0xc8b8a0, roughness: 1, map: barkTex });
-    const CAP = { pine: 78, oak: 66, cyp: 44 };
+    const CAP = { pine: 190, oak: 150, cyp: 90 };
     const pines = new THREE.InstancedMesh(leafGeo, leafMat, CAP.pine);
     const oaks = new THREE.InstancedMesh(oakGeo, oakMat, CAP.oak);
     const cyps = new THREE.InstancedMesh(cypGeo, cypMat, CAP.cyp);
@@ -3272,21 +3272,20 @@ function buildWorld() {
     }
     const shadeGeo = new THREE.PlaneGeometry(1, 1); shadeGeo.rotateX(-Math.PI / 2);
     const shades = new THREE.InstancedMesh(shadeGeo,
-      new THREE.MeshBasicMaterial({ map: window._shadeTex, transparent: true, depthWrite: false }), nTrees);
+      new THREE.MeshBasicMaterial({ map: window._shadeTex, transparent: true, depthWrite: false }), CAP.pine + CAP.oak + CAP.cyp);
     shades.renderOrder = 1;
     const shadeR = [5.4, 6.8, 2.4];                        // radio de sombra por especie
     const sOff = { x: -0.6, z: 0.8 };                      // la luz viene de (+x,-z): la sombra cae al contrario
     let ti = 0, nP = 0, nO = 0, nC = 0, rk = 0, guard = 0;
-    while (ti < nTrees && guard++ < 6000) {
-      const x = rnd(-900, 900), z = rnd(-900, 900);
-      if (nearRoad(x, z, 10)) continue;
-      const pick = Math.random();
+    // Coloca un árbol de especie aleatoria en (x,z) — devuelve false si no cabe
+    const putTree = (x, z) => {
+      const pick = rnd(0, 1);
       const kind = pick < 0.44 ? 0 : pick < 0.82 ? 1 : 2;    // 44% pino / 38% roble / 18% ciprés
-      if (kind === 0 && nP >= CAP.pine || kind === 1 && nO >= CAP.oak || kind === 2 && nC >= CAP.cyp) continue;
-      const s = rnd(0.40, 0.75);                                 // ~12-23u ≈ 6-12m: coherente con coche/pista
-      pm.makeRotationY(rnd(0, Math.PI * 2));                     // cada árbol con su orientación
+      if (kind === 0 && nP >= CAP.pine || kind === 1 && nO >= CAP.oak || kind === 2 && nC >= CAP.cyp) return false;
+      const s = rnd(0.40, 0.75);                             // ~12-23u ≈ 6-12m: coherente con coche/pista
+      pm.makeRotationY(rnd(0, Math.PI * 2));                 // cada árbol con su orientación
       pm.scale(new THREE.Vector3(s * rnd(0.9, 1.1), s * (kind === 1 ? rnd(0.8, 1) : 1), s * rnd(0.9, 1.1)));
-      pm.setPosition(x, hAt(x, z) - 0.15, z);                    // posado sobre su colina
+      pm.setPosition(x, hAt(x, z) - 0.15, z);                // posado sobre su colina
       if (kind === 0) {
         pines.setMatrixAt(nP, pm); trunksP.setMatrixAt(nP, pm);
         pines.setColorAt(nP, tCol.setHSL(0.28 + rnd(-0.06, 0.07), rnd(0.42, 0.66), rnd(0.62, 0.88)));
@@ -3306,6 +3305,26 @@ function buildWorld() {
       shades.setMatrixAt(ti, pm);
       obstacles.push({ x, z, r: 3 * s });
       ti++;
+      return true;
+    };
+    // Cinturón arbolado que SIGUE el circuito: a cada pocos metros, a ambos
+    // lados, a 24-70u del eje — la zona cercana queda llena de árboles variados
+    for (let i = 0; i < pathLen; i += 3) {
+      const p = path[i], nx = -p.tz, nz = p.tx;
+      for (const sd of [1, -1]) {
+        if (rnd(0, 1) < 0.45) continue;                      // huecos naturales, no es una pared
+        const lat = 24 + rnd(0, 46);
+        const x = p.x + nx * sd * lat + rnd(-7, 7);
+        const z = p.z + nz * sd * lat + rnd(-7, 7);
+        if (nearRoad(x, z, 14)) continue;
+        putTree(x, z);
+      }
+    }
+    // Relleno disperso del entorno lejano
+    while (ti < nTrees + 160 && guard++ < 9000) {
+      const x = rnd(-900, 900), z = rnd(-900, 900);
+      if (nearRoad(x, z, 10)) continue;
+      putTree(x, z);
     }
     pines.count = nP; oaks.count = nO; cyps.count = nC; shades.count = ti;
     trunksP.count = nP; trunksO.count = nO; trunksC.count = nC;
@@ -3872,7 +3891,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 278;
+const BUILD_NO = 279;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
