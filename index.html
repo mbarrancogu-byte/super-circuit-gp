@@ -2040,6 +2040,7 @@ let tireWear = 0;                       // 0-100 (solo blandos gastan rápido)
 let twW = [0, 0, 0, 0], flexZ = [0, 0, 0, 0], tele = [], teleT = 0, lapTs = [], lapT0 = 0;
 let rain = 0, rainAt = -1;              // 0-1 intensidad · segundo en que empieza (-1 = seco)
 let pitZone = null, pitT = 0, pitUsed = false;
+let pitStop = 0, pitDur = 0, dmgBroken = false;   // parada cronometrada + motor destrozado
 let ghostRec = null, ghostPlay = null, ghostCar = null, ghostT = 0;
 let koTimer = 30;
 let champPts = 0, champCpuPts = 0, champRaces = 0, champRivPts = [];   // puntos de cada rival CPU
@@ -4558,7 +4559,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 306;
+const BUILD_NO = 307;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -4828,12 +4829,19 @@ function ach(id) {
 
 function addDamage(q) {
   dmg = Math.min(100, dmg + q);
+  // Al 100% el coche queda destrozado: solo anda a paso de tortuga y la
+  // única reparación posible es la parada obligatoria en boxes
+  if (dmg >= 100 && !dmgBroken) {
+    dmgBroken = true;
+    showToast('🔴 ' + T('mustPit')); sfx.oil(); buzz(160);
+  }
   const chip = el('dmgChip'), pct = Math.round(dmg);
   if (chip._p !== pct) {
     chip._p = pct;
     chip.innerHTML = ic('burst') + pct + '%';
     chip.style.color = dmg > 70 ? '#ff6050' : dmg > 35 ? '#ffb060' : '#ffc090';
   }
+  chip.style.animation = dmgBroken ? 'blink .4s steps(2) infinite' : '';
 }
 function exitToMenu() {
   playing = false; demoMode = false; vsMode = false;
@@ -4888,6 +4896,7 @@ function update(dt) {
     if ((pitReq || pad.pit) && pitZone && Math.hypot(car.x - pitZone.x, car.z - pitZone.z) < pitZone.r + 8) {
       brake = 1; gas = 0;
     }
+    if (pitDur > 0) { brake = 1; gas = 0; }       // parada en boxes en curso: coche inmovilizado
   }
   car.steer = steer;                                     // para el volante de cabina del HUD
 
@@ -4990,6 +4999,7 @@ function update(dt) {
   vf -= drag * dt * 0.5;                 // arrastre suave: deja alcanzar velocidad punta
   if (!gasEff && !brake) vf -= vf * 0.4 * dt;
   if (!go) { vf = 0; vl = 0; }
+  if (dmgBroken) vf = clamp(vf, -4, 8.5);         // motor destrozado: cojea hasta boxes (~29 km/h)
 
   // Freno asistido: anticipa la curva que viene y recorta la velocidad si es demasiado cerrada.
   // En drag no se aplica: el piloto frena él mismo tras cruzar la meta.
@@ -5182,15 +5192,26 @@ function update(dt) {
   // Con el botón PIT pulsado el coche frena solo y para aunque entre algo más rápido
   if (pitZone) {
     const pd = Math.hypot(car.x - pitZone.x, car.z - pitZone.z);
-    if (pd < pitZone.r && spd < (pitReq ? 45 : 30) && (dmg > 3 || tireWear > 15)) {
+    const need = dmg > 3 || tireWear > 15 || dmgBroken;
+    if (pitDur > 0) {
+      // Parada cronometrada: inmovilizado hasta que acaban los mecánicos.
+      // Duración aleatoria por parada — nunca más de 3.50 s
+      pitStop += dt;
+      car.vx = car.vz = 0;
+      if (pitStop >= pitDur) {
+        dmg = 0; dmgBroken = false; tireWear = 0;
+        for (let i = 0; i < 4; i++) twW[i] = 0;
+        pitStop = 0; pitDur = 0; pitT = 0; addDamage(0);
+        showToast('✅ ' + T('pitDone')); sfx.fin(); ach('pit');
+      } else if (Math.floor(pitStop * 4) !== Math.floor((pitStop - dt) * 4)) {
+        showToast('🔧 ' + T('pitting') + ' ' + (pitDur - pitStop).toFixed(1) + 's');
+      }
+    } else if (pd < pitZone.r && spd < (pitReq ? 45 : 30) && need) {
+      pitStop = 0; pitDur = 1.6 + Math.random() * 1.9;   // 1.60–3.50 s aleatorios
       pitT += dt;
-      const was = dmg;
-      dmg = Math.max(0, dmg - 55 * dt);
-      tireWear = Math.max(0, tireWear - 70 * dt);
-      for (let i = 0; i < 4; i++) twW[i] = Math.max(0, twW[i] - 70 * dt);
-      if (pitT > 0.2 && pitT - dt <= 0.2) { showToast('🔧 ' + T('pitting')); sfx.pit(); }
-      if (was > 0 && dmg === 0) { showToast('✅ ' + T('pitDone')); sfx.fin(); ach('pit'); }
-    } else pitT = 0;
+      showToast('🔧 ' + T('pitting')); sfx.pit();
+      car.vx = car.vz = 0;
+    } else if (pd > pitZone.r + 4) pitT = 0;
   }
 
   // Lluvia dinámica: en etapas nocturnas puede empezar a mitad de carrera
@@ -6181,7 +6202,7 @@ function startStage(n, seed, mp, mode) {
   p2Mode = mode === 'drag2';            // segundo coche lo pilota el JUGADOR 2
   vsMode = mode === 'vs' || dragMode;
   champMode = mode === 'champ'; ttMode = mode === 'tt'; koMode = mode === 'ko';
-  dmg = 0; addDamage(0);
+  dmg = 0; dmgBroken = false; pitStop = 0; pitDur = 0; pitT = 0; addDamage(0);
   nitro = 60; nitroOn = inNitro = false; slipT = 0; driftT = 0; boostT = 0; oilT = 0; cutMax = null; slowT = 0;
   fpsAcc = 0; fpsN = 0; perfChecked = false;
   // Tutorial: solo la primera vez que se corre en este dispositivo
@@ -6645,6 +6666,7 @@ const I18N = {
     nextRace: '▶ SIGUIENTE CARRERA', race: 'carrera', champPts: 'Puntos',
     champWin: '¡CAMPEÓN DEL GP!', champ2: 'SUBCAMPEÓN',
     pitting: 'EN BOXES…', pitDone: '¡LISTO! Reparado y ruedas nuevas',
+    mustPit: '¡MOTOR DESTROZADO! Entra en boxes',
     rain: '¡EMPIEZA A LLOVER! — el asfalto resbala',
     koCpu: '¡RIVAL ELIMINADO!', koOut: 'ELIMINADO',
     koInfo: 'Ibas último en el corte — ¡pide revancha!',
@@ -6730,6 +6752,7 @@ const I18N = {
     nextRace: '▶ NEXT RACE', race: 'race', champPts: 'Points',
     champWin: 'GP CHAMPION!', champ2: 'RUNNER-UP',
     pitting: 'IN THE PITS…', pitDone: 'ALL FIXED! Fresh tires',
+    mustPit: 'ENGINE WRECKED! Pit stop required',
     rain: 'RAIN! — the track is slippery',
     koCpu: 'RIVAL ELIMINATED!', koOut: 'ELIMINATED',
     koInfo: 'You were last at the cutoff — demand a rematch!',
@@ -7300,16 +7323,62 @@ function c3dInit() {
   wrap.addEventListener('pointercancel', () => c3d.drag = null);
   wrap.addEventListener('wheel', e => { e.preventDefault(); c3d.zoom = Math.max(0.55, Math.min(1.9, c3d.zoom + e.deltaY * 0.001)); }, { passive: false });
 }
+// Textura con el tono del equipo: mezcla 'hue' — conserva saturación y
+// sombreado de la librea original, solo cambia el matiz (blancos/grises intactos)
+function c3dTintTex(map, tint) {
+  const key = map.uuid + ':' + tint;
+  if (!c3d.texCache) c3d.texCache = {};
+  if (c3d.texCache[key]) return c3d.texCache[key];
+  const img = map.image, cv = document.createElement('canvas');
+  cv.width = img.width; cv.height = img.height;
+  const cx = cv.getContext('2d');
+  // Primero se aclara la librea base (azul noche del R26 queda casi negra
+  // si solo se cambia el matiz) y luego 'color' impone tono+saturación del
+  // equipo conservando los pliegues y sombreado de la textura
+  cx.filter = 'brightness(2.8) saturate(1.1)';
+  cx.drawImage(img, 0, 0);
+  cx.filter = 'none';
+  cx.globalCompositeOperation = 'color';
+  cx.fillStyle = '#' + tint.toString(16).padStart(6, '0');
+  cx.fillRect(0, 0, cv.width, cv.height);
+  cx.globalCompositeOperation = 'destination-in';      // recuperar el alfa original
+  cx.drawImage(img, 0, 0);
+  const t = new THREE.CanvasTexture(cv);
+  t.flipY = map.flipY; t.encoding = map.encoding; t.anisotropy = map.anisotropy || 8;
+  c3d.texCache[key] = t;
+  return t;
+}
+// R26 repintado con el color del equipo: se clona la escena y se retinen SOLO
+// las piezas de librea (carrocería, alerones, extras) — ruedas/carbono/quillas
+// conservan sus materiales
+const C3D_LIVERY = /^(WCWING|WCEXTRA0|WCEXTRA1|WCCARBODY)/;
+function c3dTintR26(base, tint) {
+  const m = base.clone(true);
+  // La librea original es carbono casi negro: para que el color del equipo se
+  // lea de verdad, las piezas pintadas pasan a pintura brillante del tono
+  // (ruedas, carbono, fondo y suspensiones conservan su material oscuro)
+  const paint = new THREE.MeshStandardMaterial({
+    color: tint, roughness: 0.42, metalness: 0.4 });
+  m.traverse(o => {
+    if (!o.isMesh || !o.material) return;
+    if (C3D_LIVERY.test(o.material.name || '')) o.material = paint;
+  });
+  return m;
+}
 // Crea un modelo de exposición limpio (sin faros/haces/sprites) para el visor
 async function c3dModel(def) {
   let mdl;
   if (def.glb) {
     try { mdl = (await c3dGlb(def.glb)).clone(true); }
     catch (e) { mdl = buildCar(def.tint, false); }
-  } else if (def.img === 'f1_r26.png') {
-    try { mdl = (await c3dR26()).clone(true); }
-    catch (e) { mdl = buildCar(def.tint, false); }
-  } else mdl = buildCar(def.tint, false);
+  } else {
+    // Todos montan el chasis real del R26; el de cada nombre va repintado
+    try {
+      mdl = def.img === 'f1_r26.png' ? (await c3dR26()).clone(true)
+                                     : c3dTintR26(await c3dR26(), def.tint);
+      mdl.userData.r26 = true;
+    } catch (e) { mdl = buildCar(def.tint, false); }
+  }
   mdl.traverse(o => {
     if (o.isSpotLight || o.isSprite || (o.geometry && o.geometry.type === 'ConeGeometry') || o.userData.isHeadlight) o.visible = false;
   });
@@ -7322,6 +7391,7 @@ function c3dNorm(mdl, len) {
   const s = bb.getSize(new THREE.Vector3()), ctr = bb.getCenter(new THREE.Vector3());
   const k = len / Math.max(s.x, s.z);
   const wrap = new THREE.Group();
+  wrap.userData = mdl.userData || {};
   mdl.scale.setScalar(k);
   mdl.position.set(-ctr.x * k, 0, -ctr.z * k);
   wrap.add(mdl); wrap.updateMatrixWorld(true);
@@ -7343,7 +7413,7 @@ async function c3dShowAll() {
     for (let i = 0; i < n; i++) {
       const w = c3dNorm(await c3dModel(CARS[i]), 3.7);
       if (rq !== c3d.req) return;                 // se volvió a uno mientras cargaba
-      if (CARS[i].img === 'f1_r26.png') w.scale.setScalar(0.62);  // el GLB sale más grande que los demás
+      if (w.userData.r26) w.scale.setScalar(0.62);      // el GLB sale más grande que los procedurales
       const a = (i / n) * Math.PI * 2;
       w.position.set(Math.sin(a) * R, 0, Math.cos(a) * R);
       w.rotation.y = a + Math.PI;                 // morros apuntando al exterior
@@ -7458,7 +7528,7 @@ async function m3dShow(i) {
   if (m3d.car) { m3d.scene.remove(m3d.car); m3d.car = null; }
   if (m3d.mirr) { m3d.scene.remove(m3d.mirr); m3d.mirr = null; }
   const mdl = c3dNorm(await c3dModel(CARS[i]), 6.4);
-  if (CARS[i].img === 'f1_r26.png') mdl.scale.multiplyScalar(0.62);
+  if (mdl.userData.r26) mdl.scale.multiplyScalar(0.62);
   if (i !== m3d.idx) return;                             // cambió mientras cargaba
   m3d.car = mdl; m3d.scene.add(mdl);
   m3d.mirr = makeMirrorCar(mdl); m3d.scene.add(m3d.mirr); // reflejo en la plataforma
@@ -7541,7 +7611,7 @@ async function ciShow(i) {
   if (ci3d.car) { ci3d.scene.remove(ci3d.car); ci3d.car = null; }
   if (ci3d.mirr) { ci3d.scene.remove(ci3d.mirr); ci3d.mirr = null; }
   const wrap = c3dNorm(await c3dModel(def), 9.6);
-  if (r26) wrap.scale.multiplyScalar(0.62);
+  if (wrap.userData.r26) wrap.scale.multiplyScalar(0.62);
   if (i !== ci3d.idx) return;
   ci3d.car = wrap; ci3d.scene.add(wrap);
   ci3d.mirr = makeMirrorCar(wrap); ci3d.scene.add(ci3d.mirr);
