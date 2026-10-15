@@ -3409,7 +3409,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 250;
+const BUILD_NO = 251;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6106,9 +6106,9 @@ requestAnimationFrame(loop);
   const grp = new THREE.Group(); lsc.add(grp);
   const sc = 0.72;                                              // el escudo mide ~1.5u de alto
   const shape = new THREE.Shape(LOGO_SHAPE.map(p => new THREE.Vector2(p[0] * sc, p[1] * sc)));
-  const DEPTH = 0.09;
+  const DEPTH = 0.045;
   const exg = new THREE.ExtrudeGeometry(shape, {
-    depth: DEPTH, bevelEnabled: true, bevelThickness: 0.018, bevelSize: 0.014, bevelSegments: 3 });
+    depth: DEPTH, bevelEnabled: true, bevelThickness: 0.010, bevelSize: 0.014, bevelSegments: 3 });
   exg.center();
   // caras con la textura del escudo; canto metálico oscuro
   const faceMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.25, roughness: 0.45 });
