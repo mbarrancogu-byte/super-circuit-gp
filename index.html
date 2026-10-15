@@ -2415,7 +2415,7 @@ function buildWorld() {
           g.setAttribute('position', new THREE.Float32BufferAttribute(q, 3));
           g.setIndex([0, 1, 2, 0, 2, 3]);
           world.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({
-            color: 0x14171d, side: THREE.DoubleSide })));
+            color: 0x4a4f58, side: THREE.DoubleSide })));
           // Boca del túnel: franja negra junto al borde — la vía desaparece bajo la pista
           const q2 = [
             p.x + nx * s * (RW / 2 + 0.2) - fx * (WR / 2 + 1.4), 0.055, p.z + nz * s * (RW / 2 + 0.2) - fz * (WR / 2 + 1.4),
@@ -2426,10 +2426,10 @@ function buildWorld() {
           g2.setAttribute('position', new THREE.Float32BufferAttribute(q2, 3));
           g2.setIndex([0, 1, 2, 0, 2, 3]);
           world.add(new THREE.Mesh(g2, new THREE.MeshBasicMaterial({
-            color: 0x020304, side: THREE.DoubleSide })));
+            color: 0x23262e, side: THREE.DoubleSide })));
           // Portal de hormigón: caja oscura visible en la entrada
           const portal = new THREE.Mesh(new THREE.BoxGeometry(WR + 3, 4.6, 3.2),
-            new THREE.MeshStandardMaterial({ color: 0x0b0d11, roughness: 0.85 }));
+            new THREE.MeshStandardMaterial({ color: 0x6b7078, roughness: 0.85 }));
           portal.position.set(p.x + nx * s * (RW / 2 + 3.4), 2.2, p.z + nz * s * (RW / 2 + 3.4));
           portal.rotation.y = Math.atan2(-fz, fx);
           world.add(portal);
@@ -2549,6 +2549,10 @@ function buildWorld() {
       const turn = p.tx * pa.tz - p.tz * pa.tx;              // signo del giro en la ventana
       if (Math.abs(turn) < 0.22) continue;                 // solo curvas de verdad
       const s = turn > 0 ? -1 : 1;                         // lado exterior de la curva
+      const pa2 = path[(i + 1 + LOOK) % pathLen];
+      const turn2 = pn.tx * pa2.tz - pn.tz * pa2.tx;
+      // Si el exterior cambia de lado aquí (eses), el quad cruzaría la pista entera
+      if (Math.abs(turn2) < 0.22 || (turn2 > 0 ? -1 : 1) !== s) continue;
       const hw0 = neon ? RW / 2 + 0.95 : ((trackHW && trackHW[i]) || RW / 2) + 0.15;
       const hw1 = neon ? RW / 2 + 0.95 : ((trackHW && trackHW[(i + 1) % pathLen]) || RW / 2) + 0.15;
       const nx = -p.tz * s, nz = p.tx * s, nx2 = -pn.tz * s, nz2 = pn.tx * s;
