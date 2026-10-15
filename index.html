@@ -2530,13 +2530,16 @@ function buildWorld() {
     const oc = document.createElement('canvas'); oc.width = oc.height = 128;
     const og = oc.getContext('2d');
     const g = og.createRadialGradient(64, 64, 8, 64, 64, 62);
-    g.addColorStop(0, 'rgba(8,8,10,0.96)'); g.addColorStop(0.6, 'rgba(10,10,14,0.88)');
+    g.addColorStop(0, 'rgba(8,8,10,0.6)'); g.addColorStop(0.55, 'rgba(10,10,14,0.45)');
     g.addColorStop(1, 'rgba(10,10,14,0)');
     og.fillStyle = g; og.fillRect(0, 0, 128, 128);
-    og.strokeStyle = 'rgba(130,150,255,0.28)'; og.lineWidth = 3;
+    // El charco translúcido deja ver el asfalto; el irisado compensa la opacidad
+    og.strokeStyle = 'rgba(130,150,255,0.4)'; og.lineWidth = 3;
     og.beginPath(); og.arc(60, 58, 40, 3.6, 5.2); og.stroke();   // arco irisado azul
-    og.strokeStyle = 'rgba(255,170,80,0.20)';
+    og.strokeStyle = 'rgba(255,170,80,0.3)';
     og.beginPath(); og.arc(70, 66, 34, 0.6, 1.9); og.stroke();   // arco irisado ámbar
+    og.strokeStyle = 'rgba(120,255,180,0.22)'; og.lineWidth = 2;
+    og.beginPath(); og.arc(66, 60, 48, 4.6, 6.1); og.stroke();   // arco verdoso exterior
     const oilTex = new THREE.CanvasTexture(oc);
     const oilMat = new THREE.MeshBasicMaterial({ map: oilTex, transparent: true, depthWrite: false });
     const oilGeo = new THREE.PlaneGeometry(1, 1); oilGeo.rotateX(-Math.PI / 2);
