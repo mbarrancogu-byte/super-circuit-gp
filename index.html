@@ -581,9 +581,7 @@
   #introDots i.on { background: #ffd040; width: 40px; }
 
   /* ===== FICHA TÉCNICA DEL COCHE ===== */
-  #carinfo { background:
-      radial-gradient(circle at 28% 30%, rgba(50,90,170,0.40), transparent 60%),
-      linear-gradient(180deg, #060b16 0%, #03060c 100%); }
+  #carinfo { background: radial-gradient(circle at 50% 44%, #000000 0%, #7a7a7a 55%, #ffffff 100%); }
   #ciTitle { font-size: clamp(18px, 3.4vw, 30px); font-weight: 900; letter-spacing: 4px;
     color: #ffd98a; text-shadow: 0 0 18px rgba(255,190,80,0.5), 0 3px 10px #000;
     margin: 4px 0 8px; text-transform: uppercase; }
@@ -592,7 +590,7 @@
     align-items: stretch; }
   #ciStage { position: relative; flex: 1 1 46%; min-height: 300px; border-radius: 14px;
     overflow: hidden; border: 1px solid rgba(200,160,80,0.35);
-    background: radial-gradient(circle at 50% 44%, rgba(80,110,180,0.30), rgba(6,9,18,0.9) 75%);
+    background: radial-gradient(circle at 50% 46%, #000000 0%, #ffffff 100%);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 8px 26px rgba(0,0,0,0.55); }
   #ciCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #ciNum { position: absolute; left: 10px; top: 8px; font-size: 11px; font-weight: 800;
@@ -4748,7 +4746,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 333;
+const BUILD_NO = 334;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
