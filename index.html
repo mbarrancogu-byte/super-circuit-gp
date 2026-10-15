@@ -4546,7 +4546,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 303;
+const BUILD_NO = 304;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -7266,7 +7266,7 @@ function c3dInit() {
   wrap.addEventListener('pointermove', e => {
     if (!c3d.drag) return;
     c3d.rotY += (e.clientX - c3d.drag.x) * 0.012;
-    c3d.rotX = Math.max(-0.15, Math.min(0.55, c3d.rotX + (e.clientY - c3d.drag.y) * 0.006));
+    c3d.rotX += (e.clientY - c3d.drag.y) * 0.008;          // giro libre en todas direcciones
     c3d.drag = { x: e.clientX, y: e.clientY };
   });
   wrap.addEventListener('pointerup', () => c3d.drag = null);
@@ -7389,7 +7389,7 @@ document.getElementById('c3dAll').addEventListener('click', function () {
 });
 
 /* ===== Preview 3D del coche elegido, bajo la tira del menú ===== */
-const m3d = { r: null, scene: null, cam: null, car: null, idx: -1, rotY: 0 };
+const m3d = { r: null, scene: null, cam: null, car: null, idx: -1, rotY: 0, rotX: 0, drag: null, moved: 0 };
 function m3dInit() {
   if (m3d.r) return;
   const cv = document.getElementById('car3dCv');
@@ -7406,6 +7406,22 @@ function m3dInit() {
       transparent: true, opacity: 0.66 }));              // espejo pulido: el reflejo se ve a través
   disc.position.y = -0.15; m3d.scene.add(disc);
   m3d.r.localClippingEnabled = true;
+  // Arrastre: gira el coche en todas direcciones; el click corto sigue abriendo la ficha
+  const wrap = document.getElementById('car3dWrap');
+  wrap.addEventListener('pointerdown', e => {
+    if (e.target.id === 'car3dInfo') return;
+    m3d.drag = { x: e.clientX, y: e.clientY }; m3d.moved = 0;
+    wrap.setPointerCapture(e.pointerId);
+  });
+  wrap.addEventListener('pointermove', e => {
+    if (!m3d.drag) return;
+    const dx = e.clientX - m3d.drag.x, dy = e.clientY - m3d.drag.y;
+    m3d.moved += Math.abs(dx) + Math.abs(dy);
+    m3d.rotY += dx * 0.012; m3d.rotX += dy * 0.008;
+    m3d.drag = { x: e.clientX, y: e.clientY };
+  });
+  wrap.addEventListener('pointerup', () => m3d.drag = null);
+  wrap.addEventListener('pointercancel', () => m3d.drag = null);
 }
 async function m3dShow(i) {
   i = Math.min(Math.max(i, 0), CARS.length - 1);
@@ -7424,9 +7440,9 @@ async function m3dShow(i) {
   requestAnimationFrame(m3dLoop);
   const wrap = document.getElementById('car3dWrap');
   if (!m3d.r || !m3d.car || !wrap.offsetParent) return;  // solo cuando el menú es visible
-  m3d.rotY += 0.010;                                     // giro continuo del coche
-  m3d.car.rotation.y = m3d.rotY;
-  if (m3d.mirr) m3d.mirr.rotation.y = m3d.rotY;
+  if (!m3d.drag) m3d.rotY += 0.010;                      // giro continuo del coche
+  m3d.car.rotation.y = m3d.rotY; m3d.car.rotation.x = m3d.rotX;
+  if (m3d.mirr) { m3d.mirr.rotation.y = m3d.rotY; m3d.mirr.rotation.x = -m3d.rotX; }
   const cv = document.getElementById('car3dCv');
   const cw = wrap.clientWidth, ch = wrap.clientHeight;
   if (cv.width !== cw * 2) {                             // ×2 = nítido en pantallas densas
@@ -7437,7 +7453,7 @@ async function m3dShow(i) {
 })();
 
 /* ===== FICHA TÉCNICA: visor 3D grande + hoja de especificaciones ===== */
-const ci3d = { r: null, scene: null, cam: null, car: null, idx: -1, rotY: 0, on: false, raf: 0 };
+const ci3d = { r: null, scene: null, cam: null, car: null, idx: -1, rotY: 0, rotX: 0, drag: null, on: false, raf: 0 };
 function ci3dInit() {
   if (ci3d.r) return;
   const cv = document.getElementById('ciCv');
@@ -7457,6 +7473,17 @@ function ci3dInit() {
   const ring = new THREE.Mesh(new THREE.TorusGeometry(6.9, 0.10, 8, 60),
     new THREE.MeshBasicMaterial({ color: 0xffc860 }));
   ring.rotation.x = Math.PI / 2; ring.position.y = 0.03; ci3d.scene.add(ring);
+  // Arrastre: gira el coche en todas direcciones
+  const stage = document.getElementById('ciStage');
+  stage.addEventListener('pointerdown', e => { ci3d.drag = { x: e.clientX, y: e.clientY }; stage.setPointerCapture(e.pointerId); });
+  stage.addEventListener('pointermove', e => {
+    if (!ci3d.drag) return;
+    ci3d.rotY += (e.clientX - ci3d.drag.x) * 0.012;
+    ci3d.rotX += (e.clientY - ci3d.drag.y) * 0.008;
+    ci3d.drag = { x: e.clientX, y: e.clientY };
+  });
+  stage.addEventListener('pointerup', () => ci3d.drag = null);
+  stage.addEventListener('pointercancel', () => ci3d.drag = null);
 }
 function ciBar(id, v) {                                             // st ~0.85-1.20 → 0-100%
   document.getElementById(id).style.width = Math.round(Math.min(1, Math.max(0.02, (v - 0.85) / 0.35)) * 100) + '%';
@@ -7495,8 +7522,11 @@ async function ciShow(i) {
 function ciLoop() {
   if (!ci3d.on) return;
   ci3d.raf = requestAnimationFrame(ciLoop);
-  if (ci3d.car) ci3d.car.rotation.y = (ci3d.rotY += 0.008);
-  if (ci3d.mirr) ci3d.mirr.rotation.y = ci3d.rotY;
+  if (ci3d.car) {
+    if (!ci3d.drag) ci3d.rotY += 0.008;
+    ci3d.car.rotation.y = ci3d.rotY; ci3d.car.rotation.x = ci3d.rotX;
+  }
+  if (ci3d.mirr) { ci3d.mirr.rotation.y = ci3d.rotY; ci3d.mirr.rotation.x = -ci3d.rotX; }
   const cv = document.getElementById('ciCv'), stage = document.getElementById('ciStage');
   const cw = stage.clientWidth, ch = stage.clientHeight;
   if (cv.width !== cw * 2) {
@@ -7512,7 +7542,10 @@ function ciOpen() {
   ciShow(OPTS.car || 0);
 }
 document.getElementById('car3dInfo').addEventListener('click', e => { e.stopPropagation(); ciOpen(); });
-document.getElementById('car3dWrap').addEventListener('click', ciOpen);
+document.getElementById('car3dWrap').addEventListener('click', () => {
+  if (m3d.moved > 8) return;                             // fue un arrastre para girar, no un tap
+  ciOpen();
+});
 document.getElementById('ciBack').addEventListener('click', () => {
   ci3d.on = false; cancelAnimationFrame(ci3d.raf);
   document.getElementById('carinfo').classList.remove('show');
