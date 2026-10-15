@@ -1802,6 +1802,38 @@ function makeAsphaltTex() {
   }
   const tx = tex3(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; return tx;
 }
+// Hormigón del puente: paneles de encofrado, escurrimientos y manchas — enlosable
+function makeConcreteTex() {
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const t = c.getContext('2d');
+  t.fillStyle = '#9a9da3'; t.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 2400; i++) {                        // árido fino
+    const v = ri(118, 178);
+    t.fillStyle = `rgba(${v},${v},${v + ri(0, 6)},${rnd(0.15, 0.5)})`;
+    t.fillRect(ri(0, 255), ri(0, 255), ri(1, 2), ri(1, 2));
+  }
+  for (let i = 0; i < 22; i++) {                          // escurrimientos verticales
+    const x = ri(0, 255), w = rnd(2, 9), y0 = ri(0, 110), h = rnd(70, 250 - y0);
+    const g = t.createLinearGradient(0, y0, 0, y0 + h);
+    g.addColorStop(0, 'rgba(52,56,60,0.35)'); g.addColorStop(1, 'rgba(52,56,60,0)');
+    t.fillStyle = g; t.fillRect(x, y0, w, h);
+  }
+  for (let i = 0; i < 9; i++) {                           // manchas de agua/óxido
+    const x = ri(0, 255), y = ri(0, 255), r = rnd(14, 42);
+    const g = t.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(${ri(60, 92)},${ri(56, 74)},${ri(46, 60)},0.3)`);
+    g.addColorStop(1, 'rgba(60,60,60,0)');
+    t.fillStyle = g; t.beginPath(); t.arc(x, y, r, 0, 7); t.fill();
+  }
+  for (const y of [0, 64, 128, 192]) {                    // juntas horizontales de encofrado
+    t.fillStyle = 'rgba(38,42,48,0.55)'; t.fillRect(0, y, 256, 2);
+    t.fillStyle = 'rgba(215,218,224,0.32)'; t.fillRect(0, (y + 2) % 256, 256, 1.5);
+  }
+  for (const x of [85, 170]) {                            // juntas verticales
+    t.fillStyle = 'rgba(38,42,48,0.4)'; t.fillRect(x, 0, 1.5, 256);
+  }
+  const tx = tex3(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; return tx;
+}
 // Suelo de tierra: grano de grava y barro sin bandas — se enloza bajo la llanura neón
 function makeDirtTex() {
   const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -2501,6 +2533,7 @@ function buildWorld() {
         const p = path[Math.floor(pathLen * 0.8)];
         const fx = p.tx, fz = p.tz, nx = -fz, nz = fx;   // cruza perpendicular al trazado
         const LR = 85, WR = 10;
+        const concTex = makeConcreteTex(), tunAsp = makeAsphaltTex();
         for (const s of [1, -1]) {
           // Carretera que sale del túnel hacia afuera del circuito
           const q = [
@@ -2510,9 +2543,10 @@ function buildWorld() {
             p.x + nx * s * LR - fx * WR / 2, 0.05, p.z + nz * s * LR - fz * WR / 2];
           const g = new THREE.BufferGeometry();
           g.setAttribute('position', new THREE.Float32BufferAttribute(q, 3));
+          g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, LR / 12, 0, LR / 12], 2));
           g.setIndex([0, 1, 2, 0, 2, 3]);
           world.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({
-            color: 0x4a4f58, side: THREE.DoubleSide })));
+            map: tunAsp, side: THREE.DoubleSide })));
           // Boca del túnel: franja negra junto al borde — la vía desaparece bajo la pista
           const q2 = [
             p.x + nx * s * (RW / 2 + 0.2) - fx * (WR / 2 + 1.4), 0.055, p.z + nz * s * (RW / 2 + 0.2) - fz * (WR / 2 + 1.4),
@@ -2524,9 +2558,9 @@ function buildWorld() {
           g2.setIndex([0, 1, 2, 0, 2, 3]);
           world.add(new THREE.Mesh(g2, new THREE.MeshBasicMaterial({
             color: 0x23262e, side: THREE.DoubleSide })));
-          // Portal de hormigón: caja oscura visible en la entrada
+          // Portal de hormigón real: paneles de encofrado y escurrimientos
           const portal = new THREE.Mesh(new THREE.BoxGeometry(WR + 3, 4.6, 3.2),
-            new THREE.MeshStandardMaterial({ color: 0x6b7078, roughness: 0.85 }));
+            new THREE.MeshStandardMaterial({ map: concTex, roughness: 0.9 }));
           portal.position.set(p.x + nx * s * (RW / 2 + 3.4), 2.2, p.z + nz * s * (RW / 2 + 3.4));
           portal.rotation.y = Math.atan2(-fz, fx);
           world.add(portal);
@@ -3505,7 +3539,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 258;
+const BUILD_NO = 259;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
