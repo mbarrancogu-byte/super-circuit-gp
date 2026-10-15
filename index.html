@@ -551,6 +551,10 @@
     background: radial-gradient(circle at 50% 62%, #26335a 0%, #10182c 55%, #070b14 100%); }
   #c3dWrap:active { cursor: grabbing; }
   #c3dCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #c3dAll { position: absolute; top: 10px; right: 10px; z-index: 6; padding: 7px 16px;
+    background: rgba(20,32,64,0.8); border: 1px solid rgba(120,180,255,0.5); border-radius: 9px;
+    color: #bfe0ff; font-weight: 800; font-size: 13px; letter-spacing: 1px; cursor: pointer; }
+  #c3dAll:hover { background: rgba(50,80,150,0.75); }
   #c3dName { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%);
     font-size: clamp(16px,3vw,24px); font-weight: 900; font-style: italic; letter-spacing: 3px;
     color: #ffd080; text-shadow: 0 3px 14px rgba(0,0,0,0.8); pointer-events: none; }
@@ -1332,6 +1336,7 @@
     <div id="c3dLoad">CARGANDO MODELO…</div>
     <button class="c3dNav" id="c3dPrev">◀</button>
     <button class="c3dNav" id="c3dNext">▶</button>
+    <button id="c3dAll">TODOS</button>
     <div id="c3dName">AMARILLO</div>
   </div>
   <div id="c3dHint">Arrastra para girar · rueda para zoom</div>
@@ -5039,6 +5044,7 @@ const I18N = {
     launchOk: '¡SALIDA PERFECTA!',
     divebomb: 'SE LANZA POR DENTRO', overtakeZone: 'ZONA DE ADELANTAMIENTO', shortcut: '¡ATAJO! +3s',
     perfMode: '⚙️ MODO RENDIMIENTO',
+    allCars: 'TODOS LOS COCHES', allBtn: 'TODOS', oneBtn: 'UNO',
     tuto1: 'Mantén GAS · frena antes de la curva', tuto2: 'HB derrapa · ⚡ nitro en la recta',
     waitRematch: 'ESPERANDO REVANCHA…', menu: 'MENÚ', demoOut: 'DEMO · SALIR',
     pause: 'PAUSA', resume: 'CONTINUAR',
@@ -5105,6 +5111,7 @@ const I18N = {
     shiftPerf: 'PERFECT SHIFT!', shiftEarly: 'TOO EARLY', shiftLate: 'AT THE LIMIT',
     launchOk: 'PERFECT LAUNCH!',
     divebomb: 'DIVES DOWN THE INSIDE', overtakeZone: 'OVERTAKING ZONE', shortcut: 'SHORTCUT! +3s',
+    allCars: 'ALL CARS', allBtn: 'ALL', oneBtn: 'ONE',
     perfMode: '⚙️ PERFORMANCE MODE',
     tuto1: 'Hold GAS · brake before the corner', tuto2: 'HB to drift · ⚡ nitro on straights',
     waitRematch: 'WAITING FOR REMATCH…', menu: 'MENU', demoOut: 'DEMO · QUIT',
@@ -5442,7 +5449,7 @@ document.getElementById('powBack').addEventListener('click', () => {
 
 /* ================== CARS 3D: visor de modelos ================== */
 const c3d = { on: false, r: null, scene: null, cam: null, car: null, raf: 0,
-  idx: 0, rotY: 0, rotX: 0, zoom: 1, drag: null, r26: null, r26p: null };
+  idx: 0, rotY: 0, rotX: 0, zoom: 1, drag: null, r26: null, r26p: null, allGrp: null };
 // Mismo tratamiento de materiales que el render del sprite
 const C3D_TMAP = {
   WCWING: 'wcwing.png', WCEXTRA0: 'wcextra0.png', WCEXTRA1: 'wcextra1.png',
@@ -5532,38 +5539,68 @@ function c3dInit() {
   wrap.addEventListener('pointercancel', () => c3d.drag = null);
   wrap.addEventListener('wheel', e => { e.preventDefault(); c3d.zoom = Math.max(0.55, Math.min(1.9, c3d.zoom + e.deltaY * 0.001)); }, { passive: false });
 }
+// Crea un modelo de exposición limpio (sin faros/haces/sprites) para el visor
+async function c3dModel(def) {
+  let mdl;
+  if (def.img === 'f1_r26.png') {
+    try { mdl = (await c3dR26()).clone(true); }
+    catch (e) { mdl = buildCar(def.tint, false); }
+  } else mdl = buildCar(def.tint, false);
+  mdl.traverse(o => {
+    if (o.isSpotLight || o.isSprite || (o.geometry && o.geometry.type === 'ConeGeometry') || o.userData.isHeadlight) o.visible = false;
+  });
+  return mdl;
+}
+// Normaliza un modelo: longitud `len`, centrado y apoyado en y=0 dentro de un grupo
+function c3dNorm(mdl, len) {
+  const bb = new THREE.Box3();
+  mdl.traverse(o => { if (o.isMesh && o.visible) bb.expandByObject(o); });
+  const s = bb.getSize(new THREE.Vector3()), ctr = bb.getCenter(new THREE.Vector3());
+  const k = len / Math.max(s.x, s.z);
+  const wrap = new THREE.Group();
+  mdl.scale.setScalar(k);
+  mdl.position.set(-ctr.x * k, 0, -ctr.z * k);
+  wrap.add(mdl); wrap.updateMatrixWorld(true);
+  const bb2 = new THREE.Box3();
+  mdl.traverse(o => { if (o.isMesh && o.visible) bb2.expandByObject(o); });
+  mdl.position.y -= bb2.min.y;
+  return wrap;
+}
+// TODOS: los 7 coches en círculo sobre la plataforma — carrusel giratorio
+async function c3dShowAll() {
+  const load = document.getElementById('c3dLoad');
+  if (c3d.car) { c3d.scene.remove(c3d.car); c3d.car = null; }
+  load.style.display = 'flex';
+  if (!c3d.allGrp) {
+    const grp = new THREE.Group();
+    const R = 5.0, n = CARS.length;
+    for (let i = 0; i < n; i++) {
+      const w = c3dNorm(await c3dModel(CARS[i]), 3.7);
+      if (CARS[i].img === 'f1_r26.png') w.scale.setScalar(0.62);  // el GLB sale más grande que los demás
+      const a = (i / n) * Math.PI * 2;
+      w.position.set(Math.sin(a) * R, 0, Math.cos(a) * R);
+      w.rotation.y = a + Math.PI;                 // morros apuntando al exterior
+      grp.add(w);
+    }
+    c3d.allGrp = grp; c3d.scene.add(grp);
+  }
+  c3d.allGrp.visible = true;
+  c3d.car = c3d.allGrp;                           // el loop lo gira como carrusel
+  c3d.zoom = Math.max(c3d.zoom, 1.05);
+  load.style.display = 'none';
+  document.getElementById('c3dName').textContent = T('allCars');
+}
 async function c3dShow(i) {
+  if (c3d.allGrp) c3d.allGrp.visible = false;
   c3d.idx = ((i % CARS.length) + CARS.length) % CARS.length;
   const def = CARS[c3d.idx];
   document.getElementById('c3dName').textContent = def.name;
   const load = document.getElementById('c3dLoad');
   if (c3d.car) { c3d.scene.remove(c3d.car); c3d.car = null; }
-  let mdl;
-  if (def.img === 'f1_r26.png') {
-    load.style.display = 'flex';
-    try { mdl = (await c3dR26()).clone(true); }
-    catch (e) { mdl = buildCar(def.tint, false); }
-    load.style.display = 'none';
-  } else {
-    mdl = buildCar(def.tint, false);
-    mdl.traverse(o => {                          // en el visor no hay haces de faro ni sprites
-      if (o.isSpotLight || o.isSprite || (o.geometry && o.geometry.type === 'ConeGeometry') || o.userData.isHeadlight) o.visible = false;
-    });
-  }
-  if (c3d.idx !== CARS.indexOf(def)) return;          // cambió mientras cargaba
-  // Normalizar: longitud ~8.2u, base sobre la plataforma, centrado (solo mallas visibles)
-  const bb = new THREE.Box3();
-  mdl.traverse(o => { if (o.isMesh && o.visible) bb.expandByObject(o); });
-  const s = bb.getSize(new THREE.Vector3()), ctr = bb.getCenter(new THREE.Vector3());
-  const k = 8.2 / Math.max(s.x, s.z);
-  const wrap = new THREE.Group();
-  mdl.scale.setScalar(k);
-  mdl.position.set(-ctr.x * k, 0, -ctr.z * k);           // centrado en planta
-  wrap.add(mdl); c3d.scene.add(wrap);
-  wrap.updateMatrixWorld(true);
-  const bb2 = new THREE.Box3();
-  mdl.traverse(o => { if (o.isMesh && o.visible) bb2.expandByObject(o); });
-  mdl.position.y -= bb2.min.y;                           // apoyado en la plataforma
+  const mdl = await c3dModel(def);
+  if (c3d.idx !== CARS.indexOf(def) || c3d.car === c3d.allGrp) return;   // cambió mientras cargaba
+  const wrap = c3dNorm(mdl, 8.2);                        // ~8.2u de largo sobre la plataforma
+  c3d.scene.add(wrap);
   c3d.car = wrap;
 }
 function c3dLoop() {
@@ -5586,6 +5623,7 @@ document.getElementById('cars3dBtn').addEventListener('click', async () => {
   sc.classList.add('show', 'play');
   c3d.on = true;
   c3dInit(); c3dLoop();
+  document.getElementById('c3dAll').textContent = T('allBtn');
   c3dShow(OPTS.car || 0);
 });
 document.getElementById('c3dBack').addEventListener('click', () => {
@@ -5595,6 +5633,10 @@ document.getElementById('c3dBack').addEventListener('click', () => {
 });
 document.getElementById('c3dPrev').addEventListener('click', () => c3dShow(c3d.idx - 1));
 document.getElementById('c3dNext').addEventListener('click', () => c3dShow(c3d.idx + 1));
+document.getElementById('c3dAll').addEventListener('click', function () {
+  if (c3d.car === c3d.allGrp && c3d.allGrp) { this.textContent = T('allBtn'); c3dShow(c3d.idx); }
+  else { this.textContent = T('oneBtn'); c3dShowAll(); }
+});
 document.getElementById('menuBack').addEventListener('click', () => {
   const sp = document.getElementById('splash');   // "pantalla anterior" del menú = la portada
   if (sp) sp.classList.remove('hide');
