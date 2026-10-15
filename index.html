@@ -2684,6 +2684,14 @@ function buildWorld() {
       const moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex3(makeGlowTex(200, 210, 255, 0.9)), transparent: true, depthWrite: false, fog: false }));
       moon.scale.set(160, 160, 1); moon.position.set(600, 800, -900);
       world.add(moon);
+    } else {
+      // Sol visible sobre el horizonte del NEÓN: disco cálido con halo amplio
+      const sun = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex3(makeGlowTex(255, 190, 110, 1)), transparent: true, depthWrite: false, fog: false }));
+      sun.scale.set(260, 260, 1); sun.position.set(760, 430, -1010);
+      world.add(sun);
+      const sunCore = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex3(makeGlowTex(255, 240, 200, 1)), transparent: true, depthWrite: false, fog: false }));
+      sunCore.scale.set(90, 90, 1); sunCore.position.copy(sun.position);
+      world.add(sunCore);
     }
   }
 
@@ -2717,15 +2725,15 @@ function setDayMode(day) {
     moonOX = 200; moonOZ = 120;
   } else {
     const neon = !!(circAt(stage) && !circAt(stage).img);     // circuito dibujado = ambiente neón
-    scene3.background.setHex(neon ? 0x080c18 : 0x060a16);
-    scene3.fog.color.setHex(neon ? 0x080c18 : 0x060a16);
+    scene3.background.setHex(neon ? 0x3a4d72 : 0x060a16);
+    scene3.fog.color.setHex(neon ? 0x3a4d72 : 0x060a16);
     noFog = neon;                                             // NEÓN: sin niebla — aire limpio de día
-    // NEÓN: sol fuerte + relleno suave — el ambiente se lee, las sombras siguen marcadas
-    ambLight.color.setHex(neon ? 0x8890a8 : 0x36466a); ambLight.intensity = neon ? 0.62 : 0.8;
-    hemiLight.color.setHex(neon ? 0x9aa4c0 : 0x2a3d68);
-    hemiLight.groundColor.setHex(neon ? 0x3c3c46 : 0x0e121c); hemiLight.intensity = neon ? 0.55 : 0.55;
+    // NEÓN: SOL DIURNO — cielo claro, sol cálido fuerte, sombras duras
+    ambLight.color.setHex(neon ? 0xa8b4cc : 0x36466a); ambLight.intensity = neon ? 0.85 : 0.8;
+    hemiLight.color.setHex(neon ? 0xb8c8e8 : 0x2a3d68);
+    hemiLight.groundColor.setHex(neon ? 0x4a4a52 : 0x0e121c); hemiLight.intensity = neon ? 0.75 : 0.55;
     // Luz solar blanca: fuente principal del NEÓN — blanca cálida e intensa
-    moonLight.color.setHex(neon ? 0xfff4e0 : 0x9fb2dd); moonLight.intensity = neon ? 3.0 : 0.45;
+    moonLight.color.setHex(neon ? 0xfff0d0 : 0x9fb2dd); moonLight.intensity = neon ? 3.7 : 0.45;
     moonOX = 300; moonOZ = -400;
   }
 }
@@ -3972,7 +3980,7 @@ function update(dt) {
     crowdBoost = Math.max(0, crowdBoost - dt * 0.8);
     crowdGain.gain.value = (playing && circAt(stage) ? 0.05 : 0) + crowdBoost * 0.09;
     // La lluvia tapa el sol: la luz baja con la tormenta (sensación de nublado)
-    if (moonLight) moonLight.intensity = (noFog ? 3.0 : dayMode ? 1.4 : 0.45) * (1 - rain * 0.22);
+    if (moonLight) moonLight.intensity = (noFog ? 3.7 : dayMode ? 1.4 : 0.45) * (1 - rain * 0.22);
     // Lluvia: siseo proporcional a la intensidad de la tormenta
     rainGain.gain.value = playing ? rain * 0.09 : 0;
     // Rebufo: chorro de aire mientras vas pegado a la estela del rival
