@@ -2656,6 +2656,45 @@ function buildWorld() {
     // Suelo realista: hierba verde en todos los trazados — como en las fotos aéreas
     ter.material = new THREE.MeshStandardMaterial({ map: groundTex(false), vertexColors: true, roughness: 1 });
     world.add(ter);
+    // Emblema GP pintado sobre el césped del interior del circuito, como los
+    // logos que se ven desde el aire en los circuitos reales
+    if (!dragMode) {
+      // Punto del infield con más margen al asfalto (reja sobre el bounding box)
+      let mnx = 1e9, mxx = -1e9, mnz = 1e9, mxz = -1e9;
+      for (const p of path) { mnx = Math.min(mnx, p.x); mxx = Math.max(mxx, p.x); mnz = Math.min(mnz, p.z); mxz = Math.max(mxz, p.z); }
+      const inside = (x, z) => {
+        let c = false;
+        for (let i = 0; i < pathLen; i++) {
+          const a = path[i], b = path[(i + 1) % pathLen];
+          if ((a.z > z) !== (b.z > z) && x < a.x + (z - a.z) / (b.z - a.z) * (b.x - a.x)) c = !c;
+        }
+        return c;
+      };
+      let bx = 0, bz = 0, bd = 0;
+      for (let gx = 0; gx <= 24; gx++) for (let gz = 0; gz <= 24; gz++) {
+        const x = mnx + (mxx - mnx) * gx / 24, z = mnz + (mxz - mnz) * gz / 24;
+        if (!inside(x, z)) continue;
+        let d = 1e9;
+        for (const p of path) { const q = (p.x - x) * (p.x - x) + (p.z - z) * (p.z - z); if (q < d) d = q; }
+        if (d > bd) { bd = d; bx = x; bz = z; }
+      }
+      bd = Math.sqrt(bd);
+      if (bd > 16) {
+        const ASP = 0.783;
+        const lh = Math.min(bd * 2 * 0.92 / Math.hypot(1, ASP), 150);
+        const lm = new THREE.Mesh(
+          new THREE.PlaneGeometry(lh * ASP, lh),
+          new THREE.MeshStandardMaterial({ transparent: true, alphaTest: 0.06,
+            opacity: 0.82, roughness: 1, metalness: 0, color: 0xb8c0b0,
+            polygonOffset: true, polygonOffsetFactor: -2 }));
+        new THREE.TextureLoader().load('logo_gp.webp', t => {
+          t.colorSpace = THREE.SRGBColorSpace; lm.material.map = t; lm.material.needsUpdate = true;
+        });
+        lm.rotation.set(-Math.PI / 2, 0, Math.atan2(-path[0].tx, -path[0].tz) + Math.PI / 2);
+        lm.position.set(bx, -0.02, bz);
+        world.add(lm);
+      }
+    }
   }
 
   // --- Manchas de aceite sobre el asfalto: charco oscuro con brillo irisado ---
