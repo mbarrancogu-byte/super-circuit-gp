@@ -2791,20 +2791,24 @@ function buildWorld() {
             const segLen = Math.hypot(pn.x - p.x, pn.z - p.z) || 1;
             const turn = p.tx * pn.tz - p.tz * pn.tx;
             const rEst = segLen / Math.max(Math.abs(turn), 1e-3);
-            if (rEst < 34 && rnd(0, 1) < 0.9) {              // curva cerrada → siempre goma
-              const side = turn > 0 ? -1 : 1;                // exterior de la curva
-              for (let k = 0, n = 1 + (rnd(0, 1) * 3 | 0); k < n; k++) {
-                const lat = RW / 2 + 0.5 + rnd(0, 1) * (W_OUT - 1.1);
-                const drift = rnd(-0.05, 0.13);              // leve deriva hacia fuera
-                let dx = p.tx + nx * side * drift, dz = p.tz + nz * side * drift;
-                const dl = Math.hypot(dx, dz); dx /= dl; dz /= dl;
-                put(i, p.x + nx * side * lat, p.z + nz * side * lat,
-                    dx, dz, 0.55 + rnd(0, 1) * 0.55, 2.5 + rnd(0, 1) * 6.5,
-                    side * lat, rnd(0.55, 1));
+            if (rEst < 150) {                                 // TODA curva lleva goma en el exterior
+              const side = turn > 0 ? -1 : 1;
+              const tight = rEst < 34;                        // horquillas: abanico cargado
+              if (rnd(0, 1) < (tight ? 0.95 : 0.8)) {         // curvas suaves: algo más ralo
+                const nMax = tight ? 3 : 2;
+                for (let k = 0, n = 1 + (rnd(0, 1) * nMax | 0); k < n; k++) {
+                  const lat = RW / 2 + 0.5 + rnd(0, 1) * (W_OUT - 1.1);
+                  const drift = rnd(-0.05, 0.13);             // leve deriva hacia fuera
+                  let dx = p.tx + nx * side * drift, dz = p.tz + nz * side * drift;
+                  const dl = Math.hypot(dx, dz); dx /= dl; dz /= dl;
+                  put(i, p.x + nx * side * lat, p.z + nz * side * lat,
+                      dx, dz, 0.55 + rnd(0, 1) * 0.55, 2.5 + rnd(0, 1) * 6.5,
+                      side * lat, rnd(0.4, 1));
+                }
               }
               continue;
             }
-            // Rectas y curvas suaves: tramos aleatorios con/sin manchas
+            // Rectas: solo tramos aleatorios sueltos — hay zonas limpias
             if (run <= 0 && rnd(0, 1) < 0.09) run = 4 + (rnd(0, 1) * 11 | 0);
             if (run-- > 0 && rnd(0, 1) < 0.6) {
               const sd = rnd(0, 1) < 0.5 ? 1 : -1;
@@ -4182,7 +4186,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 287;
+const BUILD_NO = 288;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
