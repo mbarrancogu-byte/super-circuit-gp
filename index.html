@@ -1182,8 +1182,6 @@
 <div class="zbtn" id="zoomOut">−</div>
 
 <div id="splash"><img src="portada.jpg" alt="">
-  <div id="splashGpX">GP</div>
-  <div id="splashGP">GP</div>
   <div id="splashWheels"><i></i><i></i></div>
   <div id="splashSmoke"><i></i><i></i><i></i><i></i><i></i><i class="surge"></i></div>
   <div id="splashFog"><i></i><i></i><i></i><i></i></div>
@@ -5530,16 +5528,6 @@ document.getElementById('optReset').addEventListener('click', () => {
     sl.style.gap = '12px';   // las dos banderas juntas, centradas
     bs.style.left = (r.left + r.width * 0.5) + 'px';   // flecha sobre el "START RACE"
     bs.style.top = (r.top + r.height * 0.885) + 'px';
-    const gp = document.getElementById('splashGP');   // GP naranja metálico 3D sobre el póster
-    const gx = document.getElementById('splashGpX');  // su capa de extrusión
-    const fs = Math.round(r.height * 0.185);
-    gp.style.fontSize = gx.style.fontSize = fs + 'px';
-    const gTop = r.top + r.height * 0.038;
-    const gLeft = r.left + r.width * 0.5 - gp.offsetWidth / 2;
-    gp.style.top = gTop + 'px';
-    gp.style.left = gLeft + 'px';
-    gx.style.top = (gTop + fs * 0.035) + 'px';        // la extrusión va un pelín abajo-derecha
-    gx.style.left = (gLeft + fs * 0.04) + 'px';
     const sm = document.getElementById('splashSmoke');        // humo sobre las ruedas traseras
     sm.style.left = (r.left + r.width * 0.13) + 'px';
     sm.style.top = (r.top + r.height * 0.52) + 'px';
