@@ -4689,7 +4689,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 328;
+const BUILD_NO = 329;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -5023,7 +5023,7 @@ function update(dt) {
     gas = Math.max(inGas, pad.gas); brake = Math.max(inBrake, pad.brake);
     hb = inHB || pad.hb || (keys.Space && !dragMode);
     if (keys.KeyW || (!p2Mode && keys.ArrowUp)) gas = 1;          // ↑ es de J2 en modo 2 jugadores
-    if (keys.KeyS || (!p2Mode && keys.ArrowDown)) brake = 1;
+    if (keys.KeyX || (!p2Mode && keys.ArrowDown)) brake = 1;      // X = marcha atrás/freno
     // Botón PIT: dentro de la zona de boxes el coche frena solo para parar
     if ((pitReq || pad.pit) && pitZone && Math.hypot(car.x - pitZone.x, car.z - pitZone.z) < pitZone.r + 8) {
       brake = 1; gas = 0;
@@ -5693,7 +5693,7 @@ function draw(now) {
   const wSpin = spd * dt * 1.2;
   for (const w of wheelF) w.children[0].rotation.x += wSpin;
   for (const w of wheelR) w.children[0].rotation.x += wSpin;
-  for (const ts of tailSpr) ts.material.opacity = (inBrake || keys.ArrowDown || keys.KeyS) ? 0.95 : 0.35;
+  for (const ts of tailSpr) ts.material.opacity = (inBrake || keys.ArrowDown || keys.KeyX) ? 0.95 : 0.35;
   flameTick(carGrp, (inGas > 0 || keys.KeyW || keys.ArrowUp) && playing);   // fuego al acelerar
   if (remote && remote.grp) flameTick(remote.grp, (remote.spd || 0) > 14);
   if (ghostCar && ghostCar.visible) flameTick(ghostCar, true);
@@ -5861,7 +5861,7 @@ function draw(now) {
   }
   // (sin vibración por bordes: la cámara no tiembla al rozar los laterales ni salir de pista)
   // Sacudida al frenar fuerte a alta velocidad — el coche "muerde" el asfalto
-  if ((inBrake || keys.ArrowDown || keys.KeyS) && spd > 55 && camZoom < 0.8) {
+  if ((inBrake || keys.ArrowDown || keys.KeyX) && spd > 55 && camZoom < 0.8) {
     const sh = 0.32 * Math.min(1, (spd - 55) / 60);
     cam3.position.x += rnd(-sh, sh); cam3.position.z += rnd(-sh, sh);
     cam3.position.y += rnd(-sh, sh) * 0.4;
