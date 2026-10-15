@@ -2797,12 +2797,25 @@ function buildWorld() {
       const walls = new THREE.InstancedMesh(wallGeo, wallMat, (pathLen + 1) * 2);
       const wM = new THREE.Matrix4(), wQ = new THREE.Quaternion(), wE = new THREE.Euler(),
             wV = new THREE.Vector3(), wS = new THREE.Vector3();
+      // Hueco en los muros del lado de boxes en la ENTRADA y SALIDA del pit lane —
+      // mismo anclaje que el complejo (centro al 5.5% del trazado, tangente local)
+      let pitC = null;
+      if (!dragMode) {
+        const pc0 = path[Math.floor(pathLen * 0.055)], off0 = RW / 2 + 23;
+        pitC = { x: pc0.x + pc0.tz * off0, z: pc0.z - pc0.tx * off0, tx: pc0.tx, tz: pc0.tz };
+      }
+      const pitGap = i => {
+        if (!pitC) return false;
+        const a = (path[i].x - pitC.x) * pitC.tx + (path[i].z - pitC.z) * pitC.tz;
+        return (a > -150 && a < -40) || (a > 40 && a < 150);   // tramos de las cintas S
+      };
       let wi = 0;
       for (let i = 0; i < pathLen; i++) {
         const p = path[i], pn = path[(i + 1) % pathLen];
         const seg = Math.hypot(pn.x - p.x, pn.z - p.z) || 1;
         const ang = Math.atan2(-(pn.z - p.z), pn.x - p.x);   // box alineada con el tramo
         for (const s of [1, -1]) {
+          if (s === -1 && pitGap(i)) continue;             // lado de boxes: entrada/salida abiertas
           const nx = -p.tz * s, nz = p.tx * s;
           const wx = p.x + nx * (RW / 2 + 0.45), wz = p.z + nz * (RW / 2 + 0.45);
           wE.set(0, ang, 0); wQ.setFromEuler(wE);
@@ -2825,6 +2838,7 @@ function buildWorld() {
           dirV.set((pn.x - p.x) / seg, 0, (pn.z - p.z) / seg);
           wQ.setFromUnitVectors(up, dirV);                        // eje Y del cilindro → dirección del tramo
           for (const s of [1, -1]) {
+            if (s === -1 && pitGap(i)) continue;            // los tubos también dejan el hueco
             const nx = -p.tz * s, nz = p.tx * s;
             wM.compose(wV.set(p.x + nx * (RW / 2 + 0.45), 1.3 + bankYAt(i, s * (RW / 2 + 0.45)), p.z + nz * (RW / 2 + 0.45)),
                        wQ, wS.set(1, seg + 0.5, 1));              // solape 0.5 → cadena continua sin huecos
@@ -4597,7 +4611,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 315;
+const BUILD_NO = 316;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -5111,7 +5125,15 @@ function update(dt) {
   // Barrera del circuito: en NEON la pared es el borde mismo — el coche nunca se sale,
   // solo rebota contra las cintas luminosas; en el resto hay margen de hierba primero
   const neonCirc = !!(circAt(stage) && !circAt(stage).img);
-  const MAX_OUT = neonCirc ? RW / 2 - 1.8 : halfW + 4;
+  let MAX_OUT = neonCirc ? RW / 2 - 1.8 : halfW + 4;
+  // Entrada/salida de boxes abiertas: dentro de la huella del complejo el muro
+  // invisible de los circuitos neón no cierra — el pit lane queda accesible
+  const pex = window._pitExcl;
+  if (neonCirc && pex) {
+    const pdx = car.x - pex.x, pdz = car.z - pex.z;
+    if (Math.abs(pdx * pex.tx + pdz * pex.tz) < pex.hx &&
+        Math.abs(-pdx * pex.tz + pdz * pex.tx) < pex.hz) MAX_OUT = halfW + 26;
+  }
   if (dRoad > MAX_OUT) {
     const k = MAX_OUT / dRoad;
     car.x = np.x + (car.x - np.x) * k;
