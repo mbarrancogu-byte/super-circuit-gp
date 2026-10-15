@@ -1,8 +1,8 @@
 // Service worker: actualiza primero por red y guarda copia para offline (PWA)
-const CACHE = 'scgp-v17';
+const CACHE = 'scgp-v18';
 const ASSETS = [
   './', 'index.html', 'circuitos.js', 'fondo.jpg', 'fondo2.jpg', 'portada.jpg',
-  'fondo_pw.jpg', 'fondo_card.jpg', 'f1.png', 'f1sel.png', 'f1_r26.png', 'f1_scarlet.png', 'f1_verde.png', 'f1_amarillo.png', 'f1_negro.png', 'f1_rosa.png', 'f1_naranja.png', 'volante.png', 'RADIO.mp3', 'three.min.js', 'peerjs.min.js',
+  'fondo_pw.jpg', 'fondo_card.jpg', 'f1.png', 'f1sel.png', 'f1_r26.png', 'f1_scarlet.png', 'f1_verde.png', 'f1_amarillo.png', 'f1_negro.png', 'f1_rosa.png', 'f1_naranja.png', 'volante.png', 'logo_gp.webp', 'RADIO.mp3', 'three.min.js', 'peerjs.min.js',
   'icon-192.png', 'icon-512.png', 'manifest.json'
 ];
 self.addEventListener('install', e => {
