@@ -3561,7 +3561,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 261;
+const BUILD_NO = 262;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -4846,7 +4846,30 @@ function draw(now) {
       g.fillText((i + 1) + '·' + r.n.toUpperCase(), lx, ly);
     }
   }
-  // Torre de clasificación pegada bajo el radar: posición, piloto y hueco al líder (s)
+  // Barra de daño bajo el radar: sube con cada golpe, verde→ámbar→rojo
+  {
+    const bw = mm, bx = mx, by = my + mm + 4, bh = 12;
+    g.beginPath(); g.roundRect(bx, by, bw, bh, 6);
+    g.fillStyle = 'rgba(6,10,20,0.78)'; g.fill();
+    g.strokeStyle = 'rgba(255,200,80,0.4)'; g.lineWidth = 1; g.stroke();
+    const f = clamp(dmg / 100, 0, 1);
+    if (f > 0.004) {
+      g.save();
+      g.beginPath(); g.roundRect(bx + 2, by + 2, (bw - 4) * f, bh - 4, 4); g.clip();
+      const fg = g.createLinearGradient(bx, 0, bx + bw, 0);
+      fg.addColorStop(0, '#3fd06a'); fg.addColorStop(0.55, '#ffb43c'); fg.addColorStop(1, '#ff4030');
+      g.fillStyle = fg; g.fillRect(bx + 2, by + 2, bw - 4, bh - 4);
+      g.restore();
+    }
+    g.font = '800 9px sans-serif'; g.textAlign = 'right'; g.textBaseline = 'middle';
+    const dTxt = T('dmgTxt').toUpperCase() + ' ' + Math.round(dmg) + '%';
+    g.strokeStyle = 'rgba(0,0,0,0.75)'; g.lineWidth = 2.4;
+    g.strokeText(dTxt, bx + bw - 6, by + bh / 2 + 0.5);
+    g.fillStyle = dmg > 70 ? '#ff8a70' : '#e8ecf4';
+    g.fillText(dTxt, bx + bw - 6, by + bh / 2 + 0.5);
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+  }
+  // Torre de clasificación pegada bajo la barra de daño: posición, piloto y hueco al líder (s)
   if (board.length > 1) {
     if (!trackSegM && path && path.length > 4) {        // metros por índice (una vez por etapa)
       let tl = 0;
@@ -4856,7 +4879,7 @@ function draw(now) {
       }
       trackSegM = tl / path.length;
     }
-    const rowH = 15, ty0 = my + mm + 6, tw = mm + 34;
+    const rowH = 15, ty0 = my + mm + 22, tw = mm + 34;
     g.fillStyle = 'rgba(6,10,20,0.78)';
     g.fillRect(mx, ty0, tw, board.length * rowH + 8);
     g.strokeStyle = 'rgba(255,200,80,0.4)'; g.lineWidth = 1;
