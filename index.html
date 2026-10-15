@@ -3495,7 +3495,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 255;
+const BUILD_NO = 256;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -3993,7 +3993,8 @@ function update(dt) {
   }
   if (onCurb && spd > 20) { car.vx *= 1 - 0.09 * dt; car.vz *= 1 - 0.09 * dt; }  // el piano roba velocidad
   const wasCurb = Math.abs(car.dRoadPrev || 0) > halfW - 1.1;
-  if (onCurb && !wasCurb && spd > 18) { car.bumpKick = 1; buzz(12); }   // subirse al piano: golpe seco
+  if (onCurb && !wasCurb && spd > 18) { car.bumpKick = 1; buzz(12);       // subirse al piano: golpe seco
+                                        car.wheelVib = Math.max(car.wheelVib || 0, 0.4); }
   car.dRoadPrev = dRoad;
   // Barrera del circuito: en NEON la pared es el borde mismo — el coche nunca se sale,
   // solo rebota contra las cintas luminosas; en el resto hay margen de hierba primero
@@ -4008,6 +4009,7 @@ function update(dt) {
     if (vr > 0) {
       car.vx -= vr * nx2 * 1.5; car.vz -= vr * nz2 * 1.5;      // rebote amortiguado
       if (vr > 8) { addDamage(Math.min(14, vr * 0.35)); sfx.hit(); buzz(30);
+                    car.wheelVib = Math.max(car.wheelVib || 0, Math.min(1.5, vr * 0.1));
                     sparkBurst(car.x, car.z, nx2, nz2); }            // chispas contra el muro
     }
   }
@@ -4031,6 +4033,7 @@ function update(dt) {
       car.x = o.x + dx / dd * (o.r + 2.5); car.z = o.z + dz / dd * (o.r + 2.5);
       const vn = (car.vx * dx + car.vz * dz) / dd;
       if (vn < 0) { car.vx -= vn * dx / dd * 1.6; car.vz -= vn * dz / dd * 1.6; sfx.hit(); addDamage(Math.min(20, -vn * 0.55));
+                    car.wheelVib = Math.max(car.wheelVib || 0, Math.min(1.5, -vn * 0.1));
                     sparkBurst(car.x, car.z, dx / dd, dz / dd); }    // chispas contra el obstáculo
     }
   }
@@ -4050,6 +4053,7 @@ function update(dt) {
         addDamage(hit);
         if (cpus.includes(rival)) rival.dmg = Math.min(100, rival.dmg + hit * 0.8);
         sfx.hit(); buzz(40);
+        car.wheelVib = Math.max(car.wheelVib || 0, Math.min(1.5, hit * 0.1));
         sparkBurst(car.x, car.z, dx / dd, dz / dd);                  // chispas coche contra coche
       }
     }
@@ -4547,11 +4551,18 @@ function draw(now) {
   // Volante de cabina: aparece al acercar la cámara, gira con la dirección del coche
   const wOp = clamp((1 - camZoom) * 1.8 - 0.35, 0, 0.96);
   wheelDegS += ((car.steer || 0) * 55 - wheelDegS) * Math.min(1, dt * 3.6);   // giro suave y corto
+  // Vibración del volante: tironeo leve con carga lateral en curva,
+  // sacudida fuerte tras impacto (wheelVib se carga en las colisiones)
+  car.wheelVib = Math.max(0, (car.wheelVib || 0) - dt * 2.4);
+  const wJit = Math.abs(car.steer || 0) * clamp(spd / 32, 0, 1) * 0.9 + (car.wheelVib || 0) * 9;
+  const wSh = wJit * Math.sin(now * 0.11) + wJit * 0.4 * Math.sin(now * 0.31);
+  const wTf = `translate(${(wJit * 0.32 * Math.sin(now * 0.23)).toFixed(1)}px,${(wJit * 0.28 * Math.cos(now * 0.19)).toFixed(1)}px)` +
+              ` rotate(${(wheelDegS + wSh).toFixed(1)}deg)`;
   el('wheelImg').style.opacity = wOp.toFixed(2);
-  el('wheelImg').style.transform = `rotate(${wheelDegS.toFixed(1)}deg)`;
+  el('wheelImg').style.transform = wTf;
   // Capa de LEDs + pantalla + grados: gira y aparece junto al volante
   el('wheelLayer').style.opacity = wOp.toFixed(2);
-  el('wheelLayer').style.transform = `rotate(${wheelDegS.toFixed(1)}deg)`;
+  el('wheelLayer').style.transform = wTf;
   el('wheelDeg').textContent = (wheelDegS > 0.5 ? '+' : '') + Math.round(wheelDegS) + '°';
   // LEDs: barra RPM progresiva (verde→rojo→azul, parpadea al corte) + testigos fijos
   if (!wheelLeds) wheelLeds = document.querySelectorAll('#wheelWrap .wled');
