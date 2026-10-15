@@ -4919,7 +4919,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 336;
+const BUILD_NO = 337;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -7821,16 +7821,18 @@ const c3d = { on: false, r: null, scene: null, cam: null, car: null, raf: 0,
 const C3D_TMAP = {
   WCWING: 'wcwing.png', WCEXTRA0: 'wcextra0.png', WCEXTRA1: 'wcextra1.png',
   WCCARBODY: 'wccarbody.png', CARBFBD: 'carbon_flat.png', CARBFBDNOSPEC: 'carbon_flat.png',
-  tread: 'tread_flat.png', side: 'side_flat.png', REN06WHEEL: 'wheel_flat.png',
-  RENRIM: 'renrim_flat.png', RENSPOKES: 'renrim_flat.png', RENHUB: 'renhub_flat.png',
-  brake: 'brake_flat.png', disk: 'rotor_flat.png',
   COCKPITSCREWS: 'SCREW.DDS_39.png', led: 'displayLedG.dds_11.png',
   COCKPIT: 'cockpit_flat.png'
 };
 const C3D_FLAT = {
   calliper: 0x701818, Light: 0x0c0e12, MIRROR: 0x0c1016,
   WCWINDOW: 0x0c1016, CHROME: 0x2a2e36,
-  argent: 0x1a1e24, susp: 0x0e1013, green: 0x18a018
+  argent: 0x1a1e24, susp: 0x0e1013, green: 0x18a018,
+  // Ruedas sin textura: las imágenes originales llevaban los colores del R26
+  // horneados — pasan a lisas (goma negra, llanta oscura, disco gris)
+  tread: 0x0d0f12, side: 0x0d0f12, REN06WHEEL: 0x24282e,
+  RENRIM: 0x2e333a, RENSPOKES: 0x2e333a, RENHUB: 0x3a4048,
+  brake: 0x4a4e54, disk: 0x555a60
 };
 function c3dMap(name, map) {
   for (const k in map) if (name.startsWith(k)) return map[k];
