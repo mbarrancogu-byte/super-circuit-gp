@@ -4746,7 +4746,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 334;
+const BUILD_NO = 335;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -7656,6 +7656,17 @@ function c3dNorm(mdl, len) {
   mdl.position.y -= bb2.min.y;
   return wrap;
 }
+// Al volcar el coche (rotX) el pivote está a nivel de la plataforma y el
+// morro/cola atravesarían el disco: se eleva lo justo según la mitad del largo
+function pitchLift(car, rotX) {
+  if (car.userData.hl === undefined) {
+    const s = new THREE.Box3().setFromObject(car).getSize(new THREE.Vector3());
+    car.userData.hl = Math.max(s.x, s.z) / 2;
+  }
+  const lift = Math.abs(Math.sin(rotX)) * car.userData.hl;
+  car.position.y = lift;
+  return lift;
+}
 // TODOS: los 7 coches en círculo sobre la plataforma — carrusel giratorio
 async function c3dShowAll() {
   const load = document.getElementById('c3dLoad');
@@ -7708,9 +7719,10 @@ function c3dLoop() {
   if (!c3d.on) return;
   c3d.raf = requestAnimationFrame(c3dLoop);
   if (!c3d.drag) c3d.rotY += 0.004;                      // giro automático
-  if (c3d.car) { c3d.car.rotation.y = c3d.rotY; c3d.car.rotation.x = c3d.rotX; }
+  let lift = 0;
+  if (c3d.car) { c3d.car.rotation.y = c3d.rotY; c3d.car.rotation.x = c3d.rotX; lift = pitchLift(c3d.car, c3d.rotX); }
   const mr = c3d.car === c3d.allGrp ? c3d.allMirr : c3d.mirr;
-  if (mr) { mr.rotation.y = c3d.rotY; mr.rotation.x = -c3d.rotX; }
+  if (mr) { mr.rotation.y = c3d.rotY; mr.rotation.x = -c3d.rotX; mr.position.y = -lift * 0.94; }
   const w = c3d.cam;                                     // zoom = distancia · pan = encuadre
   w.position.set(c3d.panX, 5.6 * c3d.zoom + c3d.panY, 15.5 * c3d.zoom);
   w.lookAt(c3d.panX, 1.4 + c3d.panY, 0);
@@ -7797,7 +7809,8 @@ async function m3dShow(i) {
   if (!m3d.r || !m3d.car || !wrap.offsetParent) return;  // solo cuando el menú es visible
   if (!m3d.drag) m3d.rotY += 0.010;                      // giro continuo del coche
   m3d.car.rotation.y = m3d.rotY; m3d.car.rotation.x = m3d.rotX;
-  if (m3d.mirr) { m3d.mirr.rotation.y = m3d.rotY; m3d.mirr.rotation.x = -m3d.rotX; }
+  const mlift = pitchLift(m3d.car, m3d.rotX);
+  if (m3d.mirr) { m3d.mirr.rotation.y = m3d.rotY; m3d.mirr.rotation.x = -m3d.rotX; m3d.mirr.position.y = -mlift * 0.94; }
   const cv = document.getElementById('car3dCv');
   const cw = wrap.clientWidth, ch = wrap.clientHeight;
   if (cv.width !== cw * 2) {                             // ×2 = nítido en pantallas densas
@@ -7877,11 +7890,13 @@ async function ciShow(i) {
 function ciLoop() {
   if (!ci3d.on) return;
   ci3d.raf = requestAnimationFrame(ciLoop);
+  let clift = 0;
   if (ci3d.car) {
     if (!ci3d.drag) ci3d.rotY += 0.008;
     ci3d.car.rotation.y = ci3d.rotY; ci3d.car.rotation.x = ci3d.rotX;
+    clift = pitchLift(ci3d.car, ci3d.rotX);
   }
-  if (ci3d.mirr) { ci3d.mirr.rotation.y = ci3d.rotY; ci3d.mirr.rotation.x = -ci3d.rotX; }
+  if (ci3d.mirr) { ci3d.mirr.rotation.y = ci3d.rotY; ci3d.mirr.rotation.x = -ci3d.rotX; ci3d.mirr.position.y = -clift * 0.94; }
   const cv = document.getElementById('ciCv'), stage = document.getElementById('ciStage');
   const cw = stage.clientWidth, ch = stage.clientHeight;
   if (cv.width !== cw * 2) {
