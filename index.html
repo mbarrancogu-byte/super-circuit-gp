@@ -4639,7 +4639,7 @@ function buildF1(tint) {
   rainGlow.scale.set(2.3, 2.3, 1); rainGlow.position.set(0, 2.3, -4.6);
   grp.add(rainGlow);
   grp.userData = { wF: [], wR: [], tails, flames, rain: { bar: rainBar, glow: rainGlow } };
-  grp.scale.setScalar(0.72);                        // coches más pequeños: más circuito a la vista
+  grp.scale.setScalar(0.18);                        // escala F1 real: ~1.9u ancho sobre ~8u de asfalto
   return grp;
 }
 // Parpadeo de las llamas de escape de un coche (encendido + jitter)
@@ -4907,8 +4907,8 @@ function skidMark(x, z, a, k = 1) {
   const bp = path[pathIdx];
   m.position.set(x, 0.12 + (bp ? bankYAt(pathIdx, (x - bp.x) * (-bp.tz) + (z - bp.z) * bp.tx) : 0), z);
   m.rotation.y = a + (Math.random() - 0.5) * 0.05;          // jitter: la raya no es una regla
-  m.scale.set((0.52 + Math.random() * 0.18) * (0.85 + 0.2 * k), 1,   // ancho de neumático real
-            (9 + Math.random() * 5.5) * (0.85 + 0.35 * k));          // largas en Z: raya continua
+  m.scale.set((0.17 + Math.random() * 0.06) * (0.85 + 0.2 * k), 1,   // ancho de neumático real
+            (3 + Math.random() * 2) * (0.85 + 0.35 * k));            // largas en Z: raya continua
   const op = 0.34 + 0.36 * k;
   m.material.opacity = op; m.userData.op = op; m.userData.life = 1; m.visible = true;
 }
@@ -4919,7 +4919,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 338;
+const BUILD_NO = 339;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -5005,14 +5005,14 @@ function cpuDrive(c, dt) {
     if (!o) continue;
     const dx = o.x - c.x, dz = o.z - c.z;
     const fwd = dx * p0.tx + dz * p0.tz, side = -dx * p0.tz + dz * p0.tx;
-    if (fwd > 2 && fwd < 30 && Math.abs(side) < 7) {
-      const w = clamp((7 - Math.abs(side)) * (fwd < 14 ? 1.5 : 1), 0, 9);
+    if (fwd > 1 && fwd < 9 && Math.abs(side) < 1.8) {
+      const w = clamp((1.8 - Math.abs(side)) * (fwd < 4 ? 1.5 : 1), 0, 3);
       const dir = side >= 0 ? -1 : 1;                    // abre por el lado opuesto
       if (Math.abs(avd) < w) avd = dir * w;
       const ov = o === car ? Math.hypot(car.vx, car.vz) : (o.v !== undefined ? o.v : (o.spd || 12));
-      if (fwd < 13 && ov < c.v) vMax = Math.min(vMax, Math.max(12, ov * 1.02));
+      if (fwd < 4 && ov < c.v) vMax = Math.min(vMax, Math.max(12, ov * 1.02));
       // DIVEBOMB: hueco + curva cerca → el CPU lanza el ataque por dentro y entra pasado
-      if (fwd > 4 && fwd < 16 && worst > 0.10 && c.k > 0.92 && c.lungeT <= 0 && Math.random() < dt * 0.55) {
+      if (fwd > 2 && fwd < 7 && worst > 0.10 && c.k > 0.92 && c.lungeT <= 0 && Math.random() < dt * 0.55) {
         c.lungeT = rnd(0.35, 0.7); showToast('⚔️ ' + (c.nm || 'CPU') + ' ' + T('divebomb'));
       }
     }
@@ -5021,11 +5021,11 @@ function cpuDrive(c, dt) {
   // el CPU toma la trazada defensiva por dentro — tapar el hueco del divebomb
   if (c.lungeT <= 0 && c.wideT <= 0 && gap > -30 && gap < -1 && worst > 0.06 &&
       Math.hypot(car.vx, car.vz) > c.v * 0.9) {
-    const def = wSign * 7;
+    const def = wSign * 2.4;
     if (Math.abs(avd) < Math.abs(def)) avd = def;
   }
-  if (c.lungeT > 0) { c.lungeT -= dt; avd = wSign * 9; vMax *= 1.07; }   // estirada por dentro
-  if (c.wideT > 0) avd = -wSign * 9;                                    // error: se va largo fuera
+  if (c.lungeT > 0) { c.lungeT -= dt; avd = wSign * 3; vMax *= 1.07; }   // estirada por dentro
+  if (c.wideT > 0) avd = -wSign * 3;                                    // error: se va largo fuera
   c.latBias += (avd - c.latBias) * Math.min(1, dt * 3.5);
   if (p2Mode) {
     // ===== JUGADOR 2 (humano): gas = ↑ / pedal J2 · marcha = ShiftDer/Enter / ▲J2 =====
@@ -5287,8 +5287,8 @@ function update(dt) {
   // Salida lanzada con el pie a fondo: las ruedas hacen burnout y el público sube
   if (go && !goWas && gas > 0) {
     for (let k = 0; k < 7; k++)
-      dustPuff(car.x - Math.cos(car.a) * rnd(2, 5), car.z - Math.sin(car.a) * rnd(2, 5),
-               rnd(-2, 2), rnd(-2, 2), 0xdcdcdc, 0.9, rnd(3.5, 6), 0.6);
+      dustPuff(car.x - Math.cos(car.a) * rnd(0.6, 1.5), car.z - Math.sin(car.a) * rnd(0.6, 1.5),
+               rnd(-2, 2), rnd(-2, 2), 0xdcdcdc, 0.9, rnd(1.6, 2.8), 0.6);
     crowdBoost = Math.max(crowdBoost, 0.8);
   }
   goWas = go;
@@ -5520,8 +5520,8 @@ function update(dt) {
   // Obstáculos (árboles/rocas): empuje + golpe
   for (const o of obstacles) {
     const dx = car.x - o.x, dz = car.z - o.z, dd = Math.hypot(dx, dz);
-    if (dd < o.r + 2.5 && dd > 0.01) {
-      car.x = o.x + dx / dd * (o.r + 2.5); car.z = o.z + dz / dd * (o.r + 2.5);
+    if (dd < o.r + 0.9 && dd > 0.01) {
+      car.x = o.x + dx / dd * (o.r + 0.9); car.z = o.z + dz / dd * (o.r + 0.9);
       const vn = (car.vx * dx + car.vz * dz) / dd;
       if (vn < 0) { car.vx -= vn * dx / dd * 1.6; car.vz -= vn * dz / dd * 1.6; sfx.hit(); addDamage(Math.min(20, -vn * 0.55));
                     car.wheelVib = Math.max(car.wheelVib || 0, Math.min(1.5, -vn * 0.1));
@@ -5535,8 +5535,8 @@ function update(dt) {
   for (const rival of rivalsNow) {
     if (!rival || !rival.grp) continue;
     const dx = car.x - rival.x, dz = car.z - rival.z, dd = Math.hypot(dx, dz);
-    if (dd < 6 && dd > 0.01) {
-      car.x = rival.x + dx / dd * 6; car.z = rival.z + dz / dd * 6;
+    if (dd < 2.0 && dd > 0.01) {
+      car.x = rival.x + dx / dd * 2.0; car.z = rival.z + dz / dd * 2.0;
       const vn = (car.vx * dx + car.vz * dz) / dd;
       if (vn < 0) {
         car.vx -= vn * dx / dd * 1.5; car.vz -= vn * dz / dd * 1.5;
@@ -5556,7 +5556,7 @@ function update(dt) {
     if (!rival || !rival.grp) continue;
     const dx = rival.x - car.x, dz = rival.z - car.z;
     const fwd = dx * cf + dz * sf, lat2 = Math.abs(-dx * sf + dz * cf);
-    if (fwd > 5 && fwd < 34 && lat2 < 5 && spd > 30) slipTgt = 1;
+    if (fwd > 2 && fwd < 14 && lat2 < 1.6 && spd > 30) slipTgt = 1;
   }
   slipT += (slipTgt - slipT) * Math.min(1, dt * 5);
   // DRS real: solo se abre en ZONA DRS (recta limpia por delante) yendo a <1s
@@ -5698,7 +5698,7 @@ function update(dt) {
   ghostTick();
   // Daño alto → humo negro del motor
   if (dmg > 65 && Math.random() < dt * (dmg > 85 ? 9 : 4)) {
-    dustPuff(car.x, car.z, -car.vx * 0.2, -car.vz * 0.2, 0x242424, 1.4, rnd(5, 8));
+    dustPuff(car.x, car.z, -car.vx * 0.2, -car.vz * 0.2, 0x242424, 1.4, rnd(1.8, 2.8));
   }
   cpuTick(dt);
 
@@ -5812,19 +5812,19 @@ function update(dt) {
     const mk = sliding ? 1 : 0.35 + 0.45 * turnK;
     for (const s of [-1, 1]) {
       // cada rueda pinta siempre; la variación es de intensidad, nunca un hueco
-      skidMark(car.x - cf * 3 - sf * s * 1.9, car.z - sf * 3 + cf * s * 1.9,
+      skidMark(car.x - cf * 0.7 - sf * s * 0.45, car.z - sf * 0.7 + cf * s * 0.45,
                -car.a + Math.PI / 2, mk * (0.75 + Math.random() * 0.25));
     }
     // en curva muy cerrada las delanteras también dejan alguna raya suelta
     if (!sliding && turnK > 0.65 && Math.random() < 0.35) {
       const s = Math.random() < 0.5 ? -1 : 1;
-      skidMark(car.x + cf * 3 - sf * s * 1.9, car.z + sf * 3 + cf * s * 1.9, -car.a + Math.PI / 2, mk * 0.8);
+      skidMark(car.x + cf * 0.7 - sf * s * 0.45, car.z + sf * 0.7 + cf * s * 0.45, -car.a + Math.PI / 2, mk * 0.8);
     }
   }
   dustT -= dt;
   // Spray de lluvia tras el coche: estela de agua al correr sobre mojado
   if (rain > 0.25 && spd > 14 && offroad < 0.5 && dustT <= 0) {
-    dustPuff(car.x - cf * 3.8, car.z - sf * 3.8, -car.vx * 0.18, -car.vz * 0.18);
+    dustPuff(car.x - cf * 0.9, car.z - sf * 0.9, -car.vx * 0.18, -car.vz * 0.18);
     dustT = 0.05;
   }
   // Humo real: derrape = humo blanco de neumático en las traseras; fuera de pista =
@@ -5833,21 +5833,21 @@ function update(dt) {
     dustT = 0.06;
     if (sliding)
       for (const s of [-1, 1])
-        dustPuff(car.x - cf * 3 - sf * s * 1.9, car.z - sf * 3 + cf * s * 1.9,
-                 car.vx * 0.4, car.vz * 0.4, 0xf0f0f0, rnd(0.9, 1.4), rnd(4, 6));
+        dustPuff(car.x - cf * 0.7 - sf * s * 0.45, car.z - sf * 0.7 + cf * s * 0.45,
+                 car.vx * 0.4, car.vz * 0.4, 0xf0f0f0, rnd(0.9, 1.4), rnd(1.5, 2.2));
     if (offroad > 0.4)
       for (const s of [-1, 1])   // estela de humo blanco de las dos ruedas traseras al salirse
-        dustPuff(car.x - cf * 3.2 - sf * s * 1.9, car.z - sf * 3.2 + cf * s * 1.9,
+        dustPuff(car.x - cf * 0.75 - sf * s * 0.45, car.z - sf * 0.75 + cf * s * 0.45,
                  car.vx * 0.35, car.vz * 0.35,
-                 Math.random() < 0.7 ? 0xffffff : 0xe8e8e8, rnd(1.3, 1.9), rnd(6, 9), 0.78);
+                 Math.random() < 0.7 ? 0xffffff : 0xe8e8e8, rnd(1.3, 1.9), rnd(2.2, 3.2), 0.78);
   }
   // Bloqueo de rueda delantera: frenada fuerte a alta velocidad echa humo
   // blanco de goma en las dos ruedas de delante (no en las traseras)
   if (brake && spd > 38 && offroad < 0.4 && dustT <= 0) {
     dustT = 0.045;
     for (const s of [-1, 1])
-      dustPuff(car.x + cf * 3.7 - sf * s * 1.5, car.z + sf * 3.7 + cf * s * 1.5,
-               car.vx * 0.3, car.vz * 0.3, 0xf6f6f6, rnd(0.7, 1.1), rnd(3.5, 5.5), 0.7);
+      dustPuff(car.x + cf * 0.8 - sf * s * 0.35, car.z + sf * 0.8 + cf * s * 0.35,
+               car.vx * 0.3, car.vz * 0.3, 0xf6f6f6, rnd(0.7, 1.1), rnd(1.3, 2), 0.7);
   }
   // Humo de aceleración: quema de rueda al lanzar (blanco de neumático mezclado
   // con negro) y bocanadas oscuras del escape. Con la flecha ↑/teclado sale
@@ -5858,22 +5858,22 @@ function update(dt) {
     if (launch || gas > 0.8) {
       dustT = launch ? 0.036 : 0.06;
       for (const s of [-1, 1])
-        dustPuff(car.x - cf * 3.1 - sf * s * 1.9, car.z - sf * 3.1 + cf * s * 1.9,
+        dustPuff(car.x - cf * 0.7 - sf * s * 0.45, car.z - sf * 0.7 + cf * s * 0.45,
                  -car.vx * 0.25, -car.vz * 0.25,
                  Math.random() < 0.45 ? 0x18181b : 0xf4f4f4,
-                 rnd(1.8, 2.7), rnd(6, 11), (launch ? 0.95 : 0.78) * gasK);
+                 rnd(1.2, 1.8), rnd(2.2, 3.8), (launch ? 0.95 : 0.78) * gasK);
       if (Math.random() < 0.7 * gasK)                           // bocanada negra del escape
-        dustPuff(car.x - cf * 4.6, car.z - sf * 4.6, -car.vx * 0.1, -car.vz * 0.1,
-                 0x121215, rnd(1.3, 1.9), rnd(3.5, 6), 0.85 * gasK);
+        dustPuff(car.x - cf * 1.4, car.z - sf * 1.4, -car.vx * 0.1, -car.vz * 0.1,
+                 0x121215, rnd(1.3, 1.9), rnd(1.6, 2.8), 0.85 * gasK);
     }
   }
   // Estela de nitro / mini-turbo: llamarada azul/naranja tras el coche
   if ((nitroOn || boostT > 0) && Math.random() < dt * 30) {
     const s = dustPool.find(s => !s.visible);
     if (s) {
-      s.position.set(car.x - cf * 4 + rnd(-0.8, 0.8), 1.6, car.z - sf * 4 + rnd(-0.8, 0.8));
+      s.position.set(car.x - cf * 1.2 + rnd(-0.3, 0.3), 0.7, car.z - sf * 1.2 + rnd(-0.3, 0.3));
       s.userData = { life: 0.3, life0: 0.3, vx: -car.vx * 0.15, vz: -car.vz * 0.15, op0: 0.85 };
-      s.scale.set(2.4, 2.4, 1);
+      s.scale.set(1.1, 1.1, 1);
       s.material.color.setHex(nitroOn ? 0x60c8ff : 0xffa030);
       s.material.opacity = 0.85; s.visible = true;
     }
