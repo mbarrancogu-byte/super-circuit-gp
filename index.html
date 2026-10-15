@@ -2979,10 +2979,39 @@ function buildWorld() {
   // --- Puertas de control: solo marcadores invisibles (los puntos de `gates` siguen
   // definiendo los checkpoints para el progreso de vuelta; ya no se dibujan postes ni flechas) ---
 
-  // --- Terreno: llanura oscura con manchas ---
-  // Sin colores de vértice: la rejilla de interpolación dejaba facetas visibles
-  // en la hierba — la variedad la da la textura enlosable
-  const terGeo = new THREE.PlaneGeometry(2600, 2600, 40, 40);
+  // --- Terreno: llanura con DESNIVELES — colinas suaves fuera del trazado ---
+  // hAt: altura del terreno en cada punto. Ondulación por senos superpuestos;
+  // se aplana cerca de la pista (el asfalto sigue a y=0) y en todo el infield,
+  // así el asfalto no flota y el emblema del césped queda a su cota
+  const inLoop = (x, z) => {
+    let c = false;
+    for (let i = 0; i < pathLen; i++) {
+      const a = path[i], b = path[(i + 1) % pathLen];
+      if ((a.z > z) !== (b.z > z) && x < a.x + (z - a.z) / (b.z - a.z) * (b.x - a.x)) c = !c;
+    }
+    return c;
+  };
+  const hAt = (x, z) => {
+    if (inLoop(x, z)) return 0;                          // interior del circuito: llano
+    let d2 = 1e18;
+    for (let i = 0; i < pathLen; i += 3) {
+      const p = path[i], q = (p.x - x) * (p.x - x) + (p.z - z) * (p.z - z);
+      if (q < d2) d2 = q;
+    }
+    const d = Math.sqrt(d2);
+    const f = Math.min(1, Math.max(0, (d - 18) / 42));   // 0 junto a pista → 1 a ~60u
+    const e = f * f * (3 - 2 * f);                       // smoothstep
+    return (Math.sin(x * 0.011 + 1.7) * Math.cos(z * 0.009 + 0.6) * 6.5
+          + Math.sin(x * 0.019 + 4.2) * Math.cos(z * 0.016 + 2.9) * 3.4
+          + Math.sin((x + z) * 0.0055 + 0.9) * 4.2) * e;
+  };
+  const terGeo = new THREE.PlaneGeometry(2600, 2600, 56, 56);
+  if (!traced) {
+    // Desplazar vértices: la z local del plano se convierte en altura del mundo
+    const tp = terGeo.attributes.position;
+    for (let i = 0; i < tp.count; i++) tp.setZ(i, hAt(tp.getX(i), -tp.getY(i)));
+    terGeo.computeVertexNormals();
+  }
   const ter = new THREE.Mesh(terGeo, new THREE.MeshStandardMaterial({ roughness: 1 }));
   ter.rotation.x = -Math.PI / 2; ter.position.y = -0.05; ter.receiveShadow = true;
   if (traced) {
@@ -3181,7 +3210,7 @@ function buildWorld() {
       const s = rnd(1.1, 2.3);                                   // altura real: ~32-66u
       pm.makeRotationY(rnd(0, Math.PI * 2));                     // cada árbol con su orientación
       pm.scale(new THREE.Vector3(s * rnd(0.9, 1.1), s * (kind === 1 ? rnd(0.8, 1) : 1), s * rnd(0.9, 1.1)));
-      pm.setPosition(x, 0, z);
+      pm.setPosition(x, hAt(x, z) - 0.15, z);                    // posado sobre su colina
       if (kind === 0) {
         pines.setMatrixAt(nP, pm); trunksP.setMatrixAt(nP, pm);
         pines.setColorAt(nP, tCol.setHSL(0.28 + rnd(-0.06, 0.07), rnd(0.42, 0.66), rnd(0.62, 0.88)));
@@ -3210,7 +3239,7 @@ function buildWorld() {
       const x = rnd(-850, 850), z = rnd(-850, 850);
       if (nearRoad(x, z, 10)) continue;
       const s = rnd(0.7, 2);
-      pm.makeScale(s, s * rnd(0.6, 1), s); pm.setPosition(x, 0, z);
+      pm.makeScale(s, s * rnd(0.6, 1), s); pm.setPosition(x, hAt(x, z) - 0.4, z);
       rocks.setMatrixAt(rk, pm);
       obstacles.push({ x, z, r: 2.4 * s });
       rk++;
@@ -3226,7 +3255,7 @@ function buildWorld() {
       const a = i / 16 * Math.PI * 2 + rnd(-0.1, 0.1), r = rnd(1050, 1250);
       const m = new THREE.Mesh(new THREE.ConeGeometry(rnd(160, 300), rnd(140, 260), 6),
         new THREE.MeshStandardMaterial({ color: 0x111a2c, roughness: 1, flatShading: true }));
-      m.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+      m.position.set(Math.cos(a) * r, hAt(Math.cos(a) * r, Math.sin(a) * r) - 3, Math.sin(a) * r);
       world.add(m);
     }
     if (!neon) {   // cielo estrellado + luna: solo en rallys nocturnos (el NEÓN va a sol puro)
@@ -3756,7 +3785,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 270;
+const BUILD_NO = 271;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
