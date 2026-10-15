@@ -3378,7 +3378,7 @@ function aiDrive(x, z, vx, vz, a, pi) {
 
 // El rival CPU avanza sobre la spline con perfil de velocidad (no es kinematic jugable, es "slot car")
 function cpuSpawn(slot, tint, skill, latB) {
-  const c = { s: dragMode ? -4 : -8 - slot * 4, v: 0, dmg: 0, fin: false, tm: 0, grp: buildF1(tint),
+  const c = { s: dragMode ? -4 : -8 - slot * 4, v: 0, dmg: 0, fin: false, tm: 0, grp: buildF1(tint), tint: tint,
               x: 0, z: 0, a: 0, seg: 0, k: skill || 1, latBias: latB || 0, pts: 0,
               nm: p2Mode ? 'J2' : 'CPU ' + (slot + 1) };
   let tl = 0;
@@ -4548,27 +4548,36 @@ function draw(now) {
     g.fillStyle = 'rgba(50,60,80,0.85)'; g.font = '700 8px sans-serif'; g.textAlign = 'left';
     g.fillText('S' + (k + 1), mx2(p) + 5, my2(p) - 3);
   });
-  // Coche: cono de dirección + triángulo rojo
-  g.save();
-  g.translate(mx2(car), my2(car)); g.rotate(Math.atan2(sf, cf));
-  g.fillStyle = 'rgba(224,16,16,0.22)';                       // cono de visión hacia el morro
-  g.beginPath(); g.moveTo(5, 0); g.lineTo(15, 7); g.lineTo(15, -7); g.closePath(); g.fill();
-  g.fillStyle = '#e01010';
-  g.beginPath(); g.moveTo(6, 0); g.lineTo(-4.5, 4); g.lineTo(-4.5, -4); g.closePath(); g.fill();
-  g.restore();
   // Clasificación: jugador + rivales ordenados por progreso en pista
-  const board = [{ n: YOU(), x: car.x, z: car.z, p: lapsDone * pathLen + pathIdx, me: 1 }];
+  const myTint = CARS[Math.min(OPTS.car || 0, CARS.length - 1)].tint;
+  const board = [{ n: YOU(), x: car.x, z: car.z, a: car.a, tint: myTint, p: lapsDone * pathLen + pathIdx, me: 1 }];
   cpus.forEach((c2, ci) => {
-    if (c2 && !c2.elim && c2.grp) board.push({ n: p2Mode ? 'J2' : ci === 0 ? 'CPU' : 'CPU ' + (ci + 1), x: c2.x, z: c2.z, p: c2.s });
+    if (c2 && !c2.elim && c2.grp) board.push({ n: p2Mode ? 'J2' : ci === 0 ? 'CPU' : 'CPU ' + (ci + 1), x: c2.x, z: c2.z, a: c2.a, tint: c2.tint, p: c2.s });
   });
-  if (remote && remote.grp) board.push({ n: 'P2', x: remote.x, z: remote.z, p: remote.cp * pathLen + remote.pi });
+  if (remote && remote.grp) board.push({ n: 'P2', x: remote.x, z: remote.z, a: remote.a || 0, tint: 0x8fd0ff, p: remote.cp * pathLen + remote.pi });
   board.sort((a, b) => b.p - a.p);
-  // Rival (punto azul)
-  for (const r of board) {
-    if (r.me) continue;                              // el jugador ya lleva su triángulo
-    g.fillStyle = '#2050d0';
-    g.beginPath(); g.arc(mx2(r), my2(r), 4.5, 0, 7); g.fill();
-  }
+  // Coches en el radar: el sprite real del F1 visto desde arriba, con su livery
+  // y girado según el rumbo — el morro del sprite está abajo → rotar a +X
+  const mmCar = r => {
+    let img = carTexCache[r.tint] && carTexCache[r.tint].c;
+    if (!img && f1Thumb.complete && f1Thumb.naturalWidth) { carTex(r.tint); img = carTexCache[r.tint].c; }
+    g.save(); g.translate(mx2(r), my2(r)); g.rotate(r.a || 0);
+    if (img && img.width) {
+      g.rotate(-Math.PI / 2);
+      const L = r.me ? 13 : 10.5;
+      g.drawImage(img, -L * 0.305, -L / 2, L * 0.61, L);
+    } else {                                            // reserva mientras cargan los sprites
+      g.fillStyle = r.me ? '#e01010' : '#2050d0';
+      g.beginPath(); g.moveTo(6, 0); g.lineTo(-4.5, 4); g.lineTo(-4.5, -4); g.closePath(); g.fill();
+    }
+    g.restore();
+  };
+  g.save();                                             // los sprites no salen del panel
+  g.beginPath(); g.roundRect(mx, my, mm, mm, 14); g.clip();
+  for (const r of board) if (!r.me) mmCar(r);           // rivales primero…
+  const meE = board.find(r => r.me);
+  if (meE) mmCar(meE);                                  // …y el jugador por encima
+  g.restore();
   // Líder: aro dorado que parpadea fuerte
   if (board.length > 1 && Math.floor(now / 140) % 2 === 0) {
     g.strokeStyle = '#e09800'; g.lineWidth = 2.5;
