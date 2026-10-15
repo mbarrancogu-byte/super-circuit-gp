@@ -549,29 +549,29 @@
     transition: opacity 0.85s ease, transform 1.1s cubic-bezier(0.2,0.8,0.25,1);
     transform-origin: 50% 50%; }
   .inSlide img { position: absolute; inset: 0; width: 100%; height: 100%;
-    /* contain: la imagen entera siempre visible; padding reserva la zona del
-       botón SALTAR (arriba) y del titular + puntos (abajo) — nunca se solapa */
-    object-fit: contain; padding: 64px 12px 120px; box-sizing: border-box;
-    transform: scale(1); transition: transform 3.4s ease-out;
+    /* cover: la imagen llena toda la pantalla — sin bandas ni huecos vacíos;
+       el titular va encima protegido por el degradado ::after del slide */
+    object-fit: cover;
+    transform: scale(1.05); transition: transform 3.4s ease-out;
     filter: saturate(1.06) contrast(1.03); }
   .inSlide.on { opacity: 1; transform: none; }
   /* Entrada distinta por pantalla + Ken Burns con dirección propia —
-     la imagen NUNCA supera el tamaño de la pantalla (contain + scale ≤ 1) */
+     zoom IN progresivo (scale ≥ 1.05) para no destapar el fondo */
   .inSlide.m1 { transform: scale(0.96); }
   .inSlide.m2 { transform: translateX(4%)  scale(0.97); }
   .inSlide.m3 { transform: translateX(-4%) scale(0.97); }
   .inSlide.m4 { transform: translateY(3%)  scale(0.94); }
   .inSlide.m5 { transform: scale(0.93); }
-  .inSlide.m1 img { transform: scale(1)    translate(-1.5%, 1%); }
-  .inSlide.m1.on img { transform: scale(0.92) translate(1.5%, -1%); }
-  .inSlide.m2 img { transform: scale(1)    translate(1.5%, 0); }
-  .inSlide.m2.on img { transform: scale(0.93) translate(-1.5%, 0.5%); }
-  .inSlide.m3 img { transform: scale(1)    translate(-1.5%, 0); }
-  .inSlide.m3.on img { transform: scale(0.93) translate(1.5%, -0.5%); }
-  .inSlide.m4 img { transform: scale(1)    translateY(-1.5%); }
-  .inSlide.m4.on img { transform: scale(0.92) translateY(1.5%); }
-  .inSlide.m5 img { transform: scale(1)    translate(1%, 1%); }
-  .inSlide.m5.on img { transform: scale(0.9); }
+  .inSlide.m1 img { transform: scale(1.05) translate(-1.5%, 1%); }
+  .inSlide.m1.on img { transform: scale(1.16) translate(1.5%, -1%); }
+  .inSlide.m2 img { transform: scale(1.05) translate(1.5%, 0); }
+  .inSlide.m2.on img { transform: scale(1.14) translate(-1.5%, 0.5%); }
+  .inSlide.m3 img { transform: scale(1.05) translate(-1.5%, 0); }
+  .inSlide.m3.on img { transform: scale(1.14) translate(1.5%, -0.5%); }
+  .inSlide.m4 img { transform: scale(1.05) translateY(-1.5%); }
+  .inSlide.m4.on img { transform: scale(1.14) translateY(1.5%); }
+  .inSlide.m5 img { transform: scale(1.05) translate(1%, 1%); }
+  .inSlide.m5.on img { transform: scale(1.17); }
   /* Barras cinematográficas que encuadran al abrir */
   .inBar { position: absolute; left: 0; right: 0; height: 7.5vh; background: #000; z-index: 2;
     transition: transform 0.8s cubic-bezier(0.2,0.8,0.2,1); }
@@ -4980,7 +4980,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 351;
+const BUILD_NO = 352;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
