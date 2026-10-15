@@ -934,6 +934,13 @@
     75%      { transform: scale(1.2) skewY(-2.5deg) skewX(1.5deg); } }
   .lpFlag span { position: relative; z-index: 1; font-size: 10px; font-weight: 800;
     letter-spacing: 2px; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
+  /* Entrada: las banderas suben desde el fondo hasta su sitio, escalonadas */
+  @keyframes flagRise {
+    0%   { transform: translateY(90vh) scale(0.85); opacity: 0; }
+    55%  { opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; } }
+  .lpFlag { animation: flagRise 0.85s cubic-bezier(0.2, 1.25, 0.35, 1) 0.55s backwards; }
+  #slpEN { animation-delay: 0.7s; }
   .lpFlag:hover { transform: translateY(-3px); border-color: rgba(255,208,96,0.7);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 12px 28px rgba(0,0,0,0.55), 0 0 16px rgba(255,200,80,0.25); }
   .lpFlag:active { transform: scale(0.94); }
@@ -3899,7 +3906,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 281;
+const BUILD_NO = 282;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
