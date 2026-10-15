@@ -3719,20 +3719,26 @@ function init3() {
     m.visible = false; m.renderOrder = 1; m.userData.life = 0;
     scene3.add(m); skidPool.push(m);
   }
-  // Textura de humo: varias nubes superpuestas → borrones irregulares, más real que un solo degradado
-  const smokeTex = tex3((() => {
-    const c = document.createElement('canvas'); c.width = c.height = 96;
-    const x = c.getContext('2d');
-    for (let i = 0; i < 8; i++) {
-      const px = 48 + rnd(-18, 18), py = 48 + rnd(-15, 15), r = rnd(15, 30);
-      const g = x.createRadialGradient(px, py, 0, px, py, r);
-      g.addColorStop(0, 'rgba(255,255,255,0.5)');
-      g.addColorStop(0.6, 'rgba(255,255,255,0.22)');
-      g.addColorStop(1, 'rgba(255,255,255,0)');
-      x.fillStyle = g; x.fillRect(0, 0, 96, 96);
-    }
-    return c;
-  })());
+  // 4 texturas de humo DISTINTAS: cada bocanada elige una al azar — sin patrón
+  const smokeTexs = [];
+  for (let ti2 = 0; ti2 < 4; ti2++) {
+    smokeTexs.push(tex3((() => {
+      const c = document.createElement('canvas'); c.width = c.height = 96;
+      const x = c.getContext('2d');
+      for (let i = 0; i < 8; i++) {
+        const px = 48 + (Math.random() - 0.5) * 36, py = 48 + (Math.random() - 0.5) * 30,
+              r = 15 + Math.random() * 15;
+        const g = x.createRadialGradient(px, py, 0, px, py, r);
+        g.addColorStop(0, 'rgba(255,255,255,0.5)');
+        g.addColorStop(0.6, 'rgba(255,255,255,0.22)');
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        x.fillStyle = g; x.fillRect(0, 0, 96, 96);
+      }
+      return c;
+    })()));
+  }
+  const smokeTex = smokeTexs[0];
+  window._smokeTexs = smokeTexs;
   dustPool = [];
   for (let i = 0; i < (LOW_POWER ? 24 : 60); i++) {     // menos partículas en modo rendimiento
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, depthWrite: false, opacity: 0 }));
@@ -3834,8 +3840,11 @@ function dustPuff(x, z, vx, vz, col, life, sc, op) {
   s.position.set(x + rnd(-1, 1), 1.2, z + rnd(-1, 1));
   const lf = life || rnd(0.5, 0.9);
   s.userData = { life: lf, life0: lf, vx: vx * 0.3 + rnd(-6, 6), vz: vz * 0.3 + rnd(-6, 6),
-                 op0: op === undefined ? 0.55 : op };
-  const k = sc || rnd(4, 7); s.scale.set(k, k * 0.7, 1);
+                 op0: op === undefined ? 0.55 : op,
+                 rotV: rnd(-1.6, 1.6) };                           // giro propio mientras sube
+  const k = sc || rnd(4, 7); s.scale.set(k, k * rnd(0.55, 0.95), 1); // proporción variable
+  s.material.map = window._smokeTexs[(Math.random() * window._smokeTexs.length) | 0];
+  s.material.rotation = rnd(0, Math.PI * 2);                       // orientación inicial al azar
   s.material.color.setHex(col === undefined ? 0xffffff : col);
   s.material.opacity = s.userData.op0; s.visible = true;
 }
@@ -3863,7 +3872,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 276;
+const BUILD_NO = 277;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -4871,6 +4880,7 @@ function draw(now) {
     s.position.x += s.userData.vx * dt; s.position.z += s.userData.vz * dt;
     s.position.y += dt * 3.5;
     s.scale.x += dt * 10; s.scale.y += dt * 8;
+    if (s.userData.rotV) s.material.rotation += s.userData.rotV * dt;  // la nube gira al subir
     s.material.opacity = (s.userData.op0 || 0.55) * (s.userData.life / (s.userData.life0 || 1));
   }
   // Marcas de rodadura: duran ~45s (aguantan casi toda la carrera), fade suave al final
