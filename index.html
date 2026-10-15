@@ -425,8 +425,54 @@
   .hint { color: #5a6890; font-size: 12px; margin-top: 8px; }
   #resTitle, #pauseTitle { font-size: clamp(34px, 8vw, 62px); font-weight: 900; font-style: italic;
     color: #ffe0a0; letter-spacing: 3px; text-shadow: 0 4px 20px rgba(255,140,40,0.5); }
-  #resTime { font-size: clamp(40px, 10vw, 76px); font-weight: 900; color: #fff; margin: 14px 0; }
-  #resNew { color: #7dffb0; font-size: 16px; font-weight: 800; display: none; margin-bottom: 6px; }
+  /* ===== Pantalla META: fibra oscura + siluetas F1 + trazas LED ===== */
+  #results { background:
+      radial-gradient(circle at 50% 22%, rgba(46,74,140,0.5), transparent 62%),
+      repeating-linear-gradient(60deg, rgba(96,140,210,0.05) 0 2px, transparent 2px 16px),
+      repeating-linear-gradient(-60deg, rgba(96,140,210,0.05) 0 2px, transparent 2px 16px),
+      linear-gradient(180deg, #0b1224 0%, #05080f 100%); }
+  .resCars { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .resCars i { position: absolute; width: 46vmin; height: 46vmin;
+    background: url('f1.png') center/contain no-repeat;
+    filter: grayscale(1) brightness(0) invert(0.42); opacity: .13; }
+  .resCars .c1 { top: 1%; right: -9%; transform: rotate(-22deg); }
+  .resCars .c2 { top: 36%; right: -4%; width: 30vmin; height: 30vmin; transform: rotate(13deg); }
+  .resCars .c3 { bottom: -8%; left: -7%; transform: rotate(28deg) scaleX(-1); }
+  .resHead { display: flex; align-items: center; gap: clamp(8px, 2vw, 18px); margin: 6px 0 0; }
+  .resTrc { width: clamp(90px, 22vw, 190px); height: 56px; overflow: visible; flex: 0 0 auto; }
+  .resTrc path { fill: none; stroke: #39c8ff; stroke-width: 2.2; stroke-linecap: round;
+    filter: drop-shadow(0 0 5px rgba(60,200,255,0.75)); }
+  .resTrc path.d1 { opacity: .55; stroke-width: 1.6; }
+  .resTrc path.d2 { opacity: .35; stroke-width: 1.3; }
+  .resTrc circle.cr { fill: #ff5040; filter: drop-shadow(0 0 4px #ff5040); }
+  .resTrc circle.cb { fill: #58b0ff; filter: drop-shadow(0 0 4px #58b0ff); }
+  .resTrc.flip { transform: scaleX(-1); }
+  #resTitle { background: linear-gradient(180deg, #fff6d8 0%, #ffd968 38%, #d19130 62%, #8a5a16 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    display: flex; flex-direction: column; align-items: center;
+    filter: drop-shadow(0 0 12px rgba(60,200,255,0.4)) drop-shadow(0 5px 16px rgba(0,0,0,0.85)); }
+  #resTitle::after { content: attr(data-t); font-size: .44em; letter-spacing: 9px; margin-top: -3px;
+    opacity: .55; background: inherit; -webkit-background-clip: text; background-clip: text; }
+  #resTime { font-size: clamp(40px, 10vw, 76px); font-weight: 900; margin: 14px 0;
+    color: rgba(14,10,4,0.55); -webkit-text-stroke: 2.5px #f0d490;
+    text-shadow: 0 0 30px rgba(255,200,90,0.28); }
+  #resNew { color: #54ffa0; font-size: 16px; font-weight: 800; display: none; margin-bottom: 6px;
+    letter-spacing: 3px; text-shadow: 0 0 14px rgba(60,255,140,0.7); }
+  #resPts .ic { width: 20px; height: 20px; vertical-align: -4px; margin-left: 6px; }
+  #nextBtn { background:
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0 3px, transparent 3px 6px),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,0.05) 0 3px, transparent 3px 6px),
+      linear-gradient(180deg, #4a3410, #1c1206);
+    border: 2px solid #f0c060; color: #ffe4a8;
+    box-shadow: 0 0 24px rgba(255,180,50,0.4), inset 0 1px 0 rgba(255,255,255,0.15),
+      0 6px 0 #3a240a, 0 12px 22px rgba(0,0,0,0.6); }
+  .resPill { background: linear-gradient(180deg, #434d63, #181e2c);
+    border: 1.5px solid rgba(170,200,255,0.55); color: #e6eeff;
+    font-size: 14px; padding: 11px 22px; margin: 12px 4px 0; letter-spacing: 2px;
+    box-shadow: 0 4px 0 #10141e, 0 8px 16px rgba(0,0,0,0.5); }
+  .resPill:active { transform: translateY(3px);
+    box-shadow: 0 1px 0 #10141e, 0 3px 8px rgba(0,0,0,0.5); }
+  .resPill .ic { width: 16px; height: 16px; margin-right: 7px; vertical-align: -3px; }
   #countNum { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center;
     font-size: clamp(80px, 22vw, 140px); font-weight: 900; font-style: italic; color: #ffd040;
     text-shadow: 0 0 40px rgba(255,120,20,0.8); pointer-events: none; }
@@ -1112,6 +1158,13 @@
   <rect x="3" y="7" width="13" height="10" rx="2.4" fill="url(#gBlue)"/>
   <path d="M16 10.5 L21 7.5 L21 16.5 L16 13.5 Z" fill="url(#gBlue)"/>
 </symbol>
+<!-- compartir -->
+<symbol id="i-share" viewBox="0 0 24 24">
+  <path d="M9.4 10.7 L14.8 6.9 M9.4 13.3 L14.8 17.1" stroke="url(#gSilv)" stroke-width="2.1" fill="none" stroke-linecap="round"/>
+  <circle cx="6.6" cy="12" r="3.3" fill="url(#gSilv)"/>
+  <circle cx="17.4" cy="5.6" r="3.3" fill="url(#gCyan)"/>
+  <circle cx="17.4" cy="18.4" r="3.3" fill="url(#gCyan)"/>
+</symbol>
 <!-- medalla récords -->
 <symbol id="i-medal" viewBox="0 0 24 24">
   <path d="M8 3 L10.4 8 M16 3 L13.6 8" stroke="url(#gRed)" stroke-width="3" fill="none"/>
@@ -1496,14 +1549,27 @@
 
 <div class="screen" id="results">
   <div class="stripe"></div>
-  <div id="resTitle">META</div>
+  <div class="resCars" aria-hidden="true"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div>
+  <div class="resHead">
+    <svg class="resTrc" viewBox="0 0 130 64" aria-hidden="true">
+      <path d="M0 10h58l14 14h58"/><path class="d1" d="M0 26h44l12 12h74"/><path class="d2" d="M0 42h66l14 12h50"/>
+      <circle class="cr" cx="20" cy="10" r="3"/><circle class="cb" cx="52" cy="26" r="3"/>
+      <circle class="cb" cx="112" cy="24" r="3"/><circle class="cr" cx="100" cy="54" r="3"/>
+    </svg>
+    <div id="resTitle" data-t="META">META</div>
+    <svg class="resTrc flip" viewBox="0 0 130 64" aria-hidden="true">
+      <path d="M0 10h58l14 14h58"/><path class="d1" d="M0 26h44l12 12h74"/><path class="d2" d="M0 42h66l14 12h50"/>
+      <circle class="cr" cx="20" cy="10" r="3"/><circle class="cb" cx="52" cy="26" r="3"/>
+      <circle class="cb" cx="112" cy="24" r="3"/><circle class="cr" cx="100" cy="54" r="3"/>
+    </svg>
+  </div>
   <div id="resNew">★ ¡NUEVO RÉCORD! ★</div>
   <div id="resTime">0:00.0</div>
   <div id="resInfo" class="hint" style="font-size:14px;color:#8898c0"></div>
   <div id="pfWrap"><div id="pfLbl">📸 PHOTO FINISH</div><img id="pfImg" alt="photo finish"></div>
   <div id="resPts"></div>
   <button class="mbtn" id="nextBtn">▶ SIGUIENTE ETAPA</button>
-  <div class="backWrap"><button class="mbtn" id="photoBtn">📸 FOTO</button><button class="mbtn" id="menuBtn2">MENÚ</button></div>
+  <div class="backWrap"><button class="mbtn resPill" id="photoBtn">📸 FOTO</button><button class="mbtn resPill" id="shareBtn">COMPARTIR</button><button class="mbtn resPill" id="menuBtn2">MENÚ</button></div>
   <div class="stripe"></div>
 </div>
 
@@ -1818,7 +1884,7 @@ let tutoT = 0;                                     // cuenta atrás del tutorial
 let trackCX = 0, trackCZ = 0, trackSpanX = 1, trackSpanZ = 1;
 let carGrp = null, wheelF = [], wheelR = [], beamL = null, beamR = null, tailSpr = [];
 let ledMats = [], ledFR = null, ledFL = null;         // señales LED: materiales y frames por lado
-let beacons = [];                                     // balizas verde neón de las curvas
+let beacons = [];                                     // balizas rojo intenso de las curvas
 let skidPool = [], dustPool = [], moonLight = null, pathPts = null;
 let mmMinX = 0, mmMinZ = 0, mmScale = 1, mmSpanX = 1, mmSpanZ = 1; // encuadre justo del minimapa (cacheado por etapa)
 let ambLight = null, hemiLight = null, moonOX = 300, moonOZ = -400;
@@ -2868,7 +2934,7 @@ function buildWorld() {
     }
   }
 
-  // Pilotos LED verde neón: a ambos lados (interior y exterior) de todas las
+  // Pilotos LED rojo intenso: a ambos lados (interior y exterior) de todas las
   // curvas — poste bajo + bola LED con halo; parpadeo en cadena que corre por la curva
   {
     beacons = [];
@@ -2876,7 +2942,7 @@ function buildWorld() {
     const postGeo = new THREE.CylinderGeometry(0.05, 0.07, 0.55, 6);
     const postMat = new THREE.MeshBasicMaterial({ color: 0x14161a });
     const ballGeo = new THREE.SphereGeometry(0.15, 8, 6);
-    const glowTx = tex3(makeGlowTex(64, 255, 26, 0.95));
+    const glowTx = tex3(makeGlowTex(255, 40, 24, 0.95));
     let bi = 0, acc2 = 0;
     for (let i = 0; i < pathLen; i++) {
       const p = path[i], pn = path[(i + 1) % pathLen], pa = path[(i + LOOK2) % pathLen];
@@ -2890,10 +2956,10 @@ function buildWorld() {
         const nx = -p.tz * s, nz = p.tx * s;
         const post = new THREE.Mesh(postGeo, postMat);
         post.position.set(p.x + nx * hw, 0.28, p.z + nz * hw);
-        const bm = new THREE.MeshBasicMaterial({ color: 0x35ff18, transparent: true, opacity: 0.2, fog: false });
+        const bm = new THREE.MeshBasicMaterial({ color: 0xff2014, transparent: true, opacity: 0.2, fog: false });
         const ball = new THREE.Mesh(ballGeo, bm);
         ball.position.y = 0.34;
-        const gm = new THREE.SpriteMaterial({ map: glowTx, color: 0x4aff20, transparent: true, opacity: 0.08, depthWrite: false, fog: false });
+        const gm = new THREE.SpriteMaterial({ map: glowTx, color: 0xff2818, transparent: true, opacity: 0.08, depthWrite: false, fog: false });
         const gl = new THREE.Sprite(gm);
         gl.scale.set(1.6, 1.6, 1); gl.position.y = 0.34;
         post.add(ball, gl);
@@ -3648,7 +3714,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 264;
+const BUILD_NO = 266;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -3861,6 +3927,7 @@ function koOut() {
   if (rivGain) rivGain.gain.value = 0;
   el('speedVig').style.opacity = 0;
   document.getElementById('resTitle').textContent = T('koOut');
+  document.getElementById('resTitle').dataset.t = T('koOut');
   document.getElementById('resNew').style.display = 'none';
   document.getElementById('resInfo').textContent = T('koInfo');
   document.getElementById('nextBtn').style.display = 'none';
@@ -4611,7 +4678,7 @@ function draw(now) {
     const ph = Math.floor(now / 130) % 4;
     for (const s of ledMats) s.m.map = (s.r ? ledFR : ledFL)[ph];
   }
-  // Balizas: pulso verde neón que viaja en cadena a lo largo de la curva
+  // Balizas: pulso rojo intenso que viaja en cadena a lo largo de la curva
   if (beacons.length) {
     const cyc = Math.floor(now / 150);
     for (const bc of beacons) {
@@ -5465,11 +5532,13 @@ function finishStage() {
     if (isBest) ghostSave();
   }
   // Los puntos del ganador se suman al total persistente y se muestran en resultados
+  const rt2 = document.getElementById('resTitle');
+  rt2.dataset.t = rt2.textContent;                 // eco del título (2ª línea META)
   if (gained > 0) {
     addPts(gained);
     const rp = document.getElementById('resPts');
     rp.style.display = 'block';
-    rp.textContent = `+${gained} PTS · ${T('ptsTot')}: ${PTS}`;
+    rp.innerHTML = `+${gained} PTS · ${T('ptsTot')}: ${PTS} ` + ic('trophy');
   } else document.getElementById('resPts').style.display = 'none';
   // PHOTO FINISH: si la rendija capturó la llegada, se muestra la foto recortada
   const pfWrap = document.getElementById('pfWrap');
@@ -5652,6 +5721,7 @@ const I18N = {
     p1Win: '¡GANA J1!', p2Win: '¡GANA J2!',
     demoEnd: 'DEMO', you: 'Tú', rival: 'Rival', dnf: 'sin terminar', dmgTxt: 'daño',
     next: '▶ SIGUIENTE ETAPA', nextDemo: '▶ SIGUIENTE DEMO', rematch: 'REVANCHA', ptsTot: 'TOTAL',
+    photo: 'FOTO', share: 'COMPARTIR', imgSaved: 'IMAGEN GUARDADA',
     shiftPerf: '¡CAMBIO PERFECTO!', shiftEarly: 'MUY PRONTO', shiftLate: 'AL CORTE',
     launchOk: '¡SALIDA PERFECTA!',
     divebomb: 'SE LANZA POR DENTRO', overtakeZone: 'ZONA DE ADELANTAMIENTO', shortcut: '¡ATAJO! +3s',
@@ -5720,6 +5790,7 @@ const I18N = {
     p1Win: 'P1 WINS!', p2Win: 'P2 WINS!',
     demoEnd: 'DEMO', you: 'You', rival: 'Rival', dnf: 'DNF', dmgTxt: 'damage',
     next: '▶ NEXT STAGE', nextDemo: '▶ NEXT DEMO', rematch: 'REMATCH', ptsTot: 'TOTAL',
+    photo: 'PHOTO', share: 'SHARE', imgSaved: 'IMAGE SAVED',
     shiftPerf: 'PERFECT SHIFT!', shiftEarly: 'TOO EARLY', shiftLate: 'AT THE LIMIT',
     launchOk: 'PERFECT LAUNCH!',
     divebomb: 'DIVES DOWN THE INSIDE', overtakeZone: 'OVERTAKING ZONE', shortcut: 'SHORTCUT! +3s',
@@ -5831,6 +5902,7 @@ function applyLang() {
   el('wwBigTxt').textContent = T('wrongWay');
   setI('demoChip', 'robot', T('demoOut'));
   setI('menuBtn2', 'back', T('menu'));
+  setI('photoBtn', 'cam', T('photo')); setI('shareBtn', 'share', T('share'));
   set('pauseTitle', T('pause'));
   set('resumeBtn', '▶ ' + T('resume'));
   setI('pauseExitBtn', 'back', T('menu'));
@@ -6360,6 +6432,24 @@ document.getElementById('photoBtn').addEventListener('click', () => {
   const a = document.createElement('a');
   a.href = url; a.download = 'SuperCircuitGP-' + Date.now() + '.png';
   document.body.appendChild(a); a.click(); a.remove();
+});
+// COMPARTIR: la captura se envía por Web Share; sin soporte → descarga directa
+document.getElementById('shareBtn').addEventListener('click', async () => {
+  if (!renderer3 || !scene3) return;
+  renderer3.render(scene3, cam3);
+  const url = renderer3.domElement.toDataURL('image/png');
+  try {
+    const blob = await (await fetch(url)).blob();
+    const f = new File([blob], 'SuperCircuitGP-' + Date.now() + '.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [f] })) {
+      await navigator.share({ files: [f], title: 'Super Circuit GP' });
+      return;
+    }
+  } catch (e) {}
+  const a = document.createElement('a');
+  a.href = url; a.download = 'SuperCircuitGP-' + Date.now() + '.png';
+  document.body.appendChild(a); a.click(); a.remove();
+  showToast(T('imgSaved'));
 });
 // Mejor marca en el menú
 (() => {
