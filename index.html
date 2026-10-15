@@ -981,8 +981,8 @@
   #splash::before { content: ''; position: absolute; inset: -40px;
     background: url('portada.jpg') center / cover no-repeat;
     filter: blur(26px) brightness(0.55); }
-  #splash img { position: absolute; inset: 0; margin: auto;
-    max-width: 100%; max-height: 100%; }
+  #splash img { position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; }                              /* llena la pantalla, recorta bordes */
   #splash.hide { opacity: 0; pointer-events: none; transition: opacity .45s; }
   /* Idiomas dentro de la portada — JS los posa sobre el volante de la foto */
   #splashLang { position: absolute; left: 50%; bottom: 15%; transform: translate(-50%, -50%);
@@ -4927,7 +4927,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 340;
+const BUILD_NO = 341;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -7616,16 +7616,23 @@ document.getElementById('optReset').addEventListener('click', () => {
   const bs = document.getElementById('blinkStart');
   const place = () => {
     if (!im.naturalWidth) return;
-    const r = im.getBoundingClientRect();
-    sl.style.left = (r.left + r.width * 0.5) + 'px';   // centro horizontal de la imagen
-    sl.style.top = (r.top + r.height * 0.40) + 'px';   // justo debajo del "WORLD TRACKS"
+    // rect VIRTUAL de la imagen con object-fit:cover — la foto se recorta por los
+    // bordes al llenar la pantalla, así que el anclaje se calcula, no se mide
+    const vw = sp.clientWidth, vh = sp.clientHeight;
+    const k = Math.max(vw / im.naturalWidth, vh / im.naturalHeight);
+    const r = { left: (vw - im.naturalWidth * k) / 2, top: (vh - im.naturalHeight * k) / 2,
+                width: im.naturalWidth * k, height: im.naturalHeight * k };
+    const clX = v => Math.min(Math.max(v, 20), vw - 20);   // con cover la imagen se
+    const clY = v => Math.min(Math.max(v, 14), vh - 14);   // recorta: anclajes al viewport
+    sl.style.left = clX(r.left + r.width * 0.5) + 'px';   // centro horizontal de la imagen
+    sl.style.top = clY(r.top + r.height * 0.40) + 'px';   // justo debajo del "WORLD TRACKS"
     sl.style.bottom = 'auto';
     sl.style.gap = '12px';   // las dos banderas juntas, centradas
-    bs.style.left = (r.left + r.width * 0.5) + 'px';   // flecha sobre el "START RACE"
-    bs.style.top = (r.top + r.height * 0.885) + 'px';
+    bs.style.left = clX(r.left + r.width * 0.5) + 'px';   // flecha sobre el "START RACE"
+    bs.style.top = clY(r.top + r.height * 0.885) + 'px';
     const sg = document.getElementById('startGlow');    // halo sobre el texto START RACE
-    sg.style.left = (r.left + r.width * 0.5) + 'px';
-    sg.style.top = (r.top + r.height * 0.925) + 'px';
+    sg.style.left = clX(r.left + r.width * 0.5) + 'px';
+    sg.style.top = clY(r.top + r.height * 0.925) + 'px';
     sg.style.width = (r.width * 0.30) + 'px';
     sg.style.height = (r.height * 0.075) + 'px';
     const sm = document.getElementById('splashSmoke');        // humo sobre las ruedas traseras
