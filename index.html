@@ -2680,15 +2680,15 @@ function setDayMode(day) {
     moonOX = 200; moonOZ = 120;
   } else {
     const neon = !!(circAt(stage) && !circAt(stage).img);     // circuito dibujado = ambiente neón
-    scene3.background.setHex(neon ? 0x02030a : 0x060a16);
-    scene3.fog.color.setHex(neon ? 0x02030a : 0x060a16);
+    scene3.background.setHex(neon ? 0x080c18 : 0x060a16);
+    scene3.fog.color.setHex(neon ? 0x080c18 : 0x060a16);
     noFog = neon;                                             // NEÓN: sin niebla — aire limpio de día
-    // NEÓN: SOLO EL SOL — sin luz ambiente ni hemisférica, sombras duras reales
-    ambLight.color.setHex(neon ? 0x78788c : 0x36466a); ambLight.intensity = neon ? 0 : 0.8;
-    hemiLight.color.setHex(neon ? 0x9098b4 : 0x2a3d68);
-    hemiLight.groundColor.setHex(neon ? 0x2e2e34 : 0x0e121c); hemiLight.intensity = neon ? 0 : 0.55;
-    // Luz solar blanca: única fuente de luz del NEÓN — blanca cálida e intensa
-    moonLight.color.setHex(neon ? 0xfff4e0 : 0x9fb2dd); moonLight.intensity = neon ? 2.6 : 0.45;
+    // NEÓN: sol fuerte + relleno suave — el ambiente se lee, las sombras siguen marcadas
+    ambLight.color.setHex(neon ? 0x8890a8 : 0x36466a); ambLight.intensity = neon ? 0.62 : 0.8;
+    hemiLight.color.setHex(neon ? 0x9aa4c0 : 0x2a3d68);
+    hemiLight.groundColor.setHex(neon ? 0x3c3c46 : 0x0e121c); hemiLight.intensity = neon ? 0.55 : 0.55;
+    // Luz solar blanca: fuente principal del NEÓN — blanca cálida e intensa
+    moonLight.color.setHex(neon ? 0xfff4e0 : 0x9fb2dd); moonLight.intensity = neon ? 3.0 : 0.45;
     moonOX = 300; moonOZ = -400;
   }
 }
@@ -3918,7 +3918,7 @@ function update(dt) {
     crowdBoost = Math.max(0, crowdBoost - dt * 0.8);
     crowdGain.gain.value = (playing && circAt(stage) ? 0.05 : 0) + crowdBoost * 0.09;
     // La lluvia tapa el sol: la luz baja con la tormenta (sensación de nublado)
-    if (moonLight) moonLight.intensity = (noFog ? 2.6 : dayMode ? 1.4 : 0.45) * (1 - rain * 0.22);
+    if (moonLight) moonLight.intensity = (noFog ? 3.0 : dayMode ? 1.4 : 0.45) * (1 - rain * 0.22);
     // Lluvia: siseo proporcional a la intensidad de la tormenta
     rainGain.gain.value = playing ? rain * 0.09 : 0;
     // Rebufo: chorro de aire mientras vas pegado a la estela del rival
