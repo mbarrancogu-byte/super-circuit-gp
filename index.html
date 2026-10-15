@@ -4390,7 +4390,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 292;
+const BUILD_NO = 293;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6897,7 +6897,7 @@ document.getElementById('powBack').addEventListener('click', () => {
 
 /* ================== CARS 3D: visor de modelos ================== */
 const c3d = { on: false, r: null, scene: null, cam: null, car: null, raf: 0,
-  idx: 0, rotY: 0, rotX: 0, zoom: 1, drag: null, r26: null, r26p: null, allGrp: null };
+  idx: 0, rotY: 0, rotX: 0, zoom: 1, drag: null, r26: null, r26p: null, allGrp: null, req: 0 };
 // Mismo tratamiento de materiales que el render del sprite
 const C3D_TMAP = {
   WCWING: 'wcwing.png', WCEXTRA0: 'wcextra0.png', WCEXTRA1: 'wcextra1.png',
@@ -6972,6 +6972,21 @@ async function c3dGlb(url) {
   })();
   return c3d.glbCache[url];
 }
+// Clon espejo: copia volteada bajo la plataforma, recortada al plano y=0.02
+// y atenuada — se ve a través del disco translúcido como reflejo pulido
+function makeMirrorCar(wrap) {
+  const m = wrap.clone(true);
+  m.traverse(o => {
+    if (!o.isMesh) return;
+    o.material = o.material.clone();
+    o.material.transparent = true;
+    if (o.material.color) o.material.color.multiplyScalar(0.6);
+    o.material.clippingPlanes = [new THREE.Plane(new THREE.Vector3(0, -1, 0), 0.02)];
+    o.castShadow = o.receiveShadow = false;
+  });
+  m.scale.y = -0.94;
+  return m;
+}
 function c3dInit() {
   if (c3d.r) return;
   const cvEl = document.getElementById('c3dCv');
@@ -6987,8 +7002,10 @@ function c3dInit() {
   const under = new THREE.PointLight(0x60a0ff, 0.6, 40); under.position.set(0, 1, 0); c3d.scene.add(under);
   // Plataforma de exposición
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(6.1, 6.5, 0.35, 48),
-    new THREE.MeshStandardMaterial({ color: 0x182238, roughness: 0.35, metalness: 0.7 }));
+    new THREE.MeshStandardMaterial({ color: 0x0d1626, roughness: 0.12, metalness: 0.9,
+      transparent: true, opacity: 0.66 }));
   disc.position.y = -0.18; c3d.scene.add(disc);
+  c3d.r.localClippingEnabled = true;
   const ringT = new THREE.Mesh(new THREE.TorusGeometry(6.1, 0.07, 8, 60),
     new THREE.MeshBasicMaterial({ color: 0xffc860 }));
   ringT.rotation.x = Math.PI / 2; ringT.position.y = 0.01; c3d.scene.add(ringT);
@@ -7038,13 +7055,16 @@ function c3dNorm(mdl, len) {
 // TODOS: los 7 coches en círculo sobre la plataforma — carrusel giratorio
 async function c3dShowAll() {
   const load = document.getElementById('c3dLoad');
-  if (c3d.car) { c3d.scene.remove(c3d.car); c3d.car = null; }
+  if (c3d.car && c3d.car !== c3d.allGrp) { c3d.scene.remove(c3d.car); c3d.car = null; }
+  if (c3d.mirr && c3d.mirr !== c3d.allMirr) { c3d.scene.remove(c3d.mirr); c3d.mirr = null; }
+  const rq = ++c3d.req;
   load.style.display = 'flex';
   if (!c3d.allGrp) {
     const grp = new THREE.Group();
     const R = 5.0, n = CARS.length;
     for (let i = 0; i < n; i++) {
       const w = c3dNorm(await c3dModel(CARS[i]), 3.7);
+      if (rq !== c3d.req) return;                 // se volvió a uno mientras cargaba
       if (CARS[i].img === 'f1_r26.png') w.scale.setScalar(0.62);  // el GLB sale más grande que los demás
       const a = (i / n) * Math.PI * 2;
       w.position.set(Math.sin(a) * R, 0, Math.cos(a) * R);
@@ -7052,8 +7072,11 @@ async function c3dShowAll() {
       grp.add(w);
     }
     c3d.allGrp = grp; c3d.scene.add(grp);
+    c3d.allMirr = makeMirrorCar(grp); c3d.scene.add(c3d.allMirr);
   }
+  if (rq !== c3d.req) return;
   c3d.allGrp.visible = true;
+  if (c3d.allMirr) c3d.allMirr.visible = true;
   c3d.car = c3d.allGrp;                           // el loop lo gira como carrusel
   c3d.zoom = Math.max(c3d.zoom, 1.05);
   load.style.display = 'none';
@@ -7061,22 +7084,29 @@ async function c3dShowAll() {
 }
 async function c3dShow(i) {
   if (c3d.allGrp) c3d.allGrp.visible = false;
+  if (c3d.allMirr) c3d.allMirr.visible = false;
   c3d.idx = ((i % CARS.length) + CARS.length) % CARS.length;
   const def = CARS[c3d.idx];
   document.getElementById('c3dName').textContent = def.name;
   const load = document.getElementById('c3dLoad');
-  if (c3d.car) { c3d.scene.remove(c3d.car); c3d.car = null; }
+  if (c3d.car && c3d.car !== c3d.allGrp) { c3d.scene.remove(c3d.car); c3d.car = null; }
+  if (c3d.mirr && c3d.mirr !== c3d.allMirr) { c3d.scene.remove(c3d.mirr); c3d.mirr = null; }
+  const rq = ++c3d.req;
   const mdl = await c3dModel(def);
-  if (c3d.idx !== CARS.indexOf(def) || c3d.car === c3d.allGrp) return;   // cambió mientras cargaba
+  if (rq !== c3d.req) return;                            // cambió mientras cargaba
   const wrap = c3dNorm(mdl, 8.2);                        // ~8.2u de largo sobre la plataforma
   c3d.scene.add(wrap);
   c3d.car = wrap;
+  c3d.mirr = makeMirrorCar(wrap); c3d.scene.add(c3d.mirr);
+  load.style.display = 'none';
 }
 function c3dLoop() {
   if (!c3d.on) return;
   c3d.raf = requestAnimationFrame(c3dLoop);
   if (!c3d.drag) c3d.rotY += 0.004;                      // giro automático
   if (c3d.car) { c3d.car.rotation.y = c3d.rotY; c3d.car.rotation.x = c3d.rotX; }
+  const mr = c3d.car === c3d.allGrp ? c3d.allMirr : c3d.mirr;
+  if (mr) { mr.rotation.y = c3d.rotY; mr.rotation.x = -c3d.rotX; }
   const w = c3d.cam;                                     // zoom = distancia
   w.position.set(0, 5.6 * c3d.zoom, 15.5 * c3d.zoom); w.lookAt(0, 1.4, 0);
   const cvEl = document.getElementById('c3dCv'), wrap = document.getElementById('c3dWrap');
@@ -7121,8 +7151,10 @@ function m3dInit() {
   const key = new THREE.DirectionalLight(0xfff2dc, 1.6); key.position.set(5, 9, 5); m3d.scene.add(key);
   const rim = new THREE.DirectionalLight(0x80b0ff, 0.9); rim.position.set(-6, 5, -5); m3d.scene.add(rim);
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 5.0, 0.3, 40),
-    new THREE.MeshStandardMaterial({ color: 0x141e33, roughness: 0.4, metalness: 0.6 }));
+    new THREE.MeshStandardMaterial({ color: 0x0d1626, roughness: 0.12, metalness: 0.9,
+      transparent: true, opacity: 0.66 }));              // espejo pulido: el reflejo se ve a través
   disc.position.y = -0.15; m3d.scene.add(disc);
+  m3d.r.localClippingEnabled = true;
 }
 async function m3dShow(i) {
   i = Math.min(Math.max(i, 0), CARS.length - 1);
@@ -7130,10 +7162,12 @@ async function m3dShow(i) {
   m3d.idx = i;
   m3dInit();
   if (m3d.car) { m3d.scene.remove(m3d.car); m3d.car = null; }
+  if (m3d.mirr) { m3d.scene.remove(m3d.mirr); m3d.mirr = null; }
   const mdl = c3dNorm(await c3dModel(CARS[i]), 6.4);
   if (CARS[i].img === 'f1_r26.png') mdl.scale.multiplyScalar(0.62);
   if (i !== m3d.idx) return;                             // cambió mientras cargaba
   m3d.car = mdl; m3d.scene.add(mdl);
+  m3d.mirr = makeMirrorCar(mdl); m3d.scene.add(m3d.mirr); // reflejo en la plataforma
 }
 (function m3dLoop() {
   requestAnimationFrame(m3dLoop);
@@ -7141,6 +7175,7 @@ async function m3dShow(i) {
   if (!m3d.r || !m3d.car || !wrap.offsetParent) return;  // solo cuando el menú es visible
   m3d.rotY += 0.010;                                     // giro continuo del coche
   m3d.car.rotation.y = m3d.rotY;
+  if (m3d.mirr) m3d.mirr.rotation.y = m3d.rotY;
   const cv = document.getElementById('car3dCv');
   const cw = wrap.clientWidth, ch = wrap.clientHeight;
   if (cv.width !== cw * 2) {                             // ×2 = nítido en pantallas densas
@@ -7164,8 +7199,10 @@ function ci3dInit() {
   const key = new THREE.DirectionalLight(0xfff0d8, 1.7); key.position.set(6, 10, 6); ci3d.scene.add(key);
   const rim = new THREE.DirectionalLight(0x7fb0ff, 1.0); rim.position.set(-7, 6, -6); ci3d.scene.add(rim);
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(6.4, 7.0, 0.4, 48),
-    new THREE.MeshStandardMaterial({ color: 0x18223a, roughness: 0.35, metalness: 0.65 }));
+    new THREE.MeshStandardMaterial({ color: 0x0d1626, roughness: 0.12, metalness: 0.9,
+      transparent: true, opacity: 0.66 }));
   disc.position.y = -0.2; ci3d.scene.add(disc);
+  ci3d.r.localClippingEnabled = true;
   const ring = new THREE.Mesh(new THREE.TorusGeometry(6.9, 0.10, 8, 60),
     new THREE.MeshBasicMaterial({ color: 0xffc860 }));
   ring.rotation.x = Math.PI / 2; ring.position.y = 0.03; ci3d.scene.add(ring);
@@ -7197,15 +7234,18 @@ async function ciShow(i) {
   // Modelo 3D
   ci3dInit();
   if (ci3d.car) { ci3d.scene.remove(ci3d.car); ci3d.car = null; }
+  if (ci3d.mirr) { ci3d.scene.remove(ci3d.mirr); ci3d.mirr = null; }
   const wrap = c3dNorm(await c3dModel(def), 9.6);
   if (r26) wrap.scale.multiplyScalar(0.62);
   if (i !== ci3d.idx) return;
   ci3d.car = wrap; ci3d.scene.add(wrap);
+  ci3d.mirr = makeMirrorCar(wrap); ci3d.scene.add(ci3d.mirr);
 }
 function ciLoop() {
   if (!ci3d.on) return;
   ci3d.raf = requestAnimationFrame(ciLoop);
   if (ci3d.car) ci3d.car.rotation.y = (ci3d.rotY += 0.008);
+  if (ci3d.mirr) ci3d.mirr.rotation.y = ci3d.rotY;
   const cv = document.getElementById('ciCv'), stage = document.getElementById('ciStage');
   const cw = stage.clientWidth, ch = stage.clientHeight;
   if (cv.width !== cw * 2) {
