@@ -4009,25 +4009,32 @@ function buildWorld() {
   // tocar la calzada (solo fuera del radio de pista y del pit lane).
   // Solo etapas procedurales: en las de foto aérea la hierba ya es real
   if (!traced && !dragMode) {
-    // Textura de mechón: ~18 briznas afiladas desde la base
+    // Textura de mechón: briznas en forma de cúpula — altas en el centro y
+    // bajas en los bordes, para que la mata no se lea como un cuadrado
     if (!window._grassTex) {
-      const gc = document.createElement('canvas'); gc.width = gc.height = 64;
+      const gc = document.createElement('canvas'); gc.width = gc.height = 96;
       const gx = gc.getContext('2d');
-      for (let i = 0; i < 22; i++) {
-        const bx = 8 + Math.random() * 48, top = 4 + Math.random() * 26,
-              w = 2 + Math.random() * 3.2, lean = (Math.random() - 0.5) * 10;
-        const g = gx.createLinearGradient(bx, 64, bx + lean, top);
+      for (let i = 0; i < 42; i++) {
+        const off = (Math.random() - 0.5);                      // -0.5 … 0.5
+        const bx = 48 + off * 66;                               // base centrada
+        const dome = Math.cos(off * Math.PI);                   // 1 centro → 0 bordes
+        const top = 96 - (26 + dome * 54 + Math.random() * 16); // silueta abovedada
+        const w = 0.9 + Math.random() * 1.8, lean = off * 30 + (Math.random() - 0.5) * 10;
+        const g = gx.createLinearGradient(bx, 96, bx + lean, top);
         const h = 95 + Math.random() * 45;
         g.addColorStop(0, `rgb(${40 + Math.random() * 30},${h},${34 + Math.random() * 22})`);
         g.addColorStop(1, `rgb(${70 + Math.random() * 50},${h + 55},${50 + Math.random() * 30})`);
         gx.strokeStyle = g; gx.lineWidth = w; gx.lineCap = 'round';
-        gx.beginPath(); gx.moveTo(bx, 64);
-        gx.quadraticCurveTo(bx + lean * 0.4, 40, bx + lean, top); gx.stroke();
+        gx.beginPath(); gx.moveTo(bx, 96);
+        gx.quadraticCurveTo(bx + lean * 0.4, 62, bx + lean, top); gx.stroke();
       }
       window._grassTex = tex3(gc);
     }
-    // Geometría de la mata: dos planos cruzados, base en y=0
+    // Geometría de la mata: dos planos cruzados AFILADOS arriba (trapecio) —
+    // con vértices cuadrados la mata se veía como un bloque, no como hierba
     const gp1 = new THREE.PlaneGeometry(1.6, 1.6); gp1.translate(0, 0.8, 0);
+    { const pp = gp1.attributes.position;
+      for (let i = 0; i < pp.count; i++) if (pp.getY(i) > 1.2) pp.setX(i, pp.getX(i) * 0.42); }
     const gp2 = gp1.clone(); gp2.rotateY(Math.PI / 2);
     const tuftGeo = mergeGeos([{ geo: gp1, m: new THREE.Matrix4() },
                                { geo: gp2, m: new THREE.Matrix4() }]);
@@ -4731,7 +4738,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 331;
+const BUILD_NO = 332;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
