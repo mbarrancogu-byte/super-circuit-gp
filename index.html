@@ -503,8 +503,20 @@
   #powGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-auto-rows: 1fr; perspective: 900px;
     gap: 10px 14px; width: 100%; flex: 1 1 auto; align-self: stretch; align-content: stretch; }
-  .powCard { height: 100%; box-sizing: border-box; min-width: 0;
+  .powCard { height: 100%; box-sizing: border-box; min-width: 0; cursor: pointer;
     transform-style: preserve-3d; transition: transform .18s ease-out; will-change: transform; }
+  /* Volteo: la carta gira 180° al pulsarla — cara frontal icono+nombre, trasera el texto */
+  .powIn { position: absolute; inset: 0; transform-style: preserve-3d;
+    transition: transform .55s cubic-bezier(.32,.72,.28,1.06); }
+  .powCard.flip .powIn { transform: rotateY(180deg); }
+  .powFace { position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 7px; padding: 12px 10px 16px;
+    border-radius: 14px; overflow: hidden;
+    transform-style: preserve-3d;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .powFace.back { transform: rotateY(180deg); }
+  .powFlipIc { position: absolute; top: 7px; left: 9px; font-size: 13px; line-height: 1;
+    color: rgba(255,220,150,0.55); text-shadow: 0 1px 4px rgba(0,0,0,0.6); }
   .powIc { transform: translateZ(30px); }             /* el icono flota sobre la carta */
   .powTx { transform: translateZ(14px); }
   .powCard::after { content: ''; position: absolute; inset: 0; border-radius: inherit;
@@ -514,7 +526,8 @@
   .powCard:hover::after { opacity: 1; }
   .powCard { display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 7px; padding: 12px 10px 16px;
-    border-radius: 14px; text-align: center; position: relative; overflow: hidden;
+    border-radius: 14px; text-align: center; position: relative;
+    /* sin overflow:hidden: aplanaría el 3D y rompería backface-visibility */
     background:
       linear-gradient(160deg, rgba(10,12,22,0.60), rgba(4,6,14,0.82)),
       url('fondo_card.jpg') center / 100% 100% no-repeat;
@@ -1319,39 +1332,95 @@
   <div style="font-size:clamp(22px,4.4vw,36px);font-weight:900;font-style:italic;color:#ffc890;letter-spacing:3px;margin:0 0 4px"><span id="powTitle">POWER-UPS</span></div>
   <div id="powGrid">
     <div class="powCard pwToggle" id="pwVersus">
-      <div class="powIc" style="--pc:#ff9a90" id="piVersus"></div>
-      <div class="powTx"><b id="pwVersusT">VERSUS</b><i id="pwVersusD"></i><em id="pwVersusK"></em></div>
-      <div class="powSw" id="pwVersusSw">OFF</div>
+      <div class="powIn">
+        <div class="powFace">
+          <div class="powFlipIc">⟲</div>
+          <div class="powIc" style="--pc:#ff9a90" id="piVersus"></div>
+          <div class="powTx"><b id="pwVersusT">VERSUS</b></div>
+          <div class="powSw" id="pwVersusSw">OFF</div>
+        </div>
+        <div class="powFace back">
+          <div class="powTx"><b id="pwVersusT2">VERSUS</b><i id="pwVersusD"></i><em id="pwVersusK"></em></div>
+        </div>
+      </div>
     </div>
     <div class="powCard">
-      <div class="powIc" style="--pc:#60d8ff" id="piNitro"></div>
-      <div class="powTx"><b id="pwNitroT">NITRO / ERS</b><i id="pwNitroD"></i><em id="pwNitroK"></em></div>
-      <div class="powBar"><div class="powFill" style="width:85%;background:linear-gradient(90deg,#2080ff,#60e0ff)"></div></div>
+      <div class="powIn">
+        <div class="powFace">
+          <div class="powFlipIc">⟲</div>
+          <div class="powIc" style="--pc:#60d8ff" id="piNitro"></div>
+          <div class="powTx"><b id="pwNitroT">NITRO / ERS</b></div>
+        </div>
+        <div class="powFace back">
+          <div class="powTx"><b id="pwNitroT2">NITRO / ERS</b><i id="pwNitroD"></i><em id="pwNitroK"></em></div>
+          <div class="powBar"><div class="powFill" style="width:85%;background:linear-gradient(90deg,#2080ff,#60e0ff)"></div></div>
+        </div>
+      </div>
     </div>
     <div class="powCard">
-      <div class="powIc" style="--pc:#ffb040" id="piDrift"></div>
-      <div class="powTx"><b id="pwDriftT">MINI-TURBO</b><i id="pwDriftD"></i><em id="pwDriftK"></em></div>
-      <div class="powBar"><div class="powFill" style="width:70%;background:linear-gradient(90deg,#ff7020,#ffc040)"></div></div>
+      <div class="powIn">
+        <div class="powFace">
+          <div class="powFlipIc">⟲</div>
+          <div class="powIc" style="--pc:#ffb040" id="piDrift"></div>
+          <div class="powTx"><b id="pwDriftT">MINI-TURBO</b></div>
+        </div>
+        <div class="powFace back">
+          <div class="powTx"><b id="pwDriftT2">MINI-TURBO</b><i id="pwDriftD"></i><em id="pwDriftK"></em></div>
+          <div class="powBar"><div class="powFill" style="width:70%;background:linear-gradient(90deg,#ff7020,#ffc040)"></div></div>
+        </div>
+      </div>
     </div>
     <div class="powCard">
-      <div class="powIc" style="--pc:#80ffa0" id="piSlip"></div>
-      <div class="powTx"><b id="pwSlipT">REBUFO</b><i id="pwSlipD"></i><em id="pwSlipK"></em></div>
-      <div class="powBar"><div class="powFill" style="width:60%;background:linear-gradient(90deg,#20c060,#a0ffb0)"></div></div>
+      <div class="powIn">
+        <div class="powFace">
+          <div class="powFlipIc">⟲</div>
+          <div class="powIc" style="--pc:#80ffa0" id="piSlip"></div>
+          <div class="powTx"><b id="pwSlipT">REBUFO</b></div>
+        </div>
+        <div class="powFace back">
+          <div class="powTx"><b id="pwSlipT2">REBUFO</b><i id="pwSlipD"></i><em id="pwSlipK"></em></div>
+          <div class="powBar"><div class="powFill" style="width:60%;background:linear-gradient(90deg,#20c060,#a0ffb0)"></div></div>
+        </div>
+      </div>
     </div>
     <div class="powCard">
-      <div class="powIc" style="--pc:#ffe080" id="piPit"></div>
-      <div class="powTx"><b id="pwPitT">BOXES EXPRÉS</b><i id="pwPitD"></i><em id="pwPitK"></em></div>
-      <div class="powBar"><div class="powFill" style="width:100%;background:linear-gradient(90deg,#c09020,#ffe080)"></div></div>
+      <div class="powIn">
+        <div class="powFace">
+          <div class="powFlipIc">⟲</div>
+          <div class="powIc" style="--pc:#ffe080" id="piPit"></div>
+          <div class="powTx"><b id="pwPitT">BOXES EXPRÉS</b></div>
+        </div>
+        <div class="powFace back">
+          <div class="powTx"><b id="pwPitT2">BOXES EXPRÉS</b><i id="pwPitD"></i><em id="pwPitK"></em></div>
+          <div class="powBar"><div class="powFill" style="width:100%;background:linear-gradient(90deg,#c09020,#ffe080)"></div></div>
+        </div>
+      </div>
     </div>
     <div class="powCard">
-      <div class="powIc" style="--pc:#ff7070" id="piTire"></div>
-      <div class="powTx"><b id="pwTireT">NEUMÁTICOS</b><i id="pwTireD"></i><em id="pwTireK"></em></div>
-      <div class="powBar"><div class="powFill" style="width:55%;background:linear-gradient(90deg,#c03030,#ff8080)"></div></div>
+      <div class="powIn">
+        <div class="powFace">
+          <div class="powFlipIc">⟲</div>
+          <div class="powIc" style="--pc:#ff7070" id="piTire"></div>
+          <div class="powTx"><b id="pwTireT">NEUMÁTICOS</b></div>
+        </div>
+        <div class="powFace back">
+          <div class="powTx"><b id="pwTireT2">NEUMÁTICOS</b><i id="pwTireD"></i><em id="pwTireK"></em></div>
+          <div class="powBar"><div class="powFill" style="width:55%;background:linear-gradient(90deg,#c03030,#ff8080)"></div></div>
+        </div>
+      </div>
     </div>
     <div class="powCard">
-      <div class="powIc" style="--pc:#a0c0ff" id="piRain"></div>
-      <div class="powTx"><b id="pwRainT">LLUVIA</b><i id="pwRainD"></i><em id="pwRainK"></em></div>
-      <div class="powBar"><div class="powFill" style="width:40%;background:linear-gradient(90deg,#4060c0,#a0c8ff)"></div></div>
+      <div class="powIn">
+        <div class="powFace">
+          <div class="powFlipIc">⟲</div>
+          <div class="powIc" style="--pc:#a0c0ff" id="piRain"></div>
+          <div class="powTx"><b id="pwRainT">LLUVIA</b></div>
+        </div>
+        <div class="powFace back">
+          <div class="powTx"><b id="pwRainT2">LLUVIA</b><i id="pwRainD"></i><em id="pwRainK"></em></div>
+          <div class="powBar"><div class="powFill" style="width:40%;background:linear-gradient(90deg,#4060c0,#a0c8ff)"></div></div>
+        </div>
+      </div>
     </div>
     <div class="powCard" id="powArt"><img src="fondo_pw.jpg" alt=""></div>
   </div>
@@ -2549,6 +2618,23 @@ function buildWorld() {
         }
         ribs.instanceMatrix.needsUpdate = true;
         world.add(ribs);
+        // Bocas del túnel: arco grueso de hormigón en la entrada y la salida,
+        // con banda luminosa que marca el portal desde lejos
+        {
+          const mouthGeo = new THREE.TorusGeometry(R + 0.35, 0.75, 10, 26, Math.PI);
+          const concM = new THREE.MeshStandardMaterial({ map: makeConcreteTex(), roughness: 0.85 });
+          const bandGeo = new THREE.TorusGeometry(R + 0.75, 0.16, 8, 26, Math.PI);
+          const bandM = new THREE.MeshStandardMaterial({ color: 0xffd040, emissive: 0xffb020, emissiveIntensity: 0.9, roughness: 0.4 });
+          for (const ii of [i0, i1]) {
+            const p = path[ii % pathLen];
+            wE.set(0, Math.atan2(-p.tx, -p.tz), 0); wQ.setFromEuler(wE);
+            wM.compose(wV.set(p.x, 0, p.z), wQ, wS.set(1, 1, 1));
+            const mouth = new THREE.Mesh(mouthGeo, concM);
+            const band = new THREE.Mesh(bandGeo, bandM);
+            mouth.applyMatrix4(wM); band.applyMatrix4(wM);
+            world.add(mouth, band);
+          }
+        }
       }
       // Segundo túnel: una vía que pasa BAJO el circuito — bocas oscuras y carretera saliendo
       {
@@ -3562,7 +3648,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 263;
+const BUILD_NO = 264;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -5730,7 +5816,8 @@ function applyLang() {
   setI('optsBtn', 'gear', T('options'));
   setI('powBtn', 'bolt', T('powers')); setI('powTitle', 'bolt', T('powers')); setI('powBack', 'back', T('back'));
   ['Nitro', 'Drift', 'Slip', 'Pit', 'Tire', 'Rain', 'Versus'].forEach(s => {
-    set('pw' + s + 'T', T('pw' + s + 'T')); set('pw' + s + 'D', T('pw' + s + 'D')); set('pw' + s + 'K', T('pw' + s + 'K'));
+    set('pw' + s + 'T', T('pw' + s + 'T')); set('pw' + s + 'T2', T('pw' + s + 'T'));
+    set('pw' + s + 'D', T('pw' + s + 'D')); set('pw' + s + 'K', T('pw' + s + 'K'));
   });
   const rms = T('radioMsgs'), rl = Array.isArray(rms) ? rms : [rms];
   const rt = document.getElementById('radioTxt');
@@ -5949,10 +6036,14 @@ for (const c of document.querySelectorAll('.powCard')) {
   });
   c.addEventListener('pointerleave', () => { c.style.transform = ''; });
   c.addEventListener('pointerup', () => { c.style.transform = ''; });
+  // Volteo: tocar la carta la gira y muestra el texto (VERSUS y el arte aparte)
+  if (c.id !== 'powArt' && c.id !== 'pwVersus')
+    c.addEventListener('click', () => { c.classList.toggle('flip'); buzz(12); });
 }
 
 document.getElementById('powBtn').addEventListener('click', () => {
   document.getElementById('menu').classList.remove('show');
+  document.querySelectorAll('.powCard.flip').forEach(c => c.classList.remove('flip'));
   const o = document.getElementById('powers');
   o.classList.remove('play'); void o.offsetWidth;
   [...o.querySelectorAll('.powCard,.mbtn')].forEach((el, i) => { el.style.animationDelay = (i * 0.05) + 's'; });
@@ -6180,7 +6271,10 @@ function paintVsPow() {
   document.getElementById('versusBtn').style.display = on ? '' : 'none';
 }
 document.getElementById('pwVersus').addEventListener('click', () => {
-  OPTS.powVs = 1; saveOpts(); paintVsPow();   // activarla abre el modo directamente
+  const c = document.getElementById('pwVersus');
+  if (!c.classList.contains('flip')) { c.classList.add('flip'); buzz(12); return; }
+  c.classList.remove('flip');
+  OPTS.powVs = 1; saveOpts(); paintVsPow();   // segundo toque: entra al modo
   openVersus();
 });
 paintVsPow();
