@@ -2992,9 +2992,9 @@ function buildWorld() {
   if (!dragMode) {
     const pi = Math.floor(pathLen * 0.055);                    // centro a mitad de la recta de meta
     const p = path[pi], nx = -p.tz, nz = p.tx;                 // normal izquierda = lado de boxes
-    const BL = 130, BD = 15, BH = 12;                          // largo × fondo × alto (~65×7.5×6 m)
-    const off = RW / 2 + 8.5 + BD / 2;                         // hueco del pit lane + mitad del fondo
-    const bcx = p.x + nx * off, bcz = p.z + nz * off;
+    const BL = 130, BD = 14, BH = 8.5;                         // largo × fondo × alto — bajo: no tapa la cámara
+    const off = RW / 2 + 10 + BD / 2;                          // hueco del pit lane + mitad del fondo
+    const bcx = p.x - nx * off, bcz = p.z - nz * off;        // lado de la cámara: no tapa la vista
     const pit = new THREE.Group();
     pit.position.set(bcx, 0, bcz);
     pit.lookAt(p.x, 0, p.z);                                   // +z local (fachada) mira a la pista
@@ -3929,21 +3929,30 @@ function init3() {
     m.visible = false; m.renderOrder = 1; m.userData.life = 0;
     scene3.add(m); skidPool.push(m);
   }
-  // 4 texturas de humo DISTINTAS: cada bocanada elige una al azar — sin patrón
+  // 4 texturas de humo DISTINTAS: cada bocanada elige una al azar — sin patrón.
+  // Máscara radial al final: alfa → 0 en el borde del canvas, que si no el
+  // sprite recorta los borrones y el humo se ve cuadriculado
   const smokeTexs = [];
   for (let ti2 = 0; ti2 < 4; ti2++) {
     smokeTexs.push(tex3((() => {
-      const c = document.createElement('canvas'); c.width = c.height = 96;
+      const c = document.createElement('canvas'); c.width = c.height = 128;
       const x = c.getContext('2d');
-      for (let i = 0; i < 8; i++) {
-        const px = 48 + (Math.random() - 0.5) * 36, py = 48 + (Math.random() - 0.5) * 30,
-              r = 15 + Math.random() * 15;
+      for (let i = 0; i < 10; i++) {
+        const px = 64 + (Math.random() - 0.5) * 40, py = 64 + (Math.random() - 0.5) * 34,
+              r = 14 + Math.random() * 16;
         const g = x.createRadialGradient(px, py, 0, px, py, r);
-        g.addColorStop(0, 'rgba(255,255,255,0.5)');
-        g.addColorStop(0.6, 'rgba(255,255,255,0.22)');
+        g.addColorStop(0, 'rgba(255,255,255,0.42)');
+        g.addColorStop(0.55, 'rgba(255,255,255,0.18)');
         g.addColorStop(1, 'rgba(255,255,255,0)');
-        x.fillStyle = g; x.fillRect(0, 0, 96, 96);
+        x.fillStyle = g; x.fillRect(0, 0, 128, 128);
       }
+      // Máscara de borde: el alfa muere antes del límite — adiós bordes cuadrados
+      x.globalCompositeOperation = 'destination-in';
+      const m = x.createRadialGradient(64, 64, 0, 64, 64, 63);
+      m.addColorStop(0, 'rgba(0,0,0,1)'); m.addColorStop(0.72, 'rgba(0,0,0,0.55)');
+      m.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = m; x.fillRect(0, 0, 128, 128);
+      x.globalCompositeOperation = 'source-over';
       return c;
     })()));
   }
@@ -4082,7 +4091,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 284;
+const BUILD_NO = 285;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -5753,7 +5762,7 @@ function startStage(n, seed, mp, mode) {
   pitZone = null;
   if (circAt(stage)) {                                // boxes junto a la salida (zona invisible, sin círculo)
     const pp = path[Math.floor(pathLen * 0.06)], pnx = -pp.tz, pnz = pp.tx;
-    pitZone = { x: pp.x + pnx * (RW / 2 + 6), z: pp.z + pnz * (RW / 2 + 6), r: 13 };
+    pitZone = { x: pp.x - pnx * (RW / 2 + 6), z: pp.z - pnz * (RW / 2 + 6), r: 13 };
   }
   cam3.position.set(car.x, 62, car.z);
   camZoom = OPTS.cam ? 1 : 0.12;               // vista inicial: CERCA o CIRCUITO entero
