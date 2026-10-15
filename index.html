@@ -4454,7 +4454,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 300;
+const BUILD_NO = 301;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6898,6 +6898,9 @@ document.getElementById('optReset').addEventListener('click', () => {
   sp.addEventListener('pointerdown', () => close());   // wrapper: el evento no se cuele como noIntro
   window.addEventListener('keydown', function k(e) {
     if (!sp.isConnected) return window.removeEventListener('keydown', k);
+    // Portada ya cerrada: ignorar — sin esto, cualquier tecla en el menú
+    // (flechas incluidas) relanzaba la intro cinematográfica
+    if (sp.classList.contains('hide')) return;
     close();
   });
 })();
