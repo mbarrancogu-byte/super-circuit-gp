@@ -4611,7 +4611,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 316;
+const BUILD_NO = 317;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -7347,8 +7347,12 @@ function makeMirrorCar(wrap) {
     if (o.material.color) o.material.color.multiplyScalar(0.6);
     o.material.clippingPlanes = [new THREE.Plane(new THREE.Vector3(0, -1, 0), 0.02)];
     o.castShadow = o.receiveShadow = false;
+    // La esfera de contorno ignora el scale.y=-0.94 y el giro → el reflejo se
+    // descartaba (frustum culling) y parpadeaba al rotar; siempre visible
+    o.frustumCulled = false;
   });
   m.scale.y = -0.94;
+  m.frustumCulled = false;
   return m;
 }
 function c3dInit() {
