@@ -1043,6 +1043,13 @@
     animation: blinkStart 1.1s ease-in-out infinite; }
   @keyframes blinkStart { 0%, 100% { opacity: 1; transform: translateX(-50%) translateY(0); }
     50% { opacity: 0.15; transform: translateX(-50%) translateY(5px); } }
+  /* Halo dorado pulsante sobre el "START RACE" del póster */
+  #startGlow { position: absolute; z-index: 3; pointer-events: none;
+    transform: translate(-50%,-50%); mix-blend-mode: screen;
+    background: radial-gradient(ellipse at center, rgba(255,224,140,0.95), rgba(255,190,70,0.42) 46%, transparent 74%);
+    filter: blur(5px);
+    animation: startGlowP 1.1s ease-in-out infinite; }
+  @keyframes startGlowP { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
   .lpFlag { position: relative; overflow: hidden; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 2px; cursor: pointer;
     padding: 10px 14px; border-radius: 12px; min-width: 78px; line-height: 1;
@@ -1460,6 +1467,7 @@
   <div id="splashSmoke"><i></i><i></i><i></i><i></i><i></i><i class="surge"></i></div>
   <div id="splashFog"><i></i><i></i><i></i><i></i><i></i></div>
   <div id="splashOpts"><svg class="ic"><use href="#i-gear"/></svg></div>
+  <div id="startGlow"></div>
   <div id="blinkStart"><svg width="100%" height="100%" viewBox="0 0 24 24"><use href="#i-down"/></svg></div>
   <div id="splashLang">
     <div class="lpFlag" id="slpES" data-flag="es"><span>ESPAÑOL</span></div>
@@ -4446,7 +4454,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 297;
+const BUILD_NO = 298;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6850,6 +6858,11 @@ document.getElementById('optReset').addEventListener('click', () => {
     sl.style.gap = '12px';   // las dos banderas juntas, centradas
     bs.style.left = (r.left + r.width * 0.5) + 'px';   // flecha sobre el "START RACE"
     bs.style.top = (r.top + r.height * 0.885) + 'px';
+    const sg = document.getElementById('startGlow');    // halo sobre el texto START RACE
+    sg.style.left = (r.left + r.width * 0.5) + 'px';
+    sg.style.top = (r.top + r.height * 0.925) + 'px';
+    sg.style.width = (r.width * 0.30) + 'px';
+    sg.style.height = (r.height * 0.075) + 'px';
     const sm = document.getElementById('splashSmoke');        // humo sobre las ruedas traseras
     sm.style.left = (r.left + r.width * 0.13) + 'px';
     sm.style.top = (r.top + r.height * 0.52) + 'px';
