@@ -112,10 +112,18 @@
 
   /* ---------- Controles táctiles ---------- */
   .tbtn { position: absolute; z-index: 20; width: 86px; height: 86px; border-radius: 50%;
-    background: rgba(10,18,38,0.6); border: 2px solid rgba(255,200,80,0.6);
+    background: linear-gradient(180deg, rgba(62,76,112,0.92), rgba(14,20,40,0.96));
+    border: 2px solid rgba(255,200,80,0.6);
     color: #ffe0a0; font-size: 30px; display: none; align-items: center; justify-content: center;
-    font-weight: 800; pointer-events: auto; touch-action: none; backdrop-filter: blur(2px); }
-  .tbtn.on { background: rgba(255,190,60,0.35); transform: scale(0.93); }
+    font-weight: 800; pointer-events: auto; touch-action: none; backdrop-filter: blur(2px);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.7);
+    box-shadow: 0 6px 0 rgba(0,0,0,0.5), 0 12px 20px rgba(0,0,0,0.55),
+      inset 0 2px 3px rgba(255,255,255,0.30), inset 0 -5px 10px rgba(0,0,0,0.55);
+    transition: transform .08s, box-shadow .08s; }
+  .tbtn.on { transform: scale(0.93) translateY(4px);
+    background: linear-gradient(180deg, rgba(28,36,60,0.96), rgba(8,12,26,0.98));
+    box-shadow: 0 2px 0 rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.5),
+      inset 0 4px 10px rgba(0,0,0,0.65), inset 0 -1px 2px rgba(255,255,255,0.12); }
   /* Zona izquierda: pad de dirección ancho tipo cruceta deslizante */
   #stPad { left: 14px; bottom: 16px; width: 200px; height: 88px; border-radius: 44px;
     flex-direction: row; padding: 0; overflow: hidden; }
@@ -4589,7 +4597,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 314;
+const BUILD_NO = 315;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
