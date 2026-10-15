@@ -32,6 +32,14 @@
     font-size: 12px; font-weight: 800; letter-spacing: 1px; }
   #drsChip   { top: 44px; right: 10px; display: none; border-color: rgba(80,220,255,0.7); color: #70d8ff;
     font-size: 12px; font-weight: 900; letter-spacing: 1px; animation: drsBlink .5s infinite; }
+  #ovtChip   { top: 44px; right: 80px; display: none; border-color: rgba(120,255,140,0.7); color: #7dffa0;
+    font-size: 12px; font-weight: 900; letter-spacing: 1px; animation: drsBlink .5s infinite; }
+  /* Tutorial de primera carrera: tarjeta flotante que se apaga sola */
+  #tuto { position: absolute; left: 50%; top: 24%; transform: translateX(-50%); z-index: 24;
+    display: none; padding: 14px 26px; border-radius: 16px; text-align: center;
+    background: rgba(8,12,22,0.82); border: 1px solid rgba(255,200,80,0.5);
+    color: #ffd890; font-size: 15px; font-weight: 700; line-height: 1.5; pointer-events: none;
+    animation: scrIn .4s ease-out; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
   @keyframes drsBlink { 50% { opacity: 0.5; } }
   #wrongWay  { top: 60px; left: 50%; transform: translateX(-50%); color: #ff5060; border-color: #ff5060;
     display: none; font-size: 15px; animation: blink .5s steps(2) infinite; }
@@ -309,7 +317,13 @@
     align-items: center; justify-content: center; text-align: center;
     background: radial-gradient(ellipse at 50% 35%, #14204a 0%, #04060c 72%); }
   .screen.show { display: flex; animation: scrIn 0.32s ease-out; }
-  @keyframes scrIn { from { opacity: 0; transform: scale(1.015); } to { opacity: 1; transform: none; } }
+  @keyframes scrIn { from { opacity: 0; transform: scale(1.015) translateY(12px); } to { opacity: 1; transform: none; } }
+  /* Entrada en cascada: los botones suben uno tras otro al abrir la pantalla */
+  .screen.show .mbtn { animation: mbtnIn 0.3s ease-out backwards; }
+  .screen.show .mbtn:nth-of-type(2) { animation-delay: 0.06s; }
+  .screen.show .mbtn:nth-of-type(3) { animation-delay: 0.12s; }
+  .screen.show .mbtn:nth-of-type(n+4) { animation-delay: 0.18s; }
+  @keyframes mbtnIn { from { opacity: 0; transform: translateY(12px); } }
   #opts { overflow: hidden; justify-content: flex-start; padding: 10px 12px 72px;
     /* Fondo con profundidad: luz cenital azul + resplandor cálido inferior + base radial */
     background:
@@ -1121,6 +1135,8 @@
   <div class="chip" id="cpChip">◯ ◯ ◯</div>
   <div class="chip" id="sectChip"></div>
   <div class="chip" id="drsChip">DRS</div>
+  <div class="chip" id="ovtChip">⚔ ADELANTAR</div>
+  <div id="tuto"></div>
   <div class="chip" id="wrongWay"><svg class="ic"><use href="#i-warn"/></svg>SENTIDO CONTRARIO</div>
   <div id="wwBig"><svg class="ic"><use href="#i-warn"/></svg><span id="wwBigTxt">DIRECCIÓN CONTRARIA</span></div>
   <div class="chip" id="vsChip"><svg class="ic"><use href="#i-vs"/></svg>P1</div>
@@ -1382,7 +1398,7 @@
   <div id="pfWrap"><div id="pfLbl">📸 PHOTO FINISH</div><img id="pfImg" alt="photo finish"></div>
   <div id="resPts"></div>
   <button class="mbtn" id="nextBtn">▶ SIGUIENTE ETAPA</button>
-  <div class="backWrap"><button class="mbtn" id="menuBtn2">MENÚ</button></div>
+  <div class="backWrap"><button class="mbtn" id="photoBtn">📸 FOTO</button><button class="mbtn" id="menuBtn2">MENÚ</button></div>
   <div class="stripe"></div>
 </div>
 
@@ -1680,6 +1696,8 @@ let world = null;
 let camZoom = 1;                                   // 0 = pegado al coche · 1 = circuito entero
 let camLeadX = 0, camLeadZ = 0;                    // look-ahead suavizado (sin sacudida en choques)
 let camHS = 62;                                    // altura de cámara suavizada
+let fpsAcc = 0, fpsN = 0, perfChecked = false;     // auto-modo rendimiento
+let tutoT = 0;                                     // cuenta atrás del tutorial inicial
 let trackCX = 0, trackCZ = 0, trackSpanX = 1, trackSpanZ = 1;
 let carGrp = null, wheelF = [], wheelR = [], beamL = null, beamR = null, tailSpr = [];
 let skidPool = [], dustPool = [], moonLight = null, pathPts = null;
@@ -2884,7 +2902,7 @@ function spawnCar() {
 }
 
 // Modo rendimiento: dispositivos débiles → sombras off, DPR capado, menos partículas
-const LOW_POWER = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 2
+let LOW_POWER = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 2
   || /Android [1-8]\./.test(navigator.userAgent);
 function init3() {
   if (renderer3 || typeof THREE === 'undefined') return;
@@ -3074,7 +3092,7 @@ function skidMark(x, z, a, k = 1) {
 }
 
 /* ================== LÓGICA ================== */
-let skidT = 0, skidD = 0, dustT = 0;
+let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 // Refs DOM cacheadas: getElementById por frame obliga al navegador a buscar en el árbol
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
@@ -3104,7 +3122,8 @@ function aiDrive(x, z, vx, vz, a, pi) {
 // El rival CPU avanza sobre la spline con perfil de velocidad (no es kinematic jugable, es "slot car")
 function cpuSpawn(slot, tint, skill, latB) {
   const c = { s: dragMode ? -4 : -8 - slot * 4, v: 0, dmg: 0, fin: false, tm: 0, grp: buildF1(tint),
-              x: 0, z: 0, a: 0, seg: 0, k: skill || 1, latBias: latB || 0, pts: 0 };
+              x: 0, z: 0, a: 0, seg: 0, k: skill || 1, latBias: latB || 0, pts: 0,
+              nm: p2Mode ? 'J2' : 'CPU ' + (slot + 1) };
   let tl = 0;
   for (let i = 0; i < pathLen; i++) {                  // longitud media del segmento para s→metros
     const p = path[i], q = path[(i + 1) % pathLen];
@@ -3122,22 +3141,29 @@ function cpuDrive(c, dt) {
   const i0 = ((Math.floor(c.s) % pathLen) + pathLen) % pathLen;
   const p0 = path[i0];
   // velocidad objetivo: curva más cerrada próxima, penalizada por daño
-  let worst = 0;
+  let worst = 0, wSign = 1;
   const look = 8 + Math.floor(c.v * 0.35);
   for (let k = 4; k <= look; k += 4) {
     const pa = path[(i0 + k) % pathLen];
-    const cr = Math.abs(p0.tx * pa.tz - p0.tz * pa.tx);
-    if (cr > worst) worst = cr;
+    const crs = p0.tx * pa.tz - p0.tz * pa.tx;
+    const cr = Math.abs(crs);
+    if (cr > worst) { worst = cr; wSign = Math.sign(crs) || 1; }
   }
-  // Errores de pilotaje: de vez en cuando el CPU "se equivoca" y pierde velocidad un instante
-  // — la CPU habilidosa (k alto, etapas avanzadas) se equivoca mucho menos
-  if (!c.errT || c.errT <= 0) { if (Math.random() < dt * 0.09 / c.k) c.errT = rnd(0.35, 1.0); }
+  // Errores de pilotaje: pérdida de ritmo puntual + bloqueos de frenada + salidas
+  // largas de curva. El CPU bueno (k alto) se equivoca menos, pero nadie es infalible.
+  if (c.errT === undefined) { c.errT = 0; c.wideT = 0; c.lockT = 0; c.lungeT = 0; }
+  if (c.errT <= 0 && Math.random() < dt * 0.09 / c.k) c.errT = rnd(0.35, 1.0);
   else c.errT -= dt;
+  if (c.wideT <= 0 && c.errT <= 0 && Math.random() < dt * 0.05 / c.k) c.wideT = rnd(0.5, 1.1);
+  else c.wideT -= dt;
+  // Bloqueo de frenada: llega pasado a la curva, se va largo y pierde velocidad al salir
+  if (c.lockT <= 0 && worst > 0.10 && c.v > 52 && Math.random() < dt * 0.05 / c.k) c.lockT = rnd(0.35, 0.8);
+  else if (c.lockT > 0) { c.lockT -= dt; if (c.lockT <= 0) c.v *= 0.84; }
   // Ataque: si el jugador va justo por delante, apura frenada y empuja más;
   // los pilotos más listos atacan más fuerte (hasta 1.10 en etapas altas)
   const gap = (lapsDone * pathLen + pathIdx) - c.s;
   const atk = (gap > -35 && gap < 45) ? 1.02 + 0.08 * clamp((c.k - 0.85) / 0.45, 0, 1) : 1;
-  const errMul = c.errT > 0 ? 0.7 : 1;
+  const errMul = (c.errT > 0 ? 0.7 : 1) * (c.lockT > 0 ? 1.16 : 1);   // al bloquear entra pasado
   // En curvas los mejores pilotos frenan más tarde: el castigo por curvatura
   // baja con la habilidad (k 1.0 → ×1.0 · k 1.3 → ×0.9)
   let vMax = Math.max(14, (102 - worst * 138 * (1.35 - 0.35 * clamp(c.k, 0.8, 1.3))) * (1 - c.dmg * 0.004) * 0.96 * c.k * (1 - rain * 0.12) * errMul * atk);
@@ -3158,8 +3184,14 @@ function cpuDrive(c, dt) {
       if (Math.abs(avd) < w) avd = dir * w;
       const ov = o === car ? Math.hypot(car.vx, car.vz) : (o.v !== undefined ? o.v : (o.spd || 12));
       if (fwd < 13 && ov < c.v) vMax = Math.min(vMax, Math.max(12, ov * 1.02));
+      // DIVEBOMB: hueco + curva cerca → el CPU lanza el ataque por dentro y entra pasado
+      if (fwd > 4 && fwd < 16 && worst > 0.10 && c.k > 0.92 && c.lungeT <= 0 && Math.random() < dt * 0.55) {
+        c.lungeT = rnd(0.35, 0.7); showToast('⚔️ ' + (c.nm || 'CPU') + ' ' + T('divebomb'));
+      }
     }
   }
+  if (c.lungeT > 0) { c.lungeT -= dt; avd = wSign * 9; vMax *= 1.07; }   // estirada por dentro
+  if (c.wideT > 0) avd = -wSign * 9;                                    // error: se va largo fuera
   c.latBias += (avd - c.latBias) * Math.min(1, dt * 3.5);
   if (p2Mode) {
     // ===== JUGADOR 2 (humano): gas = ↑ / pedal J2 · marcha = ShiftDer/Enter / ▲J2 =====
@@ -3378,15 +3410,16 @@ function update(dt) {
     const ai = aiDrive(car.x, car.z, car.vx, car.vz, car.a, pathIdx);
     steer = ai.steer; gas = ai.gas; brake = ai.brake; hb = ai.hb;
   } else {
-    steer = inSteer;
+    steer = inSteer + pad.steer;
     if (keys.ArrowLeft || keys.KeyA) steer -= 1;
     if (keys.ArrowRight || keys.KeyD) steer += 1;
     steer = clamp(steer, -1, 1);
-    gas = inGas; brake = inBrake; hb = inHB || (keys.Space && !dragMode);
+    gas = Math.max(inGas, pad.gas); brake = Math.max(inBrake, pad.brake);
+    hb = inHB || pad.hb || (keys.Space && !dragMode);
     if (keys.KeyW || (!p2Mode && keys.ArrowUp)) gas = 1;          // ↑ es de J2 en modo 2 jugadores
     if (keys.KeyS || (!p2Mode && keys.ArrowDown)) brake = 1;
     // Botón PIT: dentro de la zona de boxes el coche frena solo para parar
-    if (pitReq && pitZone && Math.hypot(car.x - pitZone.x, car.z - pitZone.z) < pitZone.r + 8) {
+    if ((pitReq || pad.pit) && pitZone && Math.hypot(car.x - pitZone.x, car.z - pitZone.z) < pitZone.r + 8) {
       brake = 1; gas = 0;
     }
   }
@@ -3412,7 +3445,7 @@ function update(dt) {
   if (shiftCd > 0) shiftCd -= dt;
   if (dragMode) {
     const rpm = Math.max(0, (kmh0 - (gear - 1) * GEAR_SPAN) / GEAR_SPAN);   // vueltas dentro de la marcha actual
-    const shiftReq = inShift || keys.Space || keys.ShiftLeft || keys.KeyE ||
+    const shiftReq = inShift || pad.shift || keys.Space || keys.ShiftLeft || keys.KeyE ||
       (!p2Mode && (keys.ShiftRight || keys.Enter));               // en 2P ShiftDer/Enter son de J2
     if (shiftReq && !shiftHeld && go) {
       if (gear < 6) {
@@ -3457,7 +3490,7 @@ function update(dt) {
   const gasEff = go ? gas : 0;
   const st = carSt();
   // Nitro ERS: Shift/N o botón ⚡ — consume carga, se recarga con derrape y rebufo
-  nitroOn = (inNitro || keys.ShiftLeft || keys.ShiftRight || keys.KeyN) && nitro > 0 && go && !dragMode;
+  nitroOn = (inNitro || pad.nitro || keys.ShiftLeft || keys.ShiftRight || keys.KeyN) && nitro > 0 && go && !dragMode;
   if (nitroOn) ach('boost');
   if (nitroOn) nitro = Math.max(0, nitro - 26 * dt);
   else nitro = Math.min(100, nitro + (2.2 + slipT * 6) * dt);
@@ -3558,6 +3591,18 @@ function update(dt) {
     }
   }
 
+  // Anti-atajo: si sales del asfalto y vuelves por delante de donde te fuiste
+  // (recortaste trazado), el coche paga el tiempo ganado con una penalización
+  const progNow = lapsDone * pathLen + pathIdx;
+  if (!dragMode && path) {
+    if (offroad < 0.5) cutMax = progNow;
+    else if (cutMax !== null && progNow - cutMax > 22) {
+      slowT = 1.5; cutMax = null;
+      showToast('⚠️ ' + T('shortcut')); sfx.beep(); buzz(80);
+    }
+  }
+  if (slowT > 0) { slowT -= dt; vf = Math.min(vf, 34); }   // el castigo arrastra el coche ~3s
+
   // Obstáculos (árboles/rocas): empuje + golpe
   for (const o of obstacles) {
     const dx = car.x - o.x, dz = car.z - o.z, dd = Math.hypot(dx, dz);
@@ -3602,6 +3647,20 @@ function update(dt) {
   if (drsOn) vf += 22 * dt;                                  // DRS: succión más fuerte en la estela
   const dc = el('drsChip');
   if (dc._on !== drsOn) { dc._on = drsOn; dc.style.display = drsOn ? 'block' : 'none'; }
+  // Zona de adelantamiento: tramo recto por delante + rival a tiro de rebufo →
+  // el empuje es mayor y sale el indicador verde "ADELANTAR"
+  let ovtOn = false;
+  if (drsOn && !dragMode && path) {
+    const pz = path[pathIdx];
+    let crMax = 0;
+    for (let k = 4; k <= 24; k += 4) {
+      const pz2 = path[(pathIdx + k) % pathLen];
+      crMax = Math.max(crMax, Math.abs(pz.tx * pz2.tz - pz.tz * pz2.tx));
+    }
+    if (crMax < 0.10) { vf += 14 * dt; ovtOn = true; }       // recta limpia: succión extra
+  }
+  const oc = el('ovtChip');
+  if (oc._on !== ovtOn) { oc._on = ovtOn; oc.style.display = ovtOn ? 'block' : 'none'; }
 
   // Desgaste de neumáticos: blandos gastan rápido, duros aguantan toda la carrera
   tireWear = Math.min(100, tireWear + dt * (0.55 + (slidingNow ? 2.6 : 0) + offroad * 1.4) * (OPTS.tire ? 0.42 : 1));
@@ -3900,6 +3959,29 @@ function draw(now) {
   if (!world) buildWorld();
 
   const dt = Math.min(0.05, (now - (draw._l || now)) / 1000); draw._l = now;
+  // Auto-rendimiento: si los primeros segundos de carrera van a <45 fps,
+  // baja la resolución interna y apaga sombras sin tocar la opción del usuario
+  if (!perfChecked && playing) {
+    fpsAcc += dt; fpsN++;
+    if (fpsAcc > 3.5) {
+      perfChecked = true;
+      if (!LOW_POWER && fpsN / fpsAcc < 45) {
+        LOW_POWER = true;
+        renderer3.setPixelRatio(Math.min(DPR, 1.2));
+        renderer3.shadowMap.enabled = false;
+        scene3.traverse(o => { if (o.material) o.material.needsUpdate = true; });
+        showToast(T('perfMode'));
+      }
+    }
+  }
+  // Tutorial inicial: se apaga al primer input o a los 8 s
+  if (tutoT > 0) {
+    tutoT -= dt;
+    if (tutoT <= 0 || inGas || keys.ArrowLeft || keys.ArrowRight || keys.KeyA || keys.KeyD) {
+      tutoT = 0; el('tuto').style.display = 'none';
+      localStorage.scgpTuto = '1';
+    }
+  }
   const spd = Math.hypot(car.vx, car.vz), cf = Math.cos(car.a), sf = Math.sin(car.a);
   const sliding = Math.abs(-car.vx * sf + car.vz * cf) > 9;
 
@@ -4488,7 +4570,15 @@ function startStage(n, seed, mp, mode) {
   vsMode = mode === 'vs' || dragMode;
   champMode = mode === 'champ'; ttMode = mode === 'tt'; koMode = mode === 'ko';
   dmg = 0; addDamage(0);
-  nitro = 60; nitroOn = inNitro = false; slipT = 0; driftT = 0; boostT = 0; oilT = 0;
+  nitro = 60; nitroOn = inNitro = false; slipT = 0; driftT = 0; boostT = 0; oilT = 0; cutMax = null; slowT = 0;
+  fpsAcc = 0; fpsN = 0; perfChecked = false;
+  // Tutorial: solo la primera vez que se corre en este dispositivo
+  const tt = el('tuto');
+  if (!localStorage.scgpTuto && !demoMode && !dragMode) {
+    tutoT = 8;
+    tt.innerHTML = T('tuto1') + '<br><span style="color:#8fb8ff">' + T('tuto2') + '</span>';
+    tt.style.display = 'block';
+  } else { tutoT = 0; tt.style.display = 'none'; }
   tireWear = 0; rain = 0; pitT = 0; pitUsed = false; ghostT = 0; koTimer = KO_LIMIT;
   ghostRec = (ttMode || (!mpMode && !demoMode)) ? [] : null;   // grabar para el fantasma
   // Lluvia: posible en etapas procedurales a partir de la 2ª
@@ -4903,6 +4993,9 @@ const I18N = {
     next: '▶ SIGUIENTE ETAPA', nextDemo: '▶ SIGUIENTE DEMO', rematch: 'REVANCHA', ptsTot: 'TOTAL',
     shiftPerf: '¡CAMBIO PERFECTO!', shiftEarly: 'MUY PRONTO', shiftLate: 'AL CORTE',
     launchOk: '¡SALIDA PERFECTA!',
+    divebomb: 'SE LANZA POR DENTRO', overtakeZone: 'ZONA DE ADELANTAMIENTO', shortcut: '¡ATAJO! +3s',
+    perfMode: '⚙️ MODO RENDIMIENTO',
+    tuto1: 'Mantén GAS · frena antes de la curva', tuto2: 'HB derrapa · ⚡ nitro en la recta',
     waitRematch: 'ESPERANDO REVANCHA…', menu: 'MENÚ', demoOut: 'DEMO · SALIR',
     pause: 'PAUSA', resume: 'CONTINUAR',
     pos1: 'VAS 1º', pos2: 'VAS 2º', bestPfx: 'Mejor etapa 1',
@@ -4967,6 +5060,9 @@ const I18N = {
     next: '▶ NEXT STAGE', nextDemo: '▶ NEXT DEMO', rematch: 'REMATCH', ptsTot: 'TOTAL',
     shiftPerf: 'PERFECT SHIFT!', shiftEarly: 'TOO EARLY', shiftLate: 'AT THE LIMIT',
     launchOk: 'PERFECT LAUNCH!',
+    divebomb: 'DIVES DOWN THE INSIDE', overtakeZone: 'OVERTAKING ZONE', shortcut: 'SHORTCUT! +3s',
+    perfMode: '⚙️ PERFORMANCE MODE',
+    tuto1: 'Hold GAS · brake before the corner', tuto2: 'HB to drift · ⚡ nitro on straights',
     waitRematch: 'WAITING FOR REMATCH…', menu: 'MENU', demoOut: 'DEMO · QUIT',
     pause: 'PAUSE', resume: 'RESUME',
     pos1: 'P1', pos2: 'P2', bestPfx: 'Best stage 1',
@@ -5560,6 +5656,15 @@ document.getElementById('menuBtn2').addEventListener('click', () => {
   document.getElementById('results').classList.remove('show');
   document.getElementById('menu').classList.add('show');
 });
+// MODO FOTO: captura la escena 3D tal cual quedó en meta y la descarga como PNG
+document.getElementById('photoBtn').addEventListener('click', () => {
+  if (!renderer3 || !scene3) return;
+  renderer3.render(scene3, cam3);                    // repinta justo antes de leer el buffer
+  const url = renderer3.domElement.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = url; a.download = 'SuperCircuitGP-' + Date.now() + '.png';
+  document.body.appendChild(a); a.click(); a.remove();
+});
 // Mejor marca en el menú
 (() => {
   const b = +localStorage.getItem('af1_best_1');
@@ -5568,9 +5673,30 @@ document.getElementById('menuBtn2').addEventListener('click', () => {
 })();
 
 /* ================== BUCLE ================== */
+// Gamepad: stick izq + cruceta = dirección · RT/RB = gas · LT/LB = freno
+// A = nitro (o cambio en drag) · B = derrape · X = boxes · START = pausa
+const pad = { steer: 0, gas: 0, brake: 0, hb: false, nitro: false, shift: false, pit: false, _st: false, _startT: false };
+function padPoll() {
+  const gps = navigator.getGamepads && navigator.getGamepads();
+  const gp = gps && [...gps].find(p => p && p.connected);
+  pad.steer = pad.gas = pad.brake = 0; pad.hb = pad.nitro = pad.shift = pad.pit = false;
+  if (!gp) { pad._st = false; pad._startT = false; return; }
+  const dz = v => Math.abs(v) > 0.16 ? v : 0;
+  const bt = i => !!(gp.buttons[i] && gp.buttons[i].pressed);
+  const bv = i => gp.buttons[i] ? gp.buttons[i].value : 0;
+  pad.steer = clamp(dz(gp.axes[0] || 0) + (bt(15) ? 1 : 0) - (bt(14) ? 1 : 0), -1, 1);
+  pad.gas = Math.max(bv(7), bt(5) ? 1 : 0);
+  pad.brake = Math.max(bv(6), bt(4) ? 1 : 0);
+  pad.hb = bt(1); pad.nitro = bt(0); pad.shift = bt(0) || bt(5); pad.pit = bt(2);
+  const st = bt(9);
+  if (st && !pad._st) pad._startT = true;            // flanco: solo una vez por pulsación
+  pad._st = st;
+}
 let last = performance.now();
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  padPoll();
+  if (pad._startT) { pad._startT = false; if (playing) setPaused(!paused); }
   if (playing && !paused && performance.now() >= t0 - 3600) update(dt);   // inputs vivos desde ya, motor corre tras GO
   draw(now);
   requestAnimationFrame(loop);
