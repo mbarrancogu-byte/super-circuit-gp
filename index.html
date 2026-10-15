@@ -750,6 +750,13 @@
     #resTime { margin: 8px 0; }
   }
   /* Selector de F1: scroll horizontal en el menú */
+  /* Preview 3D del coche elegido, bajo la tira de selección */
+  #car3dWrap { width: min(340px, 82vw); height: 150px; margin: 2px auto 0; position: relative;
+    border-radius: 14px; overflow: hidden; flex: 0 0 auto;
+    background: radial-gradient(circle at 50% 42%, rgba(70,100,170,0.30), rgba(8,12,24,0.65) 72%);
+    border: 1px solid rgba(130,170,255,0.30);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 6px 18px rgba(0,0,0,0.35); }
+  #car3dCv { width: 100%; height: 100%; display: block; }
   #carStrip { display: flex; gap: 10px; overflow-x: auto; max-width: min(560px, 92vw);
     padding: 14px 6px 16px; scrollbar-width: none; scroll-snap-type: x proximity; flex-shrink: 0; }
   #carStrip::-webkit-scrollbar { display: none; }
@@ -1309,6 +1316,7 @@
     <div id="carStrip"></div>
     <div class="selArr" id="carNext"><svg><use href="#i-chev"/></svg></div>
   </div>
+  <div id="car3dWrap"><canvas id="car3dCv"></canvas></div>
   <div class="selRow">
     <div class="selArr lft" id="circPrev"><svg><use href="#i-chev"/></svg></div>
     <div id="circStrip"></div>
@@ -3891,7 +3899,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 279;
+const BUILD_NO = 280;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -5852,6 +5860,7 @@ function selCar(i) {
   OPTS.car = ((i % n) + n) % n; saveOpts();                 // envuelve: último → primero
   [...carStripEl.children].forEach((el, j) => el.classList.toggle('sel', j === OPTS.car));
   carStripEl.children[OPTS.car].scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  m3dShow(OPTS.car);                                   // la preview 3D sigue la selección
 }
 function buildCarStrip() {
   if (carStripEl.children.length) return;
@@ -5867,8 +5876,8 @@ function buildCarStrip() {
       () => { card.querySelector('img').src = tintThumb(c2.tint); });
   });
 }
-if (f1Thumb.complete && f1Thumb.naturalWidth) buildCarStrip();
-else f1Thumb.onload = buildCarStrip;
+if (f1Thumb.complete && f1Thumb.naturalWidth) { buildCarStrip(); m3dShow(OPTS.car || 0); }
+else f1Thumb.onload = () => { buildCarStrip(); m3dShow(OPTS.car || 0); };
 document.getElementById('carPrev').addEventListener('click', () => selCar((OPTS.car || 0) - 1));
 document.getElementById('carNext').addEventListener('click', () => selCar((OPTS.car || 0) + 1));
 
@@ -6496,6 +6505,49 @@ document.getElementById('c3dAll').addEventListener('click', function () {
   if (c3d.car === c3d.allGrp && c3d.allGrp) { this.textContent = T('allBtn'); c3dShow(c3d.idx); }
   else { this.textContent = T('oneBtn'); c3dShowAll(); }
 });
+
+/* ===== Preview 3D del coche elegido, bajo la tira del menú ===== */
+const m3d = { r: null, scene: null, cam: null, car: null, idx: -1, rotY: 0 };
+function m3dInit() {
+  if (m3d.r) return;
+  const cv = document.getElementById('car3dCv');
+  m3d.r = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true });
+  m3d.r.outputEncoding = THREE.sRGBEncoding;
+  m3d.scene = new THREE.Scene();
+  m3d.cam = new THREE.PerspectiveCamera(36, 2.2, 0.1, 100);
+  m3d.cam.position.set(0, 3.1, 10.5); m3d.cam.lookAt(0, 0.7, 0);
+  m3d.scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x2a3242, 1.15));
+  const key = new THREE.DirectionalLight(0xfff2dc, 1.6); key.position.set(5, 9, 5); m3d.scene.add(key);
+  const rim = new THREE.DirectionalLight(0x80b0ff, 0.9); rim.position.set(-6, 5, -5); m3d.scene.add(rim);
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 5.0, 0.3, 40),
+    new THREE.MeshStandardMaterial({ color: 0x141e33, roughness: 0.4, metalness: 0.6 }));
+  disc.position.y = -0.15; m3d.scene.add(disc);
+}
+async function m3dShow(i) {
+  i = Math.min(Math.max(i, 0), CARS.length - 1);
+  if (i === m3d.idx) return;
+  m3d.idx = i;
+  m3dInit();
+  if (m3d.car) { m3d.scene.remove(m3d.car); m3d.car = null; }
+  const mdl = c3dNorm(await c3dModel(CARS[i]), 6.4);
+  if (CARS[i].img === 'f1_r26.png') mdl.scale.multiplyScalar(0.62);
+  if (i !== m3d.idx) return;                             // cambió mientras cargaba
+  m3d.car = mdl; m3d.scene.add(mdl);
+}
+(function m3dLoop() {
+  requestAnimationFrame(m3dLoop);
+  const wrap = document.getElementById('car3dWrap');
+  if (!m3d.r || !m3d.car || !wrap.offsetParent) return;  // solo cuando el menú es visible
+  m3d.rotY += 0.010;                                     // giro continuo del coche
+  m3d.car.rotation.y = m3d.rotY;
+  const cv = document.getElementById('car3dCv');
+  const cw = wrap.clientWidth, ch = wrap.clientHeight;
+  if (cv.width !== cw * 2) {                             // ×2 = nítido en pantallas densas
+    m3d.r.setSize(cw * 2, ch * 2, false);
+    m3d.cam.aspect = cw / ch; m3d.cam.updateProjectionMatrix();
+  }
+  m3d.r.render(m3d.scene, m3d.cam);
+})();
 document.getElementById('menuBack').addEventListener('click', () => {
   const sp = document.getElementById('splash');   // "pantalla anterior" del menú = la portada
   if (sp) sp.classList.remove('hide');
