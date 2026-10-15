@@ -3194,7 +3194,7 @@ function buildWorld() {
     const BL = 130, BD = 14, BH = 8.5;                         // largo × fondo × alto — bajo: no tapa la cámara
     const off = RW / 2 + 16 + BD / 2;                          // hueco del pit lane + mitad del fondo (edificio alejado)
     const bcx = p.x - nx * off, bcz = p.z - nz * off;        // lado de la cámara: no tapa la vista
-    window._pitExcl = { x: bcx, z: bcz, tx: p.tx, tz: p.tz, hx: BL / 2 + 42, hz: off + 8 }; // huella del complejo
+    window._pitExcl = { x: bcx, z: bcz, tx: p.tx, tz: p.tz, hx: BL / 2 + 82, hz: off + 8 }; // huella del complejo
     const pit = new THREE.Group();
     pit.position.set(bcx, 0, bcz);
     pit.lookAt(p.x, 0, p.z);                                   // +z local (fachada) mira a la pista
@@ -3245,20 +3245,26 @@ function buildWorld() {
     const wallTop = new THREE.Mesh(new THREE.BoxGeometry(wallLen, 0.3, 0.95),
       new THREE.MeshStandardMaterial({ color: 0xd42020, roughness: 0.6 }));
     wallTop.position.set(0, 1.42, off - RW / 2 - 3.5); pit.add(wallTop);
-    // Calle de boxes: franja de asfalto oscuro entre el muro y la fachada
-    const lane = new THREE.Mesh(new THREE.BoxGeometry(BL + 4, 0.12, off - RW / 2 - BD / 2 + 2),
+    // Calle de boxes: franja de asfalto PARALELA a la recta de meta, de punta a
+    // punta del complejo — los empalmes entran/salen en tangente, sin solapes
+    const teZ = off - RW / 2 + 1.2;                        // borde de pista en local
+    const lmZ = BD / 2 + (off - RW / 2 - BD / 2) / 2 - 1;  // centro del pit lane
+    const lane = new THREE.Mesh(new THREE.BoxGeometry(BL + 96, 0.12, 9),
       new THREE.MeshStandardMaterial({ color: 0x30353d, roughness: 0.9 }));
-    lane.position.set(0, 0.02, BD / 2 + (off - RW / 2 - BD / 2) / 2 + 1);
+    lane.position.set(0, 0.02, lmZ);
     pit.add(lane);
 
     // ==== ENTRADA y SALIDA de boxes: cintas de asfalto siguiendo el trazado ====
-    // Local: +x = sentido de marcha · +z = hacia la pista · lane a z≈7..(off−RW/2−...)
-    const teZ = off - RW / 2 + 1.2;                        // borde de pista en local
-    const lmZ = BD / 2 + (off - RW / 2 - BD / 2) / 2 - 1;  // centro del pit lane
-    // Cinta asfáltica a lo largo de una bezier cuadrática (a→b→c), ancho w
-    const ribbon = (a, b, c, w, y) => {
-      const pos = [], idx = [], N = 18, pv = (t) => {
+    // Cinta asfáltica sobre bezier: 3 puntos = cuadrática, 4 = cúbica (S tangente)
+    const ribbon = (pts, w, y) => {
+      const pos = [], idx = [], N = 22, pv = (t) => {
         const u = 1 - t;
+        if (pts.length === 4) {
+          const [a, b, c, d] = pts;
+          return [u * u * u * a[0] + 3 * u * u * t * b[0] + 3 * u * t * t * c[0] + t * t * t * d[0],
+                  u * u * u * a[1] + 3 * u * u * t * b[1] + 3 * u * t * t * c[1] + t * t * t * d[1]];
+        }
+        const [a, b, c] = pts;
         return [u * u * a[0] + 2 * u * t * b[0] + t * t * c[0],
                 u * u * a[1] + 2 * u * t * b[1] + t * t * c[1]];
       };
@@ -3275,35 +3281,42 @@ function buildWorld() {
       g.setIndex(idx); g.computeVertexNormals(); return g;
     };
     const laneMat = new THREE.MeshStandardMaterial({ color: 0x6e6459, roughness: 0.95 });  // gris tierra
-    // ENTRADA: sale de la pista antes del edificio y cae al inicio del pit lane
-    const enPath = [[-BL / 2 - 34, teZ], [-BL / 2 - 12, teZ - 1.5], [-BL / 2 + 10, lmZ]];
-    // SALIDA: del fondo del pit lane reincorpora a la pista tras la meta
-    const exPath = [[BL / 2 - 10, lmZ], [BL / 2 + 12, teZ - 1.5], [BL / 2 + 34, teZ]];
-    const enGeo = ribbon(enPath[0], enPath[1], enPath[2], 8.5, 0.115);
-    const exGeo = ribbon(exPath[0], exPath[1], exPath[2], 8.5, 0.115);
+    // ENTRADA: se abre de la pista en tangente y cae a la calle en tangente —
+    // bezier cúbica en S suave, sin superponerse con la calle ni la pista
+    const enPath = [[-BL / 2 - 70, teZ], [-BL / 2 - 50, teZ], [-BL / 2 - 38, lmZ], [-BL / 2 - 26, lmZ]];
+    // SALIDA: sale de la calle en tangente y reincorpora a la pista tras la meta
+    const exPath = [[BL / 2 + 26, lmZ], [BL / 2 + 38, lmZ], [BL / 2 + 50, teZ], [BL / 2 + 70, teZ]];
+    const enGeo = ribbon(enPath, 8.5, 0.115);
+    const exGeo = ribbon(exPath, 8.5, 0.115);
     const enM = new THREE.Mesh(enGeo, laneMat); pit.add(enM);
     const exM = new THREE.Mesh(exGeo, laneMat); pit.add(exM);
 
     // ==== Puntos de luz NEÓN AZUL a lo largo de entrada, pit lane y salida ====
     const lampPts = [];
-    const along = (a, b, c, side) => {
-      const N = 9;
+    const along = (pts, side) => {
+      const N = 10, ev = t => {
+        const u = 1 - t;
+        if (pts.length === 4) {
+          const [a, b, c, d] = pts;
+          return [u * u * u * a[0] + 3 * u * u * t * b[0] + 3 * u * t * t * c[0] + t * t * t * d[0],
+                  u * u * u * a[1] + 3 * u * u * t * b[1] + 3 * u * t * t * c[1] + t * t * t * d[1]];
+        }
+        const [a, b, c] = pts;
+        return [u * u * a[0] + 2 * u * t * b[0] + t * t * c[0],
+                u * u * a[1] + 2 * u * t * b[1] + t * t * c[1]];
+      };
       for (let k = 0; k <= N; k++) {
-        const t = k / N, u = 1 - t;
-        const x = u * u * a[0] + 2 * u * t * b[0] + t * t * c[0];
-        const z = u * u * a[1] + 2 * u * t * b[1] + t * t * c[1];
-        const t2 = Math.min(1, t + 0.02), u2 = 1 - t2;
-        let dx = u2 * u2 * a[0] + 2 * u2 * t2 * b[0] + t2 * t2 * c[0] - x;
-        let dz = u2 * u2 * a[1] + 2 * u2 * t2 * b[1] + t2 * t2 * c[1] - z;
+        const t = k / N, [x, z] = ev(t), [x2, z2] = ev(Math.min(1, t + 0.02));
+        let dx = x2 - x, dz = z2 - z;
         const dl = Math.hypot(dx, dz) || 1;
         lampPts.push([x - dz / dl * side * 4.9, z + dx / dl * side * 4.9]);
       }
     };
-    along(enPath[0], enPath[1], enPath[2], 1); along(enPath[0], enPath[1], enPath[2], -1);
-    along(exPath[0], exPath[1], exPath[2], 1); along(exPath[0], exPath[1], exPath[2], -1);
+    along(enPath, 1); along(enPath, -1);
+    along(exPath, 1); along(exPath, -1);
     // y a lo largo de TODO el pit lane, por ambos bordes
-    for (let x = -BL / 2 - 2; x <= BL / 2 + 2; x += 6.2) {
-      lampPts.push([x, lmZ - 5.2], [x, lmZ + 3.6]);   // borde fachada + borde muro
+    for (let x = -BL / 2 - 42; x <= BL / 2 + 42; x += 6.2) {
+      lampPts.push([x, lmZ - 4.6], [x, lmZ + 4.6]);   // dos filas sobre los bordes de la calle
     }
     const lampGeo = new THREE.SphereGeometry(0.34, 10, 8);
     const lampMat = new THREE.MeshBasicMaterial({ color: 0x3fb8ff });
@@ -3344,7 +3357,7 @@ function buildWorld() {
       new THREE.MeshBasicMaterial({ map: signTex, side: THREE.DoubleSide }));
     sb.position.y = 3.1; sb.rotation.y = -Math.PI / 2;       // cara mirando a −x (el que llega)
     sign.add(sb);
-    sign.position.set(-BL / 2 - 36, 0, teZ - 3.5);
+    sign.position.set(-BL / 2 - 66, 0, teZ - 3.5);   // junto al inicio de la entrada
     sign.rotation.z = 0; sign.rotation.y = 0;
     pit.add(sign);
 
@@ -4559,7 +4572,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 308;
+const BUILD_NO = 309;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
