@@ -3503,11 +3503,12 @@ function buildWorld() {
       { geo: new THREE.ConeGeometry(3.3, 8, 8),   m: _m(0, 21, 0, 1, 1, 1) },
       { geo: new THREE.ConeGeometry(1.7, 7, 7),   m: _m(0, 26.5, 0, 1, 1, 1) },   // pico afilado
     ]);
-    // Copa de roble: tres grumos redondos solapados sobre tronco grueso
+    // Copa de roble: tres grumos redondos solapados sobre tronco grueso —
+    // el grumo bajo empieza DENTRO del tronco (top ~6.5), si no la copa flota
     const oakGeo = mergeGeos([
-      { geo: new THREE.IcosahedronGeometry(5.4, 1), m: _m(0, 15, 0, 1.15, 0.92, 1.15) },
-      { geo: new THREE.IcosahedronGeometry(3.8, 1), m: _m(3.6, 19, 1.4, 1, 0.85, 1) },
-      { geo: new THREE.IcosahedronGeometry(3.4, 1), m: _m(-3.8, 18.2, -1.6, 1, 0.9, 1) },
+      { geo: new THREE.IcosahedronGeometry(5.4, 1), m: _m(0, 10.5, 0, 1.15, 0.92, 1.15) },
+      { geo: new THREE.IcosahedronGeometry(3.8, 1), m: _m(3.6, 14, 1.4, 1, 0.85, 1) },
+      { geo: new THREE.IcosahedronGeometry(3.4, 1), m: _m(-3.8, 13.2, -1.6, 1, 0.9, 1) },
     ]);
     // Ciprés: llama alta y estrecha con base redondeada
     const cypGeo = mergeGeos([
@@ -3557,9 +3558,13 @@ function buildWorld() {
       const kind = pick < 0.44 ? 0 : pick < 0.82 ? 1 : 2;    // 44% pino / 38% roble / 18% ciprés
       if (kind === 0 && nP >= CAP.pine || kind === 1 && nO >= CAP.oak || kind === 2 && nC >= CAP.cyp) return false;
       const s = rnd(0.40, 0.75);                             // ~12-23u ≈ 6-12m: coherente con coche/pista
+      // En pendiente el centro puede quedar sobre la cresta: posamos al punto
+      // MÁS BAJO de la huella para que el tronco nunca flote (queda "cortado")
+      const f = 4.5 * s;
+      const y0 = Math.min(hAt(x - f, z), hAt(x + f, z), hAt(x, z - f), hAt(x, z + f), hAt(x, z));
       pm.makeRotationY(rnd(0, Math.PI * 2));                 // cada árbol con su orientación
       pm.scale(new THREE.Vector3(s * rnd(0.9, 1.1), s * (kind === 1 ? rnd(0.8, 1) : 1), s * rnd(0.9, 1.1)));
-      pm.setPosition(x, hAt(x, z) - 0.15, z);                // posado sobre su colina
+      pm.setPosition(x, y0 - 0.25, z);                       // hundido un poco: nunca flota
       if (kind === 0) {
         pines.setMatrixAt(nP, pm); trunksP.setMatrixAt(nP, pm);
         pines.setColorAt(nP, tCol.setHSL(0.28 + rnd(-0.06, 0.07), rnd(0.42, 0.66), rnd(0.62, 0.88)));
@@ -3575,7 +3580,7 @@ function buildWorld() {
       }
       const sr = shadeR[kind] * s * rnd(0.9, 1.15);
       pm.makeScale(sr * 2, 1, sr * 2);
-      pm.setPosition(x + sOff.x * sr * 0.35, hAt(x, z) + 0.12, z + sOff.z * sr * 0.35);
+      pm.setPosition(x + sOff.x * sr * 0.35, y0 + 0.12, z + sOff.z * sr * 0.35);
       shades.setMatrixAt(ti, pm);
       obstacles.push({ x, z, r: 3 * s });
       ti++;
@@ -3603,7 +3608,10 @@ function buildWorld() {
     pines.count = nP; oaks.count = nO; cyps.count = nC; shades.count = ti;
     trunksP.count = nP; trunksO.count = nO; trunksC.count = nC;
     for (const m of [pines, oaks, cyps]) if (m.instanceColor) m.instanceColor.needsUpdate = true;
-    for (const m of [pines, oaks, cyps, trunksP, trunksO, trunksC, shades]) m.instanceMatrix.needsUpdate = true;
+    for (const m of [pines, oaks, cyps, trunksP, trunksO, trunksC, shades]) {
+      m.instanceMatrix.needsUpdate = true;
+      m.frustumCulled = false;    // instancias repartidas por todo el mapa: sin culling parcial
+    }
     world.add(trunksP, trunksO, trunksC);
     guard = 0;
     while (rk < 60 && guard++ < 2000) {
@@ -4174,7 +4182,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 286;
+const BUILD_NO = 287;
 el('verNum').textContent = 'Ver.01-2026-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
