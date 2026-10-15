@@ -1589,6 +1589,13 @@ function setPaused(p) {
   }
 }
 let path = [], pathLen = 0, gates = [], cpIdx = 0, pathIdx = 0, lastIdx = 0;
+let bankArr = null;              // peralte por punto del path: +sube borde +nx, -sube -nx
+// Altura del peralte a una distancia lateral `lat` del centro (pivote en el borde interior)
+function bankYAt(i, lat) {
+  const b = bankArr ? bankArr[i % bankArr.length] : 0;
+  if (!b) return 0;
+  return b > 0 ? b * (lat + RW / 2) / RW : b * (RW / 2 - lat) / RW;
+}
 let car = { x: 0, z: 0, a: 0, vx: 0, vz: 0, steer: 0 };
 let dmg = 0;                            // daño del jugador 0-100
 let demoMode = false, vsMode = false;   // modos de juego
@@ -2081,6 +2088,21 @@ function genTrack(seed) {
   gates = dragMode ? [] : [Math.floor(N * 0.33), Math.floor(N * 0.66), 0];   // CP1, CP2, META (en drag no hay puertas)
   trackHW = (circ && circ._px) ? measureTrackW(circ) : null; // ancho real del asfalto
   if (circ && !circ._px) circPixLoad(circ);
+  // Peraltes (solo NEÓN): en curvas muy cerradas el borde exterior se levanta ~1.7u.
+  // Se detecta por la curvatura local y se suaviza para que la rampa entre/salga gradual
+  bankArr = null;
+  if (circ && !circ.img && !dragMode) {
+    bankArr = new Float32Array(N);
+    const LOOK = 6, raw = new Float32Array(N), W2 = 10;
+    for (let i = 0; i < N; i++) {
+      const p = path[i], pa = path[(i + LOOK) % N];
+      const t = p.tx * pa.tz - p.tz * pa.tx;
+      raw[i] = clamp((Math.abs(t) - 0.32) / 0.45, 0, 1) * -Math.sign(t) * 1.7;
+    }
+    for (let i = 0; i < N; i++) { let s = 0; for (let j = -W2; j <= W2; j++) s += raw[(i + j + N) % N]; bankArr[i] = s / (2 * W2 + 1); }
+    raw.set(bankArr);
+    for (let i = 0; i < N; i++) { let s = 0; for (let j = -W2; j <= W2; j++) s += raw[(i + j + N) % N]; bankArr[i] = s / (2 * W2 + 1); }
+  }
   // Manchas de aceite aleatorias sobre el asfalto — distinta disposición en cada carrera
   oilSpots = [];
   const nOil = dragMode ? 0 : 2 + ((Math.random() * 3) | 0);
@@ -2090,7 +2112,7 @@ function genTrack(seed) {
     const r = clamp(hw * rnd(0.2, 0.32), 1.0, 2.6);         // mancha proporcional al ancho
     const lat = rnd(-1, 1) * Math.max(0, hw - r - 0.6);     // siempre dentro del asfalto
     const nx = -path[i].tz, nz = path[i].tx;
-    oilSpots.push({ i, x: path[i].x + nx * lat, z: path[i].z + nz * lat, r });
+    oilSpots.push({ i, x: path[i].x + nx * lat, z: path[i].z + nz * lat, r, lat });
   }
   // Límites del circuito → encuadre del zoom máximo
   let mnx = 1e9, mxx = -1e9, mnz = 1e9, mxz = -1e9;
@@ -2122,7 +2144,8 @@ function buildWorld() {
       const rEst = segLen / Math.max(Math.abs(turn), 1e-3);
       const eP = turn > 0 ? clamp(rEst * 0.8, 3, RW / 2) : RW / 2;
       const eN = turn < 0 ? clamp(rEst * 0.8, 3, RW / 2) : RW / 2;
-      pos.push(p.x + nx * eP, 0, p.z + nz * eP,  p.x - nx * eN, 0, p.z - nz * eN);
+      pos.push(p.x + nx * eP, bankYAt(i, eP), p.z + nz * eP,
+               p.x - nx * eN, bankYAt(i, -eN), p.z - nz * eN);   // peralte: borde exterior sube
       uvs.push(0, i * 0.18, 1, i * 0.18);
       if (i < pathLen) { const b = i * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); }
     }
@@ -2166,7 +2189,7 @@ function buildWorld() {
           const nx = -p.tz * s, nz = p.tx * s;
           const wx = p.x + nx * (RW / 2 + 0.45), wz = p.z + nz * (RW / 2 + 0.45);
           wE.set(0, ang, 0); wQ.setFromEuler(wE);
-          wM.compose(wV.set(wx, 0.62, wz), wQ, wS.set(seg + 0.35, 1, 1));
+          wM.compose(wV.set(wx, 0.62 + bankYAt(i, s * (RW / 2 + 0.45)), wz), wQ, wS.set(seg + 0.35, 1, 1));
           walls.setMatrixAt(wi++, wM);
         }
       }
@@ -2186,7 +2209,7 @@ function buildWorld() {
           wQ.setFromUnitVectors(up, dirV);                        // eje Y del cilindro → dirección del tramo
           for (const s of [1, -1]) {
             const nx = -p.tz * s, nz = p.tx * s;
-            wM.compose(wV.set(p.x + nx * (RW / 2 + 0.45), 1.3, p.z + nz * (RW / 2 + 0.45)),
+            wM.compose(wV.set(p.x + nx * (RW / 2 + 0.45), 1.3 + bankYAt(i, s * (RW / 2 + 0.45)), p.z + nz * (RW / 2 + 0.45)),
                        wQ, wS.set(1, seg + 0.5, 1));              // solape 0.5 → cadena continua sin huecos
             cyl.setMatrixAt(k, wM);
             cyl.setColorAt(k, cc2.setHex(i % 2 ? 0xffffff : 0xe02030));
@@ -2213,8 +2236,10 @@ function buildWorld() {
           // lado interior de curva: el arcén se estrecha para no plegarse
           const oP = eP + (turn > 0 ? clamp(rEst * 0.8 - eP, 0.4, W_OUT) : W_OUT);
           const oN = eN + (turn < 0 ? clamp(rEst * 0.8 - eN, 0.4, W_OUT) : W_OUT);
-          pos.push(p.x + nx * (oP), 0.085, p.z + nz * oP,  p.x + nx * (eP - 0.5), 0.085, p.z + nz * (eP - 0.5),
-                   p.x - nx * (eN - 0.5), 0.085, p.z - nz * (eN - 0.5),  p.x - nx * oN, 0.085, p.z - nz * oN);
+          pos.push(p.x + nx * (oP), 0.085 + bankYAt(i, oP), p.z + nz * oP,
+                   p.x + nx * (eP - 0.5), 0.085 + bankYAt(i, eP - 0.5), p.z + nz * (eP - 0.5),
+                   p.x - nx * (eN - 0.5), 0.085 + bankYAt(i, -(eN - 0.5)), p.z - nz * (eN - 0.5),
+                   p.x - nx * oN, 0.085 + bankYAt(i, -oN), p.z - nz * oN);
           if (i < pathLen) { const b = q * 4; idx.push(b, b + 1, b + 4, b + 1, b + 5, b + 4,
                                                 b + 2, b + 3, b + 6, b + 3, b + 7, b + 6); q++; }
         }
@@ -2233,8 +2258,8 @@ function buildWorld() {
         for (let i = 0; i < pathLen; i++) {
           if (i % 3) continue;                               // 1 trazo pintado / 2 de hueco
           const p = path[i], pn = path[(i + 1) % pathLen], nx = -p.tz, nz = p.tx;
-          pos.push(p.x + nx * W2, 0.125, p.z + nz * W2,  p.x - nx * W2, 0.125, p.z - nz * W2,
-                   pn.x - nx * W2, 0.125, pn.z - nz * W2, pn.x + nx * W2, 0.125, pn.z + nz * W2);
+          pos.push(p.x + nx * W2, 0.125 + bankYAt(i, 0), p.z + nz * W2,  p.x - nx * W2, 0.125 + bankYAt(i, 0), p.z - nz * W2,
+                   pn.x - nx * W2, 0.125 + bankYAt(i + 1, 0), pn.z - nz * W2, pn.x + nx * W2, 0.125 + bankYAt(i + 1, 0), pn.z + nz * W2);
           const b = q * 4; idx.push(b, b + 1, b + 2, b, b + 2, b + 3); q++;
         }
         const dg = new THREE.BufferGeometry();
@@ -2422,14 +2447,15 @@ function buildWorld() {
       const fx = p.tx, fz = p.tz;
       for (const lane of [1, -1]) {                    // un chevrón por carril
         const lo = hw * 0.45 * lane, ox = p.x - fz * lo, oz = p.z + fx * lo;
+        const by = 0.132 + bankYAt(i, lo);               // lateral del carril sobre el peralte
         const tx = ox + fx * AL * 0.55, tz = oz + fz * AL * 0.55;        // punta del chevrón
         for (const s of [1, -1]) {
           const nx = -fz * s, nz = fx * s;
           const bx = ox - fx * AL * 0.12 + nx * AW, bz = oz - fz * AL * 0.12 + nz * AW;
           let px = -(bz - tz), pz = bx - tx;                           // perpendicular del palo
           const pl = Math.hypot(px, pz) || 1; px = px / pl * SW; pz = pz / pl * SW;
-          pos.push(tx + px, 0.132, tz + pz,  tx - px, 0.132, tz - pz,
-                   bx - px, 0.132, bz - pz,  bx + px, 0.132, bz + pz);
+          pos.push(tx + px, by, tz + pz,  tx - px, by, tz - pz,
+                   bx - px, by, bz - pz,  bx + px, by, bz + pz);
           const b = q * 4; idx.push(b, b + 1, b + 2, b, b + 2, b + 3); q++;
         }
       }
@@ -2455,10 +2481,10 @@ function buildWorld() {
       const hw1 = neon ? RW / 2 + 0.95 : ((trackHW && trackHW[(i + 1) % pathLen]) || RW / 2) + 0.15;
       const nx = -p.tz * s, nz = p.tx * s, nx2 = -pn.tz * s, nz2 = pn.tx * s;
       const dst = i % 2 ? bPos : rPos, dstI = i % 2 ? bIdx : rIdx, qb = dst.length / 3;
-      dst.push(p.x + nx * hw0, 0.09, p.z + nz * hw0,
-               p.x + nx * (hw0 + W2), 0.09, p.z + nz * (hw0 + W2),
-               pn.x + nx2 * (hw1 + W2), 0.09, pn.z + nz2 * (hw1 + W2),
-               pn.x + nx2 * hw1, 0.09, pn.z + nz2 * hw1);
+      dst.push(p.x + nx * hw0, 0.09 + bankYAt(i, s * hw0), p.z + nz * hw0,
+               p.x + nx * (hw0 + W2), 0.09 + bankYAt(i, s * (hw0 + W2)), p.z + nz * (hw0 + W2),
+               pn.x + nx2 * (hw1 + W2), 0.09 + bankYAt(i + 1, s * (hw1 + W2)), pn.z + nz2 * (hw1 + W2),
+               pn.x + nx2 * hw1, 0.09 + bankYAt(i + 1, s * hw1), pn.z + nz2 * hw1);
       dstI.push(qb, qb + 1, qb + 2, qb, qb + 2, qb + 3);
     }
     for (const [pp, ii, col] of [[rPos, rIdx, 0xd8202c], [bPos, bIdx, 0x0c0e12]]) {
@@ -2578,7 +2604,7 @@ function buildWorld() {
     const oilGeo = new THREE.PlaneGeometry(1, 1); oilGeo.rotateX(-Math.PI / 2);
     for (const s of oilSpots) {
       const m = new THREE.Mesh(oilGeo, oilMat);
-      m.position.set(s.x, 0.14, s.z);
+      m.position.set(s.x, 0.14 + bankYAt(s.i, s.lat || 0), s.z);
       const k = s.r * 2.4;
       m.scale.set(k, 1, k * 0.75);
       m.rotation.y = rnd(0, 6.3);
@@ -3168,7 +3194,8 @@ function sparkBurst(x, z, dx, dz) {
 function skidMark(x, z, a, k = 1) {
   if (!OPTS.skid) return;
   const m = skidPool.find(m => !m.visible) || skidPool[0];
-  m.position.set(x, 0.12, z);
+  const bp = path[pathIdx];
+  m.position.set(x, 0.12 + (bp ? bankYAt(pathIdx, (x - bp.x) * (-bp.tz) + (z - bp.z) * bp.tx) : 0), z);
   m.rotation.y = a + (Math.random() - 0.5) * 0.05;          // jitter: la raya no es una regla
   m.scale.set(0.95 * (0.8 + 0.2 * k) * (0.9 + Math.random() * 0.2),  // muy finas: hilo de caucho
             (11 + Math.random() * 4.5) * (0.85 + 0.35 * k), 1);      // muy largas: tramos que se solapan
@@ -3347,8 +3374,9 @@ function cpuDrive(c, dt) {
     }
   }
   c.a = Math.atan2(pa.tz, pa.tx);
-  c.grp.position.set(c.x, 0, c.z);
+  c.grp.position.set(c.x, bankYAt(i, lat), c.z);           // el CPU sube por el peralte
   c.grp.rotation.y = Math.PI / 2 - c.a;
+  c.grp.rotation.z = -(bankArr ? bankArr[i] / RW : 0);     // y se ladea hacia el vértice
   const wsp = c.v * dt * 1.2;
   for (const w of c.grp.userData.wF) w.children[0].rotation.x += wsp;
   for (const w of c.grp.userData.wR) w.children[0].rotation.x += wsp;
@@ -3638,7 +3666,9 @@ function update(dt) {
 
   // Agarre lateral: coche × neumáticos × lluvia — el derrape es lateral que no se disipa
   const tireGrip = OPTS.tire ? 0.98 - tireWear * 0.001 : 1.10 - tireWear * 0.0032;
+  const bkG = bankArr ? Math.abs(bankArr[pathIdx] || 0) : 0;
   const grip = (hb ? 1.4 : (offroad > 0.5 ? 4.5 : 8.5)) * st.grip * tireGrip * (1 - rain * 0.26)
+               * (1 + bkG * 0.08)              // el peralte empuja el coche hacia el vértice: más agarre
                * (oilT > 0 ? 0.20 : 1);         // sobre aceite: casi sin agarre lateral
   vl *= Math.exp(-grip * dt);
   vl += steer * spd * dt * (hb ? 0.5 : 0.14);  // el volante empuja el lateral (inicio del drift)
@@ -4091,11 +4121,15 @@ function draw(now) {
   const bmp = car.bump || 0, bvv = car.bumpV || 0;
   if (car.bumpKick) car.bumpKick = Math.max(0, car.bumpKick - dt * 2.6);
   const kick = (car.bumpKick || 0) * Math.sin((car.bumpKick || 0) * 42);
-  carGrp.position.set(car.x, Math.abs(bmp) * 0.15 + Math.abs(kick) * 0.32, car.z);
+  // Peralte: altura de la superficie bajo el coche + ladéo hacia el interior de la curva
+  const bpp = path[pathIdx], bnk = bankArr ? bankArr[pathIdx] || 0 : 0;
+  const blat = bpp ? (car.x - bpp.x) * (-bpp.tz) + (car.z - bpp.z) * bpp.tx : 0;
+  const surfY = bankYAt(pathIdx, blat);
+  carGrp.position.set(car.x, surfY + Math.abs(bmp) * 0.15 + Math.abs(kick) * 0.32, car.z);
   carGrp.rotation.y = Math.PI / 2 - car.a;         // el modelo mira +Z
   const latv = -car.vx * sf + car.vz * cf;
   carGrp.rotation.z = clamp(-latv * 0.006, -0.09, 0.09) + (inHB || keys.Space ? Math.sin(now / 60) * 0.008 : 0)
-                    + bmp * 0.05 + kick * 0.07;                       // el chasis bascula con el bache
+                    + bmp * 0.05 + kick * 0.07 - bnk / RW;            // bascula con bache y peralte
   carGrp.rotation.x = clamp(-(inGas - inBrake) * 0.03, -0.05, 0.05)
                     + clamp(bvv * 0.007, -0.07, 0.07) + kick * 0.05;  // cabeceo de suspensión
   for (const w of wheelF) w.rotation.y = (inSteer + (keys.ArrowLeft || keys.KeyA ? -1 : 0) + (keys.ArrowRight || keys.KeyD ? 1 : 0)) * 0.4;
