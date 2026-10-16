@@ -3552,30 +3552,6 @@ function buildWorld() {
     lamps.frustumCulled = halos.frustumCulled = posts.frustumCulled = false;
     pit.add(posts, lamps, halos);
 
-    // ==== Cartel "BOXES →" junto a la entrada, mirando al que llega ====
-    const signTex = tex3((() => {
-      const c = document.createElement('canvas'); c.width = 256; c.height = 96;
-      const x = c.getContext('2d');
-      x.fillStyle = '#0a1424'; x.fillRect(0, 0, 256, 96);
-      x.strokeStyle = '#35b0ff'; x.lineWidth = 7; x.strokeRect(5, 5, 246, 86);
-      x.fillStyle = '#eaf6ff'; x.font = '900 46px system-ui,Arial';
-      x.textAlign = 'center'; x.textBaseline = 'middle';
-      x.shadowColor = '#35b0ff'; x.shadowBlur = 14;
-      x.fillText('Boxes ➜', 128, 52);
-      return c;
-    })());
-    const sign = new THREE.Group();
-    const sp2 = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 3.4, 8),
-      new THREE.MeshStandardMaterial({ color: 0x3a4048, metalness: 0.6, roughness: 0.5 }));
-    sp2.position.y = 1.7; sign.add(sp2);
-    const sb = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 2.0),
-      new THREE.MeshBasicMaterial({ map: signTex, side: THREE.DoubleSide }));
-    sb.position.y = 3.1; sb.rotation.y = -Math.PI / 2;       // cara mirando a −x (el que llega)
-    sign.add(sb);
-    sign.position.set(-BL / 2 - 66, 0, teZ - 3.5);   // junto al inicio de la entrada
-    sign.rotation.z = 0; sign.rotation.y = 0;
-    pit.add(sign);
-
     world.add(pit);
     // Colisión: círculos a lo largo del edificio — el muro y el cuerpo frenan al coche
     for (let k = -3; k <= 3; k++)
@@ -5150,7 +5126,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 371;
+const BUILD_NO = 372;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
