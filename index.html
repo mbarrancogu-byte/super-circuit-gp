@@ -3444,7 +3444,9 @@ function buildWorld() {
     const lmZ = BD / 2 + (off - RW / 2 - BD / 2) / 2 - 1;  // centro del pit lane
     const laneTex = roadTex.clone();                       // misma textura que la pista
     laneTex.needsUpdate = true;
-    laneTex.repeat.set((BL + 96) / 12, 9 / 12);            // densidad de tile coherente con el asfalto
+    laneTex.center.set(0.5, 0.5);
+    laneTex.rotation = Math.PI / 2;                        // rodadas a lo largo de la calle — como en la pista
+    laneTex.repeat.set(9 / 12, (BL + 96) / 12);            // ejes intercambiados por la rotación
     const lane = new THREE.Mesh(new THREE.BoxGeometry(BL + 96, 0.12, 9),
       new THREE.MeshStandardMaterial({ map: laneTex, roughness: 0.9 }));
     lane.position.set(0, 0.02, lmZ);
@@ -3512,7 +3514,7 @@ function buildWorld() {
         dx /= dl; dz /= dl;
         const px = -dz, pz = dx;
         pos.push(x - px * w / 2, y, z - pz * w / 2, x + px * w / 2, y, z + pz * w / 2);
-        uv.push(cum[k] / 12, 0, cum[k] / 12, 1);            // misma densidad de tile que la pista
+        uv.push(0, cum[k] / 12, 1, cum[k] / 12);            // V a lo largo del recorrido — rodadas paralelas como en la pista
         if (k < N) { const b2 = k * 2; idx.push(b2, b2 + 1, b2 + 2, b2 + 1, b2 + 3, b2 + 2); }
       }
       const g = new THREE.BufferGeometry();
@@ -5154,7 +5156,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 381;
+const BUILD_NO = 382;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
