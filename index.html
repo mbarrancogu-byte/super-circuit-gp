@@ -2693,6 +2693,16 @@ function makeGroundTex(neon) {
                        : `rgba(${g2 * 0.78},${g2},${g2 * 0.58},0.26)`;
     wrap(x, y, r, (X, Y) => { t.beginPath(); t.arc(X, Y, r, 0, 7); t.fill(); });
   }
+  if (!neon) {
+    // Franjas de siega del césped: bandas claras/oscuras alternas como en un
+    // circuito real (sutiles — solo rompen el verde plano)
+    t.globalCompositeOperation = 'overlay';
+    for (let y = 0; y < 512; y += 64) {
+      t.fillStyle = (y / 64) % 2 ? 'rgba(255,255,240,0.05)' : 'rgba(10,18,4,0.07)';
+      t.fillRect(0, y, 512, 64);
+    }
+    t.globalCompositeOperation = 'source-over';
+  }
   return c;
 }
 function makeRubberTex() {
@@ -4271,11 +4281,11 @@ function buildWorld() {
       }
       window._grassTex = tex3(gc);
     }
-    // Geometría de la mata: dos planos cruzados AFILADOS arriba (trapecio) —
-    // con vértices cuadrados la mata se veía como un bloque, no como hierba
-    const gp1 = new THREE.PlaneGeometry(1.6, 1.6); gp1.translate(0, 0.8, 0);
+    // Geometría de la mata: dos planos cruzados BAJOS y anchos, afilados arriba —
+    // altos y estrechos se leían como mini-arbustos, no como hierba
+    const gp1 = new THREE.PlaneGeometry(2.4, 0.9); gp1.translate(0, 0.45, 0);
     { const pp = gp1.attributes.position;
-      for (let i = 0; i < pp.count; i++) if (pp.getY(i) > 1.2) pp.setX(i, pp.getX(i) * 0.42); }
+      for (let i = 0; i < pp.count; i++) if (pp.getY(i) > 0.7) pp.setX(i, pp.getX(i) * 0.42); }
     const gp2 = gp1.clone(); gp2.rotateY(Math.PI / 2);
     const tuftGeo = mergeGeos([{ geo: gp1, m: new THREE.Matrix4() },
                                { geo: gp2, m: new THREE.Matrix4() }]);
@@ -4307,12 +4317,14 @@ function buildWorld() {
         x = p.x - p.tz * sd * lat + rnd(-6, 6); z = p.z + p.tx * sd * lat + rnd(-6, 6);
       } else { x = rnd(-860, 860); z = rnd(-860, 860); }
       if (!okSpot(x, z)) continue;
-      const s = rnd(0.75, 1.7);                               // ~1.2-2.7u de alto
+      const s = rnd(0.7, 1.4);                                // bajos: ~0.5-1.3u de alto
       tq.setFromAxisAngle(tv.set(0, 1, 0), rnd(0, Math.PI * 2));
-      tm.compose(tv.set(x, hAt(x, z) - 0.06, z), tq,
-                 ts.set(s * rnd(0.85, 1.2), s, s * rnd(0.85, 1.2)));
+      tm.compose(tv.set(x, hAt(x, z) - 0.05, z), tq,
+                 ts.set(s * rnd(0.9, 1.3), s * rnd(0.55, 0.8), s * rnd(0.9, 1.3)));
       tufts.setMatrixAt(nt, tm);
-      tufts.setColorAt(nt, tc.setHSL(0.27 + rnd(-0.05, 0.05), rnd(0.45, 0.62), rnd(0.34, 0.52)));
+      // Tono pegado al césped del suelo (claro y poco saturado) — matas oscuras
+      // sobre el plano lima parecían arbustos sueltos
+      tufts.setColorAt(nt, tc.setHSL(0.25 + rnd(-0.03, 0.03), rnd(0.38, 0.5), rnd(0.42, 0.56)));
       nt++;
     }
     tufts.count = nt; tufts.instanceMatrix.needsUpdate = true;
@@ -5122,7 +5134,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 359;
+const BUILD_NO = 360;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
