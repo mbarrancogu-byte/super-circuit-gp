@@ -2884,6 +2884,7 @@ function buildWorld() {
   if (world) scene3.remove(world);
   world = new THREE.Group(); obstacles = []; gateMeshes = []; lakeSurf = null;
   window._pitBoxes = null;                            // marcas de box: se regeneran abajo si hay pit lane
+  window._pitLamps = null;                            // luces del pit: idem
   tunI0 = tunI1 = -1; tunA = 0; tunIn = 0;
   const circ = circAt(stage);
   const traced = !!(circ && circ.img);              // foto aérea = día; sin foto = circuito nocturno dibujado
@@ -3534,9 +3535,9 @@ function buildWorld() {
     for (let x = -BL / 2 - 42; x <= BL / 2 + 42; x += 6.2) {
       lampPts.push([x, lmZ - 4.6], [x, lmZ + 4.6]);   // dos filas sobre los bordes de la calle
     }
-    const lampGeo = new THREE.SphereGeometry(0.34, 10, 8);
+    const lampGeo = new THREE.SphereGeometry(0.24, 10, 8);
     const lampMat = new THREE.MeshBasicMaterial({ color: 0xff5040 });
-    const lampHaloGeo = new THREE.SphereGeometry(0.85, 10, 8);
+    const lampHaloGeo = new THREE.SphereGeometry(0.6, 10, 8);
     const lampHaloMat = new THREE.MeshBasicMaterial({ color: 0xff2018, transparent: true,
       opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false });
     const lamps = new THREE.InstancedMesh(lampGeo, lampMat, lampPts.length);
@@ -3552,6 +3553,13 @@ function buildWorld() {
     });
     lamps.frustumCulled = halos.frustumCulled = posts.frustumCulled = false;
     pit.add(posts, lamps, halos);
+    // Persecución tipo pista de aterrizaje: cada lámpara guarda su orden x — el
+    // pulso corre de un extremo a otro del pit lane (se anima en el loop)
+    {
+      const xs = lampPts.map(p => p[0]), x0 = Math.min(...xs), x1 = Math.max(...xs);
+      window._pitLamps = { lm: lamps, hm: halos, pts: lampPts,
+        seq: xs.map(x => (x - x0) / Math.max(1, x1 - x0)), m: new THREE.Matrix4() };
+    }
 
     world.add(pit);
     // Colisión: círculos a lo largo del edificio — el muro y el cuerpo frenan al coche
@@ -5127,7 +5135,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 373;
+const BUILD_NO = 374;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -9002,6 +9010,20 @@ function loop(now) {
       car.vz = (f1.z - f0.z) / Math.max(0.001, f1.t - f0.t);
     }
     if (!f1 || reI >= reBuf.length - 2) endReplay();
+  }
+  // Luces rojas del pit lane: pulso que corre de abajo a arriba, como en una
+  // pista de aterrizaje — instancias escaladas por su orden en la secuencia
+  if (window._pitLamps) {
+    const L = window._pitLamps, ph = now * 0.0016;
+    for (let i = 0; i < L.seq.length; i++) {
+      const w = (ph - L.seq[i] + 10) % 1;
+      const s = w < 0.1 ? 1.7 - w * 8 : 0.8;                    // destello que decae sobre base visible
+      L.m.makeScale(s, s, s); L.m.setPosition(L.pts[i][0], 1.05, L.pts[i][1]);
+      L.lm.setMatrixAt(i, L.m);
+      L.m.makeScale(s * 1.7, s * 1.7, s * 1.7); L.m.setPosition(L.pts[i][0], 1.05, L.pts[i][1]);
+      L.hm.setMatrixAt(i, L.m);
+    }
+    L.lm.instanceMatrix.needsUpdate = L.hm.instanceMatrix.needsUpdate = true;
   }
   draw(now);
   requestAnimationFrame(loop);
