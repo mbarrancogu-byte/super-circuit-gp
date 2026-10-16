@@ -4475,10 +4475,12 @@ function buildWorld() {
     const NB = LOW_POWER ? 130 : 380;
     const bushes = new THREE.InstancedMesh(bushGeo, bushMat, NB);
     bushes.frustumCulled = false;
-    // Helechos: abanico de 3 planos abiertos, bajo y ancho — color verde oscuro
-    const fp0 = new THREE.PlaneGeometry(2.8, 1.5); fp0.translate(0, 0.75, 0);
+    // Helechos: abanico de 3 planos abiertos, bajo y ancho — color verde oscuro.
+    // Inclinados hacia fuera para que de canto no aparezca una lámina vertical
+    const fp0 = new THREE.PlaneGeometry(2.6, 1.1); fp0.translate(0, 0.42, 0);
     const fernGeo = mergeGeos([0, 1, 2].map(k => {
-      const g = fp0.clone(); g.rotateZ(rnd(-0.12, 0.12)); g.rotateY(k * Math.PI / 3 + rnd(-0.2, 0.2));
+      const g = fp0.clone(); g.rotateZ(rnd(-0.45, -0.25) * (k % 2 ? 1 : -1));
+      g.rotateY(k * Math.PI / 3 + rnd(-0.2, 0.2));
       return { geo: g, m: new THREE.Matrix4() };
     }));
     const fernMat = new THREE.MeshStandardMaterial({
@@ -5272,7 +5274,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 398;
+const BUILD_NO = 399;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
