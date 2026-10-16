@@ -2390,7 +2390,7 @@ function makeCheckTex() {
   const c = document.createElement('canvas'); c.width = 64; c.height = 256;
   const t = c.getContext('2d');
   for (let y = 0; y < 16; y++) for (let x = 0; x < 4; x++) {
-    t.fillStyle = (x + y) % 2 ? '#c81414' : '#f2f0e8';
+    t.fillStyle = (x + y) % 2 ? '#c81414' : '#2c2f36';   // rojo + gris oscuro
     t.fillRect(x * 16, y * 16, 16, 16);
   }
   return tex3(c);
@@ -5135,7 +5135,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 374;
+const BUILD_NO = 375;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
