@@ -3470,17 +3470,17 @@ function buildWorld() {
       const bc = document.createElement('canvas'); bc.width = 64; bc.height = 64;
       const bt = bc.getContext('2d');
       // Marcas de neumático entrando al box: dos bandas de goma oscura
-      // desde el borde abierto hacia el interior, como en un pit real
+      // desde el borde abierto (lado edificio) hacia el interior, como en un pit real
       bt.fillStyle = 'rgba(12,12,15,0.5)';
       for (const wx of [19, 39]) {
-        bt.fillRect(wx - 3.5, 14, 7, 48);
+        bt.fillRect(wx - 3.5, 2, 7, 48);
         bt.fillStyle = 'rgba(12,12,15,0.3)';                 // la segunda banda, más gasta
       }
       bt.fillStyle = 'rgba(12,12,15,0.5)';
       bt.strokeStyle = col; bt.lineWidth = 5.5; bt.lineCap = 'square';
       bt.globalAlpha = 0.92;
-      bt.beginPath();                                       // U abierta hacia el garaje
-      bt.moveTo(5, 60); bt.lineTo(5, 8); bt.lineTo(59, 8); bt.lineTo(59, 60);
+      bt.beginPath();                                       // U abierta hacia el edificio
+      bt.moveTo(5, 4); bt.lineTo(5, 56); bt.lineTo(59, 56); bt.lineTo(59, 4);
       bt.stroke();
       const bm = new THREE.Mesh(new THREE.PlaneGeometry(BL / 8 - 5, 7.4),
         new THREE.MeshBasicMaterial({ map: tex3(bc), transparent: true, depthWrite: false }));
@@ -5093,7 +5093,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 385;
+const BUILD_NO = 386;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
