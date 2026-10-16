@@ -3371,6 +3371,7 @@ function buildWorld() {
 
 
   // Línea de meta a cuadros rojo/negro cruzando la calzada (todos los circuitos)
+  // + pórtico con cartel SUPER CIRCUIT GP y líneas blancas de borde
   {
     const p = path[0], hw0 = ((trackHW && trackHW[0]) || RW / 2) * 2;
     const fl = new THREE.Mesh(new THREE.PlaneGeometry(2.5, hw0 - 3.4),  // margen lateral: no sale del asfalto
@@ -3378,6 +3379,46 @@ function buildWorld() {
     fl.rotation.x = -Math.PI / 2; fl.rotation.y = -Math.atan2(p.tz, p.tx);
     fl.position.set(p.x, 0.135, p.z);
     world.add(fl);
+    // Líneas blancas finas flanqueando los cuadros — como la línea de control real
+    const wlMat = new THREE.MeshBasicMaterial({ color: 0xe8e6df, transparent: true, opacity: 0.75 });
+    for (const s of [1, -1]) {
+      const wl = new THREE.Mesh(new THREE.PlaneGeometry(0.5, hw0 - 3.2), wlMat);
+      wl.rotation.x = -Math.PI / 2; wl.rotation.y = -Math.atan2(p.tz, p.tx);
+      wl.position.set(p.x + p.tx * s * 1.55, 0.132, p.z + p.tz * s * 1.55);
+      world.add(wl);
+    }
+    // Pórtico de META: dos pilares + cartel superior cruzando la pista
+    const gantry = new THREE.Group();
+    gantry.position.set(p.x, 0, p.z);
+    gantry.rotation.y = -Math.atan2(p.tz, p.tx) + Math.PI / 2;   // eje X del grupo = a lo largo de meta
+    const pilGeo = new THREE.CylinderGeometry(0.32, 0.42, 9.4, 8);
+    const pilMat = new THREE.MeshStandardMaterial({ color: 0x2a2f38, roughness: 0.5, metalness: 0.7 });
+    for (const s of [1, -1]) {
+      const pil = new THREE.Mesh(pilGeo, pilMat);
+      pil.position.set(s * (hw0 / 2 + 1.2), 4.7, 0); pil.castShadow = false;
+      gantry.add(pil);
+      obstacles.push({ x: p.x + p.tz * s * (hw0 / 2 + 1.2), z: p.z - p.tx * s * (hw0 / 2 + 1.2), r: 1.1 });
+    }
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(hw0 + 4, 0.5, 0.8), pilMat);
+    beam.position.y = 9.4; gantry.add(beam);
+    // Cartel: fondo oscuro, texto dorado y cenefa a cuadros
+    const bc = document.createElement('canvas'); bc.width = 512; bc.height = 96;
+    const bt2 = bc.getContext('2d');
+    bt2.fillStyle = '#14171e'; bt2.fillRect(0, 0, 512, 96);
+    for (let k = 0; k < 32; k++) {                              // cenefa a cuadros abajo
+      bt2.fillStyle = k % 2 ? '#c81414' : '#2c2f36';
+      bt2.fillRect(k * 16, 80, 16, 16);
+    }
+    bt2.font = 'bold 46px Georgia, serif'; bt2.textAlign = 'center'; bt2.textBaseline = 'middle';
+    bt2.fillStyle = '#e8c14a'; bt2.fillText('SUPER CIRCUIT GP', 256, 42);
+    const bMat = new THREE.MeshBasicMaterial({ map: tex3(bc) });
+    for (const s of [1, -1]) {                                  // visible desde ambos sentidos
+      const ban = new THREE.Mesh(new THREE.PlaneGeometry(hw0 + 3.4, 2.4), bMat);
+      ban.position.set(0, 8.0, s * 0.45);
+      if (s < 0) ban.rotation.y = Math.PI;
+      gantry.add(ban);
+    }
+    world.add(gantry);
   }
 
   // --- Edificio de BOXES junto a la recta de meta (procedurales; en foto aérea desentona) ---
@@ -5193,7 +5234,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 392;
+const BUILD_NO = 393;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
