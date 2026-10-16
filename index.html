@@ -3442,8 +3442,11 @@ function buildWorld() {
     // punta del complejo — los empalmes entran/salen en tangente, sin solapes
     const teZ = off - RW / 2 + 1.2;                        // borde de pista en local
     const lmZ = BD / 2 + (off - RW / 2 - BD / 2) / 2 - 1;  // centro del pit lane
+    const laneTex = roadTex.clone();                       // misma textura que la pista
+    laneTex.needsUpdate = true;
+    laneTex.repeat.set((BL + 96) / 12, 9 / 12);            // densidad de tile coherente con el asfalto
     const lane = new THREE.Mesh(new THREE.BoxGeometry(BL + 96, 0.12, 9),
-      new THREE.MeshStandardMaterial({ color: 0x30353d, roughness: 0.9 }));
+      new THREE.MeshStandardMaterial({ map: laneTex, roughness: 0.9 }));
     lane.position.set(0, 0.02, lmZ);
     pit.add(lane);
     // Suelo del complejo: losa de hormigón gris desde detrás del edificio
@@ -3498,19 +3501,26 @@ function buildWorld() {
         return [u * u * a[0] + 2 * u * t * b[0] + t * t * c[0],
                 u * u * a[1] + 2 * u * t * b[1] + t * t * c[1]];
       };
+      const uv = [], cum = [0];
+      for (let k = 1; k <= N; k++) {                        // longitud acumulada para el tiling
+        const [ax, az] = pv((k - 1) / N), [bx, bz] = pv(k / N);
+        cum[k] = cum[k - 1] + Math.hypot(bx - ax, bz - az);
+      }
       for (let k = 0; k <= N; k++) {
         const t = k / N, [x, z] = pv(t), [x2, z2] = pv(Math.min(1, t + 0.01));
         let dx = x2 - x, dz = z2 - z; const dl = Math.hypot(dx, dz) || 1;
         dx /= dl; dz /= dl;
         const px = -dz, pz = dx;
         pos.push(x - px * w / 2, y, z - pz * w / 2, x + px * w / 2, y, z + pz * w / 2);
+        uv.push(cum[k] / 12, 0, cum[k] / 12, 1);            // misma densidad de tile que la pista
         if (k < N) { const b2 = k * 2; idx.push(b2, b2 + 1, b2 + 2, b2 + 1, b2 + 3, b2 + 2); }
       }
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
       g.setIndex(idx); g.computeVertexNormals(); return g;
     };
-    const laneMat = new THREE.MeshStandardMaterial({ color: 0x2e323a, roughness: 0.95 });  // asfalto oscuro — el gris claro se quemaba a blanco bajo el neón
+    const laneMat = new THREE.MeshStandardMaterial({ map: roadTex, roughness: 0.95 });  // misma textura que la pista
     // ENTRADA: recta en diagonal de la pista a la calle — sin curva
     const enPath = [[-BL / 2 - 70, teZ],
       [-BL / 2 - 56, teZ + (lmZ - teZ) / 3], [-BL / 2 - 40, teZ + (lmZ - teZ) * 2 / 3],
@@ -5144,7 +5154,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 380;
+const BUILD_NO = 381;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
