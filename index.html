@@ -631,10 +631,12 @@
   /* ===== FICHA TÉCNICA DEL COCHE ===== */
   #carinfo { justify-content: flex-start; overflow-y: auto; padding: 6px 10px 90px;
     background: radial-gradient(circle at 50% 24%, #585e68 0%, #31353c 55%, #16181d 100%); }
-  #ciTitle { font-size: clamp(18px, 3.4vw, 30px); font-weight: 900; letter-spacing: 4px;
-    color: #ffd98a; text-shadow: 0 0 18px rgba(255,190,80,0.5), 0 3px 10px #000;
+  #ciTitle { font-family: Georgia, 'Times New Roman', serif; font-style: normal;
+    font-size: clamp(18px, 3.4vw, 30px); font-weight: 700; letter-spacing: 6px;
+    color: #e8c880; text-shadow: 0 0 16px rgba(220,170,80,0.45), 0 2px 8px #000;
     margin: 2px 0 8px; text-transform: uppercase; }
-  #ciTitle small { display: block; font-size: .5em; letter-spacing: 7px; color: #b09b62; }
+  #ciTitle small { display: block; font-size: .48em; letter-spacing: 8px; color: #a8905a;
+    font-family: inherit; }
   #ciGrid { display: flex; flex-direction: column; gap: 10px; width: min(500px, 94vw); }
   #ciStage { position: relative; height: clamp(200px, 36vh, 320px); border-radius: 16px;
     overflow: hidden; border: 1px solid rgba(255,255,255,0.6);
@@ -5134,7 +5136,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 361;
+const BUILD_NO = 362;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -8560,10 +8562,11 @@ async function ciShow(i) {
   ci3dInit();
   if (ci3d.car) { ci3d.scene.remove(ci3d.car); ci3d.car = null; }
   if (ci3d.mirr) { ci3d.scene.remove(ci3d.mirr); ci3d.mirr = null; }
-  const wrap = c3dNorm(await c3dModel(def), 9.6);
+  const wrap = c3dNorm(await c3dModel(def), 7.6);
   if (wrap.userData.r26) wrap.scale.multiplyScalar(0.62);
   placeSponsorDecals(wrap, wrap, addSponsorDecals(wrap, def.tint));
   if (i !== ci3d.idx) return;
+  ci3d.rotY = -Math.PI / 2; ci3d.rotX = 0;                // perfil con el morro a la izquierda, como la foto
   ci3d.car = wrap; ci3d.scene.add(wrap);
   ci3d.mirr = makeMirrorCar(wrap); ci3d.scene.add(ci3d.mirr);
 }
@@ -8571,14 +8574,14 @@ function ciLoop() {
   if (!ci3d.on) return;
   ci3d.raf = requestAnimationFrame(ciLoop);
   if (ci3d.car) {
-    if (!ci3d.drag) ci3d.rotY += 0.008;
+    if (!ci3d.drag) ci3d.rotY += 0.0035;                  // giro lento: la ficha se lee en perfil
     ci3d.car.rotation.y = ci3d.rotY; ci3d.car.rotation.x = 0;
     ci3d.car.position.y = 0; ci3d.car.position.z = 0;
   }
   if (ci3d.mirr) { ci3d.mirr.rotation.y = ci3d.rotY; ci3d.mirr.rotation.x = 0;
     ci3d.mirr.position.y = 0; ci3d.mirr.position.z = 0; }
   // Vertical: orbita la cámara, no el coche
-  const elvC = clamp(0.282 + ci3d.rotX, 0.04, 1.5), orbC = 15.82;
+  const elvC = clamp(0.16 + ci3d.rotX, 0.04, 1.5), orbC = 15.82;   // vista casi a ras — perfil como la foto
   ci3d.cam.position.set(0, 0.9 + Math.sin(elvC) * orbC, Math.cos(elvC) * orbC);
   ci3d.cam.lookAt(0, 0.9, 0);
   const cv = document.getElementById('ciCv'), stage = document.getElementById('ciStage');
