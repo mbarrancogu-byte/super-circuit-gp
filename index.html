@@ -1530,7 +1530,7 @@
   <div class="chip" id="ovtChip">⚔ ADELANTAR</div>
   <div class="chip" id="scChip">🚩 SAFETY CAR</div>
   <div class="chip" id="formChip"></div>
-  <div class="chip" id="boxexChip"><svg class="ic" style="width:13px;height:13px"><use href="#i-wrench"/></svg>BOXEX</div>
+  <div class="chip" id="boxexChip"><svg class="ic" style="width:13px;height:13px"><use href="#i-wrench"/></svg>Boxes</div>
   <div class="chip" id="reChip" style="display:none;top:76px;left:50%;transform:translateX(-50%);border-color:rgba(120,200,255,0.8);color:#9fd8ff">⏪ REPLAY</div>
   <div id="tuto"></div>
   <div class="chip" id="wrongWay"><svg class="ic"><use href="#i-warn"/></svg>SENTIDO CONTRARIO</div>
@@ -1568,7 +1568,7 @@
 <div class="tbtn" id="shift2Btn" style="display:none">▲<br><span style="font-size:10px">J2</span></div>
 <div class="tbtn" id="hbBtn">HB</div>
 <div class="tbtn" id="pitBtn">PIT</div>
-<div class="tbtn" id="boxexBtn"><svg class="ic"><use href="#i-wrench"/></svg><span>BOXEX</span></div>
+<div class="tbtn" id="boxexBtn"><svg class="ic"><use href="#i-wrench"/></svg><span>Boxes</span></div>
 <div class="tbtn" id="lightsBtn"><svg class="ic" style="width:26px;height:26px;margin:0"><use href="#i-light"/></svg></div>
 <div class="tbtn" id="nitroBtn" style="border-color:rgba(80,200,255,0.7);color:#80d8ff">⚡</div>
 <div class="zbtn" id="zoomIn">+</div>
@@ -1762,10 +1762,10 @@
         <div class="powFace">
           <div class="powFlipIc">⟲</div>
           <div class="powIc" style="--pc:#ffe080" id="piPit"></div>
-          <div class="powTx"><b id="pwPitT">BOXES EXPRÉS</b></div>
+          <div class="powTx"><b id="pwPitT">Boxes Exprés</b></div>
         </div>
         <div class="powFace back">
-          <div class="powTx"><b id="pwPitT2">BOXES EXPRÉS</b><i id="pwPitD"></i><em id="pwPitK"></em></div>
+          <div class="powTx"><b id="pwPitT2">Boxes Exprés</b><i id="pwPitD"></i><em id="pwPitK"></em></div>
           <div class="powBar"><div class="powFill" style="width:100%;background:linear-gradient(90deg,#c09020,#ffe080)"></div></div>
         </div>
       </div>
@@ -1898,7 +1898,7 @@
         <div class="ctlChip"><span class="ctlIc" id="ciBrake"></span><div><b id="ctBrake">FRENO</b><i>FRENO · S · ↓</i></div></div>
         <div class="ctlChip"><span class="ctlIc" id="ciHb"></span><div><b id="ctHb">DERRAPE</b><i>HB · ESPACIO</i></div></div>
         <div class="ctlChip"><span class="ctlIc" id="ciNitro"></span><div><b>NITRO</b><i>⚡ · SHIFT · N</i></div></div>
-        <div class="ctlChip"><span class="ctlIc" id="ciPit"></span><div><b id="ctPit">BOXES</b><i>PIT · P</i></div></div>
+        <div class="ctlChip"><span class="ctlIc" id="ciPit"></span><div><b id="ctPit">Boxes</b><i>PIT · P</i></div></div>
         <div class="ctlChip"><span class="ctlIc" id="ciZoom"></span><div><b>ZOOM</b><i>+ − · = −</i></div></div>
       </div>
     </div>
@@ -1950,7 +1950,7 @@
 </div>
 
 <div class="screen" id="telemetry">
-  <div id="teleTitle"><span id="teleTit">MURO DE BOXES</span><small id="teleSub">TELEMETRÍA DE CARRERA</small></div>
+  <div id="teleTitle"><span id="teleTit">Muro de Boxes</span><small id="teleSub">TELEMETRÍA DE CARRERA</small></div>
   <div id="teleGrid">
     <div class="telePan"><div class="tpT"><b id="tpChas">CHASIS · MAPA DE CALOR DE FLEX</b><span>FLEX</span></div><canvas id="tpChasC" width="360" height="210"></canvas></div>
     <div class="telePan"><div class="tpT"><b id="tpTyre">NEUMÁTICOS · DESGASTE DI/DD/TI/TD</b><span>DESGASTE</span></div><canvas id="tpTyreC" width="360" height="210"></canvas></div>
@@ -3539,7 +3539,7 @@ function buildWorld() {
       x.fillStyle = '#eaf6ff'; x.font = '900 46px system-ui,Arial';
       x.textAlign = 'center'; x.textBaseline = 'middle';
       x.shadowColor = '#35b0ff'; x.shadowBlur = 14;
-      x.fillText('BOXES ➜', 128, 52);
+      x.fillText('Boxes ➜', 128, 52);
       return c;
     })());
     const sign = new THREE.Group();
@@ -5049,7 +5049,7 @@ document.getElementById('boxexBtn').addEventListener('pointerdown', (e) => {
     if (bi < 0) bi = OPTS.car % Math.max(1, boxes.length);
     boxexPt = boxes[bi] ||
       (pitZone ? { x: pitZone.x, z: pitZone.z } : null); // circuitos sin box pintado: zona de boxes
-    showToast('🔧 BOXEX — ' + T('boxexIn')); buzz(30);
+    showToast('🔧 Boxes — ' + T('boxexIn')); buzz(30);
   }
 });
 
@@ -5110,7 +5110,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 357;
+const BUILD_NO = 358;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -7405,7 +7405,7 @@ const I18N = {
     demoEnd: 'DEMO', you: 'Tú', rival: 'Rival', dnf: 'sin terminar', dmgTxt: 'daño',
     next: '▶ SIGUIENTE ETAPA', nextDemo: '▶ SIGUIENTE DEMO', rematch: 'REVANCHA', ptsTot: 'TOTAL',
     photo: 'FOTO', share: 'COMPARTIR', imgSaved: 'IMAGEN GUARDADA',
-    tele: 'TELEMETRÍA', teleTit: 'MURO DE BOXES', teleSub: 'TELEMETRÍA DE CARRERA',
+    tele: 'TELEMETRÍA', teleTit: 'Muro de Boxes', teleSub: 'TELEMETRÍA DE CARRERA',
     tpChas: 'CHASIS · MAPA DE CALOR DE FLEX', tpTyre: 'NEUMÁTICOS · DESGASTE DI/DD/TI/TD',
     tpSpd: 'VELOCIDAD Y MARCHAS', tpPow: 'UNIDAD DE POTENCIA Y ERS',
     tpLap: 'TIEMPOS POR VUELTA', tpDrv: 'ANALÍTICA DE PILOTAJE',
@@ -7446,11 +7446,11 @@ const I18N = {
     versus: 'VERSUS', vsSub: 'ELIGE TU DUELO',
     dVsCpu: 'duelo contra la IA', dVsOn: 'rival por internet', dVsBt: 'rival cerca de ti (app Android)',
     p2: '2 JUGADORES', dVsP2: 'misma pantalla: J1 W+E · J2 ↑+SHIFT DER',
-    secCar: 'COCHES', ctSteer: 'GIRAR', ctGas: 'ACELERAR', ctBrake: 'FRENAR', ctHb: 'DERRAPE', ctPit: 'BOXES',
+    secCar: 'COCHES', ctSteer: 'GIRAR', ctGas: 'ACELERAR', ctBrake: 'FRENAR', ctHb: 'DERRAPE', ctPit: 'Boxes',
     nextRace: '▶ SIGUIENTE CARRERA', race: 'carrera', champPts: 'Puntos',
     champWin: '¡CAMPEÓN DEL GP!', champ2: 'SUBCAMPEÓN',
-    pitting: 'EN BOXES…', pitDone: '¡LISTO! Reparado y ruedas nuevas',
-    boxexIn: 'ENTRANDO A BOXES',
+    pitting: 'En Boxes…', pitDone: '¡LISTO! Reparado y ruedas nuevas',
+    boxexIn: 'Entrando a Boxes',
     mustPit: '¡MOTOR DESTROZADO! Entra en boxes',
     c3dHint: 'Arrastra gira · clic der. mueve · rueda o +/− zoom · flechas giran · R centra',
     rain: '¡EMPIEZA A LLOVER! — el asfalto resbala',
@@ -7471,7 +7471,7 @@ const I18N = {
     pwDriftK: 'HB o ESPACIO · curva cerrada',
     pwSlipT: 'REBUFO', pwSlipD: 'Pégate al escape del coche de delante en una recta: la succión te empuja y el nitro se carga el triple.',
     pwSlipK: 'Automático · detrás de un rival',
-    pwPitT: 'BOXES EXPRÉS', pwPitD: 'Entra en la zona cian junto a meta y frena: se repara el daño y montas neumáticos nuevos en segundos.',
+    pwPitT: 'Boxes Exprés', pwPitD: 'Entra en la zona cian junto a meta y frena: se repara el daño y montas neumáticos nuevos en segundos.',
     pwPitK: 'Botón PIT · tecla P',
     pwTireT: 'NEUMÁTICOS', pwTireD: 'Blandos: +10% de agarre pero se gastan rápido. Duros: menos agarre, duran toda la carrera. Se elige en Opciones.',
     pwTireK: 'OPCIONES → ASISTENCIA',
@@ -7500,7 +7500,7 @@ const I18N = {
     demoEnd: 'DEMO', you: 'You', rival: 'Rival', dnf: 'DNF', dmgTxt: 'damage',
     next: '▶ NEXT STAGE', nextDemo: '▶ NEXT DEMO', rematch: 'REMATCH', ptsTot: 'TOTAL',
     photo: 'PHOTO', share: 'SHARE', imgSaved: 'IMAGE SAVED',
-    tele: 'TELEMETRY', teleTit: 'PIT WALL', teleSub: 'RACE TELEMETRY',
+    tele: 'TELEMETRY', teleTit: 'Pit Wall', teleSub: 'RACE TELEMETRY',
     tpChas: 'CHASSIS · FLEX HEAT MAP', tpTyre: 'TYRES · WEAR FL/FR/RL/RR',
     tpSpd: 'SPEED & GEARS', tpPow: 'POWER UNIT & ERS',
     tpLap: 'LAP TIMES', tpDrv: 'DRIVER ANALYTICS',
@@ -7541,11 +7541,11 @@ const I18N = {
     versus: 'VERSUS', vsSub: 'CHOOSE YOUR DUEL',
     dVsCpu: 'AI duel', dVsOn: 'internet rival', dVsBt: 'nearby rival (Android app)',
     p2: '2 PLAYERS', dVsP2: 'same screen: P1 W+E · P2 ↑+R-SHIFT',
-    secCar: 'CARS', ctSteer: 'STEER', ctGas: 'THROTTLE', ctBrake: 'BRAKE', ctHb: 'DRIFT', ctPit: 'PITS',
+    secCar: 'CARS', ctSteer: 'STEER', ctGas: 'THROTTLE', ctBrake: 'BRAKE', ctHb: 'DRIFT', ctPit: 'Pits',
     nextRace: '▶ NEXT RACE', race: 'race', champPts: 'Points',
     champWin: 'GP CHAMPION!', champ2: 'RUNNER-UP',
-    pitting: 'IN THE PITS…', pitDone: 'ALL FIXED! Fresh tires',
-    boxexIn: 'PITTING IN',
+    pitting: 'In the Pits…', pitDone: 'ALL FIXED! Fresh tires',
+    boxexIn: 'Pitting In',
     mustPit: 'ENGINE WRECKED! Pit stop required',
     c3dHint: 'Drag rotates · right-drag moves · wheel or +/− zoom · arrows rotate · R resets',
     rain: 'RAIN! — the track is slippery',
@@ -7566,7 +7566,7 @@ const I18N = {
     pwDriftK: 'HB or SPACE · tight corner',
     pwSlipT: 'SLIPSTREAM', pwSlipD: 'Tuck right behind the car ahead on a straight: the draft pulls you along and nitro charges three times faster.',
     pwSlipK: 'Automatic · behind a rival',
-    pwPitT: 'EXPRESS PITS', pwPitD: 'Dive into the cyan zone by the line and brake: damage is repaired and fresh tires fitted in seconds.',
+    pwPitT: 'Express Pits', pwPitD: 'Dive into the cyan zone by the line and brake: damage is repaired and fresh tires fitted in seconds.',
     pwPitK: 'PIT button · P key',
     pwTireT: 'TIRES', pwTireD: 'Softs: +10% grip but wear fast. Hards: less grip, last the whole race. Picked in Options.',
     pwTireK: 'OPTIONS → DRIVER AIDS',
