@@ -5277,7 +5277,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 401;
+const BUILD_NO = 402;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -8177,6 +8177,9 @@ function introStart() {
 }
 document.getElementById('introExit').addEventListener('pointerdown', e => {
   e.stopPropagation(); e.preventDefault(); introEnd();
+  // SALTAR → directo a la selección de coche (menú), sin pasar por la portada
+  document.getElementById('splash').classList.add('hide');
+  document.getElementById('menu').classList.add('show');
 });
 // La intro solo se sale con el botón SALTAR (los toques en la imagen no hacen nada)
 document.getElementById('optsBtn').addEventListener('click', () => {
