@@ -4485,7 +4485,7 @@ function setDayMode(day) {
     scene3.background.setHex(0x7fb4dc); scene3.fog.color.setHex(0x7fb4dc);
     ambLight.color.setHex(0xcfe0f0); ambLight.intensity = 1.15;
     hemiLight.color.setHex(0xd8e8f8); hemiLight.groundColor.setHex(0x3d5a30); hemiLight.intensity = 0.95;
-    moonLight.color.setHex(0xffefd0); moonLight.intensity = 1.4;
+    moonLight.color.setHex(0xffefd0); moonLight.intensity = 1.05;
     moonOX = 200; moonOZ = 120;
   } else {
     const neon = !!(circAt(stage) && !circAt(stage).img);     // circuito dibujado = ambiente neón
@@ -4690,8 +4690,8 @@ const SPONSOR_LAYOUT = [
   ['chev', 'top',  0,   -1.6,  2.4, 1.1,  0, 2],   // tapa motor: legible desde la T-cam trasera
   ['circ', 'l',    0,    0.9,  1.45, 0.95, 0.38, 0],
   ['circ', 'r',    0,    0.9,  1.45, 0.95, 0.38, 0],
-  ['diam', 'l',    0,   -2.2,  1.15, 1.0, 0.5, 0],
-  ['diam', 'r',    0,   -2.2,  1.15, 1.0, 0.5, 0],
+  ['diam', 'l',    0,   -2.0,  1.15, 1.0, 0.32, 0],  // bajo, sobre el pontón trasero (la aleta fina queda arriba)
+  ['diam', 'r',    0,   -2.0,  1.15, 1.0, 0.32, 0],
   ['chev', 'rear', 0,   -4.0,  3.0, 1.3,  0.72, 0],
 ];
 // Parrilla de marcas inventadas por coche (orden alineado con SPONSOR_LAYOUT)
@@ -4749,8 +4749,16 @@ function placeSponsorDecals(grp, mdl, decals) {
                 : ax === 'l'   ? new THREE.Vector3(1, 0, 0)
                 : ax === 'r'   ? new THREE.Vector3(-1, 0, 0)
                 :                new THREE.Vector3(0, 0, 1);
+      // Normal esperada en mundo: opuesta al rayo en el marco del grupo —
+      // así se rechazan cantos/interiores del ala (la pegatina no flota
+      // ni se ve espejada por la cara equivocada)
+      const expN = dir.clone().negate().transformDirection(grp.matrixWorld);
       rc.set(o, dir);
-      hit = rc.intersectObject(mdl, true).find(h => !(h.object.userData && h.object.userData.dec));
+      hit = rc.intersectObject(mdl, true).find(h => {
+        if (h.object.userData && h.object.userData.dec) return false;
+        const n = h.face.normal.clone().transformDirection(h.object.matrixWorld);
+        return n.dot(expN) > 0.4;
+      });
       if (hit) { lp = grp.worldToLocal(hit.point.clone()); break; }
     }
     if (!hit) { d.visible = false; continue; }
@@ -5136,7 +5144,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 363;
+const BUILD_NO = 364;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6141,7 +6149,7 @@ function update(dt) {
     crowdBoost = Math.max(0, crowdBoost - dt * 0.8);
     crowdGain.gain.value = (playing && circAt(stage) ? 0.05 : 0) + crowdBoost * 0.09;
     // La lluvia tapa el sol: la luz baja con la tormenta (sensación de nublado)
-    if (moonLight) moonLight.intensity = (noFog ? 3.7 : dayMode ? 1.4 : 0.45) * (1 - rain * 0.22);
+    if (moonLight) moonLight.intensity = (noFog ? 3.7 : dayMode ? 1.05 : 0.45) * (1 - rain * 0.22);
     // Lluvia: siseo proporcional a la intensidad de la tormenta
     rainGain.gain.value = playing ? rain * 0.09 : 0;
     // Rebufo: chorro de aire mientras vas pegado a la estela del rival
