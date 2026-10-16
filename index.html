@@ -3529,8 +3529,60 @@ function buildWorld() {
       }
     }
 
-    // Entrada/salida sin cinta asfáltica — se accede directo por la hierba/apron,
-    // los LEDs siguen marcando solo la calle de boxes
+    // ==== ENTRADA curva a boxes: asfalto con la misma textura + bandas
+    // azul/gris alternas por los bordes — sin costura en la unión con la calle ====
+    {
+      const teZ = off - RW / 2 + 1.2;
+      // Curva cúbica: sale tangente de la pista por el hueco de muros y
+      // aterriza tangente dentro de la calle — la punta se mete 1u dentro
+      // del carril para que la unión quede solapada por debajo, sin borde
+      const enPts = [[-148, teZ], [-118, teZ], [-112, lmZ], [-92, lmZ + 1]];
+      const ev = t => {
+        const u = 1 - t, [a, b, c, d] = enPts;
+        return [u * u * u * a[0] + 3 * u * u * t * b[0] + 3 * u * t * t * c[0] + t * t * t * d[0],
+                u * u * u * a[1] + 3 * u * u * t * b[1] + 3 * u * t * t * c[1] + t * t * t * d[1]];
+      };
+      const evn = t => {                                // normal a la curva
+        const [x, z] = ev(t), [x2, z2] = ev(Math.min(1, t + 0.01));
+        let dx = x2 - x, dz = z2 - z; const dl = Math.hypot(dx, dz) || 1;
+        return [-dz / dl, dx / dl];
+      };
+      // Cinta central de asfalto: mismas UV que la pista (V = sentido de marcha)
+      const N = 26, pos = [], uv = [], idx = [], cum = [0];
+      for (let k = 1; k <= N; k++) {
+        const [ax, az] = ev((k - 1) / N), [bx, bz] = ev(k / N);
+        cum[k] = cum[k - 1] + Math.hypot(bx - ax, bz - az);
+      }
+      for (let k = 0; k <= N; k++) {
+        const t = k / N, [x, z] = ev(t), [nx, nz] = evn(t);
+        pos.push(x - nx * 3.75, 0.088, z - nz * 3.75, x + nx * 3.75, 0.088, z + nz * 3.75);
+        uv.push(0, cum[k] / 12, 1, cum[k] / 12);
+        if (k < N) { const b2 = k * 2; idx.push(b2, b2 + 1, b2 + 2, b2 + 1, b2 + 3, b2 + 2); }
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      g.setIndex(idx); g.computeVertexNormals();
+      pit.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: roadTex, roughness: 0.95,
+        color: neon ? 0x8f949c : 0xffffff, side: THREE.DoubleSide })));
+      // Bandas de borde alternas azul/gris — estilo Paul Ricard, como pintura
+      // de escapatoria siguiendo la curva
+      const blueMat = new THREE.MeshStandardMaterial({ color: 0x1d4fd6, roughness: 0.85, side: THREE.DoubleSide });
+      const grayMat = new THREE.MeshStandardMaterial({ color: 0x7d838c, roughness: 0.85, side: THREE.DoubleSide });
+      for (let k = 0; k < 12; k++) {
+        const t0 = k / 12, t1 = (k + 1) / 12;
+        for (const s of [1, -1]) {
+          const [x0, z0] = ev(t0), [n0x, n0z] = evn(t0);
+          const [x1, z1] = ev(t1), [n1x, n1z] = evn(t1);
+          const bp = new THREE.BufferGeometry();
+          bp.setAttribute('position', new THREE.Float32BufferAttribute([
+            x0 + n0x * s * 3.75, 0.095, z0 + n0z * s * 3.75, x0 + n0x * s * 5.55, 0.095, z0 + n0z * s * 5.55,
+            x1 + n1x * s * 3.75, 0.095, z1 + n1z * s * 3.75, x1 + n1x * s * 5.55, 0.095, z1 + n1z * s * 5.55], 3));
+          bp.setIndex([0, 1, 2, 1, 3, 2]); bp.computeVertexNormals();
+          pit.add(new THREE.Mesh(bp, k % 2 ? blueMat : grayMat));
+        }
+      }
+    }
 
     // ==== Puntos de luz ROJOS (LED a ras de suelo) a lo largo del pit lane ====
     const lampPts = [];
@@ -5141,7 +5193,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 390;
+const BUILD_NO = 391;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
