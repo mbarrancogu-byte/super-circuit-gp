@@ -3549,27 +3549,24 @@ function buildWorld() {
     for (let x = -BL / 2 - 42; x <= BL / 2 + 42; x += 6.2) {
       lampPts.push([x, lmZ - 4.6], [x, lmZ + 4.6]);   // dos filas sobre los bordes de la calle
     }
-    // LEDs a ras de suelo — disco plano que los coches pueden pisar, sin poste
-    const lampGeo = new THREE.CylinderGeometry(0.3, 0.34, 0.12, 10);
-    const lampMat = new THREE.MeshBasicMaterial({ color: 0xff5040 });
-    const lampHaloGeo = new THREE.SphereGeometry(0.6, 10, 8);
-    lampHaloGeo.scale(1, 0.28, 1);                              // halo aplastado contra el suelo
-    const lampHaloMat = new THREE.MeshBasicMaterial({ color: 0xff2018, transparent: true,
-      opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false });
+    // LEDs a ras de suelo: media esfera abombada (3D), material estándar para
+    // que la cúpula coja relieve con la luz — los coches pueden pisarlas
+    const lampGeo = new THREE.SphereGeometry(0.32, 12, 8);
+    lampGeo.scale(1, 0.5, 1);                                   // cúpula baja pegada al suelo
+    const lampMat = new THREE.MeshStandardMaterial({ color: 0xff5040,
+      emissive: 0xd82018, emissiveIntensity: 0.85, roughness: 0.35, metalness: 0.1 });
     const lamps = new THREE.InstancedMesh(lampGeo, lampMat, lampPts.length);
-    const halos = new THREE.InstancedMesh(lampHaloGeo, lampHaloMat, lampPts.length);
     const _lm = new THREE.Matrix4();
     lampPts.forEach(([x, z], i) => {
-      _lm.makeTranslation(x, 0.08, z); lamps.setMatrixAt(i, _lm);
-      _lm.makeTranslation(x, 0.1, z); halos.setMatrixAt(i, _lm);
+      _lm.makeTranslation(x, 0.06, z); lamps.setMatrixAt(i, _lm);
     });
-    lamps.frustumCulled = halos.frustumCulled = false;
-    pit.add(lamps, halos);
+    lamps.frustumCulled = false;
+    pit.add(lamps);
     // Persecución tipo pista de aterrizaje: cada lámpara guarda su orden x — el
     // pulso corre de un extremo a otro del pit lane (se anima en el loop)
     {
       const xs = lampPts.map(p => p[0]), x0 = Math.min(...xs), x1 = Math.max(...xs);
-      window._pitLamps = { lm: lamps, hm: halos, pts: lampPts,
+      window._pitLamps = { lm: lamps, pts: lampPts,
         seq: xs.map(x => (x - x0) / Math.max(1, x1 - x0)), m: new THREE.Matrix4() };
     }
 
@@ -5147,7 +5144,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 379;
+const BUILD_NO = 380;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -9030,12 +9027,10 @@ function loop(now) {
     for (let i = 0; i < L.seq.length; i++) {
       const w = (ph - L.seq[i] + 10) % 1;
       const s = w < 0.1 ? 1.7 - w * 8 : 0.8;                    // destello que decae sobre base visible
-      L.m.makeScale(s, s, s); L.m.setPosition(L.pts[i][0], 0.08, L.pts[i][1]);
+      L.m.makeScale(s, s, s); L.m.setPosition(L.pts[i][0], 0.06, L.pts[i][1]);
       L.lm.setMatrixAt(i, L.m);
-      L.m.makeScale(s * 1.7, s, s * 1.7); L.m.setPosition(L.pts[i][0], 0.1, L.pts[i][1]);
-      L.hm.setMatrixAt(i, L.m);
     }
-    L.lm.instanceMatrix.needsUpdate = L.hm.instanceMatrix.needsUpdate = true;
+    L.lm.instanceMatrix.needsUpdate = true;
   }
   draw(now);
   requestAnimationFrame(loop);
