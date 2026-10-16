@@ -3045,7 +3045,10 @@ function buildWorld() {
           const eN = turn < 0 ? clamp(rEst * 0.8, 3, RW / 2) : RW / 2;
           // lado interior de curva: el arcén se estrecha para no plegarse
           const oP = eP + (turn > 0 ? clamp(rEst * 0.8 - eP, 0.4, W_OUT) : W_OUT);
-          const oN = eN + (turn < 0 ? clamp(rEst * 0.8 - eN, 0.4, W_OUT) : W_OUT);
+          let oN = eN + (turn < 0 ? clamp(rEst * 0.8 - eN, 0.4, W_OUT) : W_OUT);
+          // Hueco del arcén en la entrada/salida de boxes — la curva de entrada
+          // conecta directo con el asfalto sin la banda gris/azul por debajo
+          if (pitGap(i)) oN = eN - 0.5;
           const u = cum / 64;                                      // tile de 64u = 8 bandas
           uvs.push(u, 0, u, 1, u, 1, u, 0);
           pos.push(p.x + nx * (oP), 0.085 + bankYAt(i, oP), p.z + nz * oP,
@@ -3612,7 +3615,7 @@ function buildWorld() {
       // Curva cúbica: sale tangente de la pista por el hueco de muros y
       // aterriza tangente dentro de la calle — la punta se mete 1u dentro
       // del carril para que la unión quede solapada por debajo, sin borde
-      const enPts = [[-148, teZ], [-118, teZ], [-112, lmZ], [-92, lmZ + 1]];
+      const enPts = [[-148, teZ - 0.6], [-118, teZ], [-112, lmZ], [-92, lmZ + 1]];
       const ev = t => {
         const u = 1 - t, [a, b, c, d] = enPts;
         return [u * u * u * a[0] + 3 * u * u * t * b[0] + 3 * u * t * t * c[0] + t * t * t * d[0],
@@ -5269,7 +5272,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 394;
+const BUILD_NO = 395;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
