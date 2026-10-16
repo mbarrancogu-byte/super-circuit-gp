@@ -3615,7 +3615,7 @@ function buildWorld() {
       // Curva cúbica: sale tangente de la pista por el hueco de muros y
       // aterriza tangente dentro de la calle — la punta se mete 1u dentro
       // del carril para que la unión quede solapada por debajo, sin borde
-      const enPts = [[-148, teZ - 0.6], [-118, teZ], [-112, lmZ], [-92, lmZ + 1]];
+      const enPts = [[-148, teZ + 0.4], [-118, teZ + 0.4], [-112, lmZ], [-92, lmZ + 1]];
       const ev = t => {
         const u = 1 - t, [a, b, c, d] = enPts;
         return [u * u * u * a[0] + 3 * u * u * t * b[0] + 3 * u * t * t * c[0] + t * t * t * d[0],
@@ -5272,7 +5272,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 395;
+const BUILD_NO = 396;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
