@@ -4158,8 +4158,17 @@ function buildWorld() {
     const shadeR = [5.4, 6.8, 2.4];                        // radio de sombra por especie
     const sOff = { x: -0.6, z: 0.8 };                      // la luz viene de (+x,-z): la sombra cae al contrario
     let ti = 0, nP = 0, nO = 0, nC = 0, rk = 0, guard = 0;
+    // ¿Dentro del complejo de boxes? (huella rectangular orientada al trazado)
+    const inPitArea = (x, z) => {
+      const pe = window._pitExcl;
+      if (!pe) return false;
+      const dx = x - pe.x, dz = z - pe.z;
+      return Math.abs(dx * pe.tx + dz * pe.tz) < pe.hx &&
+             Math.abs(-dx * pe.tz + dz * pe.tx) < pe.hz;
+    };
     // Coloca un árbol de especie aleatoria en (x,z) — devuelve false si no cabe
     const putTree = (x, z) => {
+      if (inPitArea(x, z)) return false;                 // ni un árbol en el complejo de boxes
       const pick = rnd(0, 1);
       const kind = pick < 0.44 ? 0 : pick < 0.82 ? 1 : 2;    // 44% pino / 38% roble / 18% ciprés
       if (kind === 0 && nP >= CAP.pine || kind === 1 && nO >= CAP.oak || kind === 2 && nC >= CAP.cyp) return false;
@@ -4230,14 +4239,14 @@ function buildWorld() {
     };
     for (let i = 0; i < 90 && guard++ < 4000; i++) {         // cantos rodados: no obstáculo
       const x = rnd(-850, 850), z = rnd(-850, 850);
-      if (nearRoad(x, z, 9)) { i--; continue; }
+      if (nearRoad(x, z, 9) || inPitArea(x, z)) { i--; continue; }
       putRock(rocksS, i, x, z, rnd(0.35, 1.1), 0.18);
       rocksS.setColorAt(i, tCol.setHSL(0, 0, rnd(0.55, 1)));
     }
     guard = 0;
     for (let i = 0; i < 46 && guard++ < 4000; i++) {         // rocas medias
       const x = rnd(-850, 850), z = rnd(-850, 850);
-      if (nearRoad(x, z, 12)) { i--; continue; }
+      if (nearRoad(x, z, 12) || inPitArea(x, z)) { i--; continue; }
       const s = rnd(0.9, 1.7);
       putRock(rocksM, i, x, z, s, 0.5);
       rocksM.setColorAt(i, tCol.setHSL(0.08, rnd(0, 0.1), rnd(0.6, 1)));
@@ -4246,7 +4255,7 @@ function buildWorld() {
     guard = 0;
     for (let i = 0; i < 26 && guard++ < 3000; i++) {         // peñascos lejanos grandes
       const x = rnd(-820, 820), z = rnd(-820, 820);
-      if (nearRoad(x, z, 20)) { i--; continue; }
+      if (nearRoad(x, z, 20) || inPitArea(x, z)) { i--; continue; }
       const s = rnd(1.4, 2.6);
       putRock(rocksL, i, x, z, s, 1.1);
       rocksL.setColorAt(i, tCol.setHSL(0.07, rnd(0, 0.12), rnd(0.7, 1)));
@@ -5147,7 +5156,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 365;
+const BUILD_NO = 366;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
