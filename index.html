@@ -3534,9 +3534,9 @@ function buildWorld() {
       lampPts.push([x, lmZ - 4.6], [x, lmZ + 4.6]);   // dos filas sobre los bordes de la calle
     }
     const lampGeo = new THREE.SphereGeometry(0.34, 10, 8);
-    const lampMat = new THREE.MeshBasicMaterial({ color: 0x3fb8ff });
+    const lampMat = new THREE.MeshBasicMaterial({ color: 0xff5040 });
     const lampHaloGeo = new THREE.SphereGeometry(0.85, 10, 8);
-    const lampHaloMat = new THREE.MeshBasicMaterial({ color: 0x1878ff, transparent: true,
+    const lampHaloMat = new THREE.MeshBasicMaterial({ color: 0xff2018, transparent: true,
       opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false });
     const lamps = new THREE.InstancedMesh(lampGeo, lampMat, lampPts.length);
     const halos = new THREE.InstancedMesh(lampHaloGeo, lampHaloMat, lampPts.length);
@@ -5150,7 +5150,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 370;
+const BUILD_NO = 371;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
