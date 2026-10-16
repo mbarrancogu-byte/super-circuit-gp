@@ -62,7 +62,8 @@
   @keyframes wwBigBlink { 50% { opacity: 0.12; transform: translate(-50%,-50%) scale(0.96); } }
   #vsChip { top: 44px; right: 120px; display: none; border-color: rgba(120,160,255,0.6); color: #a0c8ff; }
   /* RADIO-IN: chip de comunicaciones, visible solo mientras suena RADIO.mp3 */
-  #radioChip { display: none; border-color: rgba(90,220,255,0.65); color: #a0e8ff;
+  #radioChip { display: none; top: 44px; left: 10px;               // fuera del hudTop: no pisa el crono
+    border-color: rgba(90,220,255,0.65); color: #a0e8ff;
     background: rgba(8,26,44,0.78); letter-spacing: 1.5px; overflow: hidden; }
   #radioChip.on { display: inline-flex; align-items: center; gap: 5px;
     animation: radioBlink 0.7s steps(2) infinite; }
@@ -901,7 +902,7 @@
     #hudTop { flex-wrap: wrap; max-width: 46vw; row-gap: 4px; }
     .chip { font-size: 10px; padding: 3px 8px; }
     #timeChip { font-size: 13px; min-width: 78px; }
-    #cpChip { right: 106px; }
+    #cpChip { right: 10px; }                        // junto al borde: no colisiona con el crono centrado
     #vsChip { right: 106px; top: 38px; }
     #wrongWay { font-size: 12px; top: 52px; }
     #speedBox { left: 94px; right: auto; bottom: 96px; }
@@ -1516,8 +1517,8 @@
     <div class="chip" id="koChip" style="display:none;border-color:rgba(255,80,80,0.6);color:#ff9090"><svg class="ic"><use href="#i-clock"/></svg>25</div>
     <div class="chip" id="fuelChip" style="display:none;border-color:rgba(255,200,60,0.55);color:#ffd870">⛽ 100%</div>
     <div class="chip" id="demoChip" style="display:none;border-color:rgba(140,255,220,0.6);color:#a0ffe0;pointer-events:auto;cursor:pointer"><svg class="ic"><use href="#i-robot"/></svg>DEMO · SALIR</div>
-    <div class="chip" id="radioChip"><svg class="ic"><use href="#i-radio"/></svg><div id="radioTxt"></div></div>
   </div>
+  <div class="chip" id="radioChip"><svg class="ic"><use href="#i-radio"/></svg><div id="radioTxt"></div></div>
   <!-- REINICIAR / SALIR: columna fija en el borde derecho, bajo el zoom -->
   <div class="hudBtn" id="pauseBtn"><svg class="ic"><use href="#i-pause"/></svg></div>
   <div class="hudBtn" id="rstBtn"><svg class="ic"><use href="#i-restart"/></svg></div>
@@ -5126,7 +5127,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 372;
+const BUILD_NO = 373;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
