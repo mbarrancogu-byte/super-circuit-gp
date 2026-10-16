@@ -3448,7 +3448,8 @@ function buildWorld() {
     laneTex.rotation = Math.PI / 2;                        // rodadas a lo largo de la calle — como en la pista
     laneTex.repeat.set(9 / 12, (BL + 96) / 12);            // ejes intercambiados por la rotación
     const lane = new THREE.Mesh(new THREE.BoxGeometry(BL + 96, 0.12, 9),
-      new THREE.MeshStandardMaterial({ map: laneTex, roughness: 0.9 }));
+      new THREE.MeshStandardMaterial({ map: laneTex, roughness: 0.9,
+        color: neon ? 0x8f949c : 0xffffff }));               // mismo tinte que la pista — no se quema a blanco
     lane.position.set(0, 0.02, lmZ);
     pit.add(lane);
     // Suelo del complejo: losa de hormigón gris desde detrás del edificio
@@ -3522,7 +3523,8 @@ function buildWorld() {
       g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
       g.setIndex(idx); g.computeVertexNormals(); return g;
     };
-    const laneMat = new THREE.MeshStandardMaterial({ map: roadTex, roughness: 0.95 });  // misma textura que la pista
+    const laneMat = new THREE.MeshStandardMaterial({ map: roadTex, roughness: 0.95,
+      color: neon ? 0x8f949c : 0xffffff });                // misma textura Y mismo tinte que la pista
     // ENTRADA: recta en diagonal de la pista a la calle — sin curva
     const enPath = [[-BL / 2 - 70, teZ],
       [-BL / 2 - 56, teZ + (lmZ - teZ) / 3], [-BL / 2 - 40, teZ + (lmZ - teZ) * 2 / 3],
@@ -3563,10 +3565,10 @@ function buildWorld() {
     }
     // LEDs a ras de suelo: media esfera abombada (3D), material estándar para
     // que la cúpula coja relieve con la luz — los coches pueden pisarlas
-    const lampGeo = new THREE.SphereGeometry(0.32, 12, 8);
+    const lampGeo = new THREE.SphereGeometry(0.44, 12, 8);
     lampGeo.scale(1, 0.5, 1);                                   // cúpula baja pegada al suelo
-    const lampMat = new THREE.MeshStandardMaterial({ color: 0xff5040,
-      emissive: 0xd82018, emissiveIntensity: 0.85, roughness: 0.35, metalness: 0.1 });
+    const lampMat = new THREE.MeshStandardMaterial({ color: 0xff1a10,
+      emissive: 0xff1408, emissiveIntensity: 2.4, roughness: 0.3, metalness: 0.1 });  // rojo muy marcado — se nota de lejos
     const lamps = new THREE.InstancedMesh(lampGeo, lampMat, lampPts.length);
     const _lm = new THREE.Matrix4();
     lampPts.forEach(([x, z], i) => {
@@ -5156,7 +5158,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 382;
+const BUILD_NO = 383;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
