@@ -4306,7 +4306,7 @@ function buildWorld() {
           ts = new THREE.Vector3(), tc = new THREE.Color();
     let nt = 0, gtry = 0;
     const okSpot = (x, z) => {
-      if (nearRoad(x, z, 13)) return false;
+      if (nearRoad(x, z, 16)) return false;            // margen: la mata ancha nunca pisa el arcén
       const pe = window._pitExcl;
       if (pe) {                                              // nada de hierba en el pit lane/entrada
         const dx = x - pe.x, dz = z - pe.z;
@@ -4510,7 +4510,7 @@ function setDayMode(day) {
 // Línea de salida/meta a cuadros sobre la pista
 // ¿Distancia a la pista? (usado por edificios, carteles, árboles…)
 function nearRoad(x, z, ex) {
-  for (let i = 0; i < pathLen; i += 4)
+  for (let i = 0; i < pathLen; i += 2)                 // cada 2 puntos: sin huecos en curvas cerradas
     if (Math.hypot(path[i].x - x, path[i].z - z) < RW / 2 + ex) return true;
   return false;
 }
@@ -5149,7 +5149,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 368;
+const BUILD_NO = 369;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
