@@ -48,6 +48,10 @@ public class MainActivity extends Activity {
         s.setDomStorageEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setAllowFileAccess(true);
+        // Texturas (logo_gp.webp, tex_r26/*, fotos aéreas) cargadas desde
+        // file://android_asset/ se suben a WebGL — sin esto Chrome las marca
+        // como cross-origin y texImage2D las rechaza (escudo/coches en blanco)
+        s.setAllowUniversalAccessFromFileURLs(true);
         web.setWebViewClient(new WebViewClient());
 
         bt = new BtBridge();
