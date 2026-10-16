@@ -1001,6 +1001,14 @@
     box-shadow: 0 10px 26px rgba(0,0,0,0.55), 0 0 18px rgba(255,200,80,0.35); }
   .carCard:hover img { transform: scale(1.1); }
   .carCard.sel { border-color: #ffd060; box-shadow: 0 0 14px rgba(255,200,80,0.4); }
+  /* Hora del día: selector compacto bajo la tira de circuitos */
+  #todRow { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; flex-shrink: 0; }
+  .todB { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 800;
+    letter-spacing: 1px; cursor: pointer; color: #bcd0f8;
+    background: rgba(10,16,32,0.7); border: 2px solid rgba(120,160,255,0.2);
+    transition: border-color .15s, box-shadow .15s, color .15s; }
+  .todB.sel { border-color: #ffd060; color: #ffe8b0;
+    box-shadow: 0 0 12px rgba(255,200,80,0.35); }
   /* Portada: pantalla completa, toca para entrar al menú */
   #splash { position: fixed; inset: 0; z-index: 90; cursor: pointer; overflow: hidden;
     background: #04060c; }
@@ -1255,6 +1263,124 @@
     border: 1px solid rgba(255,255,255,0.12); image-rendering: pixelated; }
   #pfLbl { font-size: 12px; font-weight: 800; letter-spacing: 3px; color: #ffd060;
     margin-bottom: 7px; text-shadow: 0 0 14px rgba(255,190,60,0.4); }
+  /* ===== SIN SCROLL: compresión de pantallas ===== */
+  /* Decorativos absolutos en RESULTADOS y TELEMETRÍA nunca deben sacar scroll */
+  #results { overflow: hidden; }
+  #telemetry { overflow: hidden; }
+  /* Móvil en vertical estrecho: todas las pantallas caben enteras */
+  @media (max-width: 560px) {
+    #menu { padding: 4px 0 8px; }
+    #titleLogo3D { height: clamp(80px, 13vh, 130px); }
+    .stripe { height: 4px; margin: 2px 0 0; }
+    .subtitle { margin: 3px 0 7px; }
+    #carStrip { padding: 6px 4px 8px; }
+    .carCard img { height: 40px; }
+    .carCard .cn { font-size: 8.5px; margin-top: 1px; }
+    .selArr { height: 50px; width: 34px; }
+    #car3dWrap { height: 92px; margin: 3px auto 7px; }
+    .circCard img, .circCard canvas { height: 44px; }
+    .circCard .cn { min-height: 18px; padding: 2px; font-size: 8px; }
+    #nickRow { padding: 4px 12px; margin-bottom: 1px; }
+    .mbtn { margin-top: 6px; }
+    #menuGrid { gap: 5px 8px; margin-top: 4px; }
+    #menuGrid .mbtn { padding: 8px 6px; font-size: 12px; }
+    #menu .backWrap { margin-top: 6px; }
+    .backWrap .mbtn { padding: 7px 22px; }
+    #bestLine, #ptsLine { font-size: 10px; margin-top: 2px; }
+    .hint { margin-top: 3px; font-size: 10px; }
+    #menu .verTag { margin-top: 3px; font-size: 8.5px; }
+    /* TELEMETRÍA en dos columnas: los seis paneles caben sin scroll */
+    #teleGrid { grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-height: calc(100vh - 150px); }
+    .tpT { padding: 4px 8px 2px; font-size: 8.5px; }
+  }
+  /* Móvil apaisado (pantalla muy baja): compresión agresiva de menús */
+  @media (max-height: 500px) {
+    #menu { padding: 2px 0 2px; }
+    .stripe { height: 3px; margin: 1px 0 0; }
+    #titleLogo3D { height: 40px; width: min(30vw, 170px); }
+    .subtitle { margin: 1px 0 3px; font-size: 9px; letter-spacing: 2px; }
+    #carStrip { padding: 2px 4px 4px; }
+    .carCard { width: 52px; padding: 2px 2px; }
+    .carCard img { height: 20px; }
+    .carCard .cn { font-size: 7.5px; margin-top: 1px; }
+    .selArr { width: 26px; height: 36px; }
+    .selArr svg { width: 14px; height: 14px; }
+    #car3dWrap { height: 52px; width: min(220px, 30vw); margin: 1px auto 4px; }
+    #car3dInfo { padding: 2px 7px; font-size: 8px; }
+    #circStrip { padding: 1px 4px 4px; }
+    .circCard { width: 70px; }
+    .circCard img, .circCard canvas { width: 70px; height: 26px; }
+    .circCard .cn { min-height: 12px; padding: 1px; font-size: 7px; line-height: 1.05; }
+    #nickRow { padding: 3px 10px; margin: 0 auto 1px; }
+    #nickIn { font-size: 11px; }
+    #nickRow svg { width: 13px; height: 13px; }
+    .mbtn { font-size: 11px; padding: 5px 16px; margin-top: 3px; letter-spacing: 1px; }
+    #menuGrid { grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 3px; margin-top: 3px; width: min(760px, 96vw); }
+    #menuGrid .mbtn { font-size: 9.5px; padding: 5px 4px; letter-spacing: .4px; }
+    #optsBtn, #powBtn { grid-column: auto; width: 100%; }
+    #menu .hint { display: none; }
+    #menu .backWrap { margin-top: 2px; padding: 2px 0 3px; }
+    .backWrap .mbtn { padding: 4px 14px; }
+    #bestLine, #ptsLine { font-size: 9px; margin-top: 1px; }
+    .hint { font-size: 8px; margin-top: 1px; }
+    #menu .verTag { margin-top: 2px; font-size: 8px; }
+    /* POWER-UPS compacto */
+    #powers { padding: 6px 10px 56px; }
+    #powGrid { gap: 6px 8px; min-height: 0; }
+    .powCard { min-height: 0; }
+    .powCard { padding: 4px 6px 10px; gap: 4px; }
+    .powFace { gap: 4px; padding: 4px 6px 10px; }
+    .powIc { width: 28px; height: 28px; }
+    .powIc svg { width: 16px; height: 16px; }
+    .powTx b { font-size: 9px; letter-spacing: .5px; }
+    .powTx i { font-size: 7.5px; margin-top: 1px; }
+    .powTx em { font-size: 7px; margin-top: 1px; }
+    .powBar { bottom: 3px; }
+    /* OPCIONES compacto */
+    #opts { padding: 6px 10px 56px; }
+    .optGrp { padding: 1px 8px 5px; }
+    .optSec { margin-top: 3px; font-size: 8px; padding-bottom: 1px; }
+    .optRow { padding: 1px 6px; margin-top: 1px; }
+    .optRow .lbl { font-size: 8.5px; }
+    .optT { padding: 2px 6px; font-size: 8.5px; min-width: 54px; }
+    .ctlChip { padding: 0 5px 0 3px; }
+    .ctlIc { width: 13px; height: 13px; }
+    .ctlIc svg { width: 9px; height: 9px; }
+    .ctlChip b { font-size: 7px; }
+    .ctlChip i { font-size: 6px; }
+    /* VERSUS compacto */
+    .vsHead { margin: 0; gap: 10px; }
+    .vsHead svg { width: 30px; height: 30px; }
+    #versus .vsHead + div { font-size: clamp(18px, 6vh, 28px) !important; }
+    #versus .hint { margin-bottom: 4px !important; }
+    .vsMode { padding: 6px 12px; gap: 9px; margin-top: 3px; }
+    .vsMode .ic { width: 24px; height: 24px; padding: 4px; }
+    .vsDesc { font-size: 8.5px; margin: -3px 0 1px; letter-spacing: 1px; }
+    #mpLobby { margin-top: 4px; }
+    #mpCode { padding: 5px 10px; margin-bottom: 4px; font-size: 11px; }
+    #mpJoinBtn { padding: 5px 16px; font-size: 11px; margin-top: 0; }
+    /* FICHA TÉCNICA compacta: escenario y tarjetas en fila */
+    #carinfo { padding: 4px 8px 56px; }
+    #ciTitle { font-size: 16px; margin: 0 0 4px; }
+    #ciGrid { flex-direction: row; align-items: stretch; gap: 6px; width: min(780px, 96vw); }
+    #ciStage { flex: 0 0 40%; height: auto; min-height: 140px; }
+    .ciCard { flex: 1 1 0; padding: 6px 10px 8px; gap: 4px; }
+    .ciSec { font-size: 9px; padding-bottom: 2px; }
+    .ciStat { font-size: 9px; grid-template-columns: 100px 1fr 56px; }
+    .ciStat b { font-size: 10px; }
+    .ciBar { height: 7px; }
+    .ciRow { font-size: 9.5px; padding: 2px; }
+    .ciRow b { font-size: 10px; }
+    /* META / TELEMETRÍA compactas */
+    #resTitle { font-size: clamp(26px, 6vh, 44px); }
+    #resTime { margin: 4px 0; font-size: clamp(30px, 9vh, 60px); }
+    .resPill { padding: 7px 14px; margin: 6px 2px 0; font-size: 12px; }
+    #teleTitle { margin: 2px 0 4px; }
+    #teleGrid { max-height: calc(100vh - 120px); overflow-y: auto; }
+    .tpT { padding: 3px 8px 2px; font-size: 8px; }
+  }
 </style>
 </head>
 <body>
@@ -5278,7 +5404,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 406;
+const BUILD_NO = 407;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
