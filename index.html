@@ -1216,6 +1216,8 @@
     background: linear-gradient(180deg, transparent 0%, rgba(4,6,12,0.82) 55%, rgba(4,6,12,0.95) 100%);
     pointer-events: none; }
   .backWrap .mbtn { pointer-events: auto; }
+  /* En el menú (lista con scroll) VOLVER va en flujo, al final — fijo taparía el carrusel */
+  #menu .backWrap { position: static; margin-top: 18px; }
   .backWrap .mbtn { margin: 0; width: auto; padding: 10px 30px;
     display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
     border-color: rgba(120,160,255,0.45); color: #a0c0ff; }
@@ -1242,6 +1244,7 @@
   .langF:active { transform: scale(0.9); }
   /* Marca de producto: versión + copyright, pequeña y discreta al pie del menú */
   /* Versión fija en la parte más baja de la pantalla, centrada */
+  #menu .verTag { position: static; transform: none; margin-top: 10px; }
   .verTag { position: fixed; left: 50%; bottom: 6px; transform: translateX(-50%);
     margin: 0; font-size: 10px; font-weight: 600; letter-spacing: 2.5px; z-index: 60;
     color: rgba(150,170,220,0.55); text-transform: uppercase; pointer-events: none;
@@ -5144,7 +5147,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 364;
+const BUILD_NO = 365;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
