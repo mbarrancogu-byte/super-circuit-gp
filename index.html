@@ -3488,20 +3488,41 @@ function buildWorld() {
       bm.position.set(-BL / 2 + (i + 0.5) * (BL / 8), 0.09, lmZ);
       pit.add(bm);
     }
-    // Flechas de sentido pintadas sobre el asfalto: indican hacia dónde se
-    // circula por la calle — entrada (−x) → salida (+x), como en un pit real
+    // Flechas de sentido PINTADAS sobre el asfalto: cada una lleva su desgaste
+    // y manchas de neumático aleatorias — se integran con la calle como las
+    // señales viales reales, no parecen pegatinas flotando
     {
-      const ac = document.createElement('canvas'); ac.width = 96; ac.height = 64;
-      const at = ac.getContext('2d');
-      at.fillStyle = 'rgba(240,240,235,0.85)';
-      at.beginPath();                                     // flecha → hacia +x
-      at.moveTo(8, 26); at.lineTo(58, 26); at.lineTo(58, 12); at.lineTo(92, 32);
-      at.lineTo(58, 52); at.lineTo(58, 38); at.lineTo(8, 38); at.closePath();
-      at.fill();
-      const aTex = tex3(ac);
       for (let i = 0; i < 5; i++) {
+        const ac = document.createElement('canvas'); ac.width = 96; ac.height = 64;
+        const at = ac.getContext('2d');
+        at.fillStyle = 'rgba(240,240,235,0.78)';
+        at.beginPath();                                     // flecha → hacia +x
+        at.moveTo(8, 26); at.lineTo(58, 26); at.lineTo(58, 12); at.lineTo(92, 32);
+        at.lineTo(58, 52); at.lineTo(58, 38); at.lineTo(8, 38); at.closePath();
+        at.fill();
+        // Desgaste: píxeles borrados al azar — la pintura perdida deja ver el asfalto
+        at.globalCompositeOperation = 'destination-out';
+        for (let j = 0; j < 260; j++) {
+          at.globalAlpha = rnd(0.25, 0.8);
+          at.fillRect(rnd(4, 92), rnd(8, 56), rnd(1, 2.5), rnd(1, 2));
+        }
+        at.globalCompositeOperation = 'source-over';
+        at.globalAlpha = 1;
+        // Manchas de neumático aleatorias por encima: rodadas oscuras que la cruzan
+        for (let j = 0, nj = ri(2, 4); j < nj; j++) {
+          at.save();
+          at.translate(rnd(20, 76), rnd(14, 50));
+          at.rotate(rnd(-0.5, 0.5));
+          const g2 = at.createLinearGradient(-14, 0, 14, 0);
+          g2.addColorStop(0, 'rgba(14,14,16,0)');
+          g2.addColorStop(0.5, `rgba(14,14,16,${rnd(0.35, 0.6)})`);
+          g2.addColorStop(1, 'rgba(14,14,16,0)');
+          at.fillStyle = g2;
+          at.fillRect(-14, -rnd(4, 7), 28, rnd(8, 14));
+          at.restore();
+        }
         const am = new THREE.Mesh(new THREE.PlaneGeometry(7.5, 5),
-          new THREE.MeshBasicMaterial({ map: aTex, transparent: true, depthWrite: false, opacity: 0.9 }));
+          new THREE.MeshBasicMaterial({ map: tex3(ac), transparent: true, depthWrite: false }));
         am.rotation.x = -Math.PI / 2;
         am.position.set(-BL / 2 - 30 + i * ((BL + 60) / 4), 0.1, lmZ);
         pit.add(am);
@@ -5120,7 +5141,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 389;
+const BUILD_NO = 390;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
