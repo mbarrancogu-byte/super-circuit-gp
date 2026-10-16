@@ -3541,24 +3541,22 @@ function buildWorld() {
     for (let x = -BL / 2 - 42; x <= BL / 2 + 42; x += 6.2) {
       lampPts.push([x, lmZ - 4.6], [x, lmZ + 4.6]);   // dos filas sobre los bordes de la calle
     }
-    const lampGeo = new THREE.SphereGeometry(0.24, 10, 8);
+    // LEDs a ras de suelo — disco plano que los coches pueden pisar, sin poste
+    const lampGeo = new THREE.CylinderGeometry(0.3, 0.34, 0.12, 10);
     const lampMat = new THREE.MeshBasicMaterial({ color: 0xff5040 });
     const lampHaloGeo = new THREE.SphereGeometry(0.6, 10, 8);
+    lampHaloGeo.scale(1, 0.28, 1);                              // halo aplastado contra el suelo
     const lampHaloMat = new THREE.MeshBasicMaterial({ color: 0xff2018, transparent: true,
       opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false });
     const lamps = new THREE.InstancedMesh(lampGeo, lampMat, lampPts.length);
     const halos = new THREE.InstancedMesh(lampHaloGeo, lampHaloMat, lampPts.length);
     const _lm = new THREE.Matrix4();
-    const postGeo = new THREE.CylinderGeometry(0.07, 0.09, 1.0, 6);
-    const postMat = new THREE.MeshStandardMaterial({ color: 0x22262e, roughness: 0.8, metalness: 0.5 });
-    const posts = new THREE.InstancedMesh(postGeo, postMat, lampPts.length);
     lampPts.forEach(([x, z], i) => {
-      _lm.makeTranslation(x, 1.05, z); lamps.setMatrixAt(i, _lm);
-      _lm.makeTranslation(x, 1.05, z); halos.setMatrixAt(i, _lm);
-      _lm.makeTranslation(x, 0.5, z); posts.setMatrixAt(i, _lm);
+      _lm.makeTranslation(x, 0.08, z); lamps.setMatrixAt(i, _lm);
+      _lm.makeTranslation(x, 0.1, z); halos.setMatrixAt(i, _lm);
     });
-    lamps.frustumCulled = halos.frustumCulled = posts.frustumCulled = false;
-    pit.add(posts, lamps, halos);
+    lamps.frustumCulled = halos.frustumCulled = false;
+    pit.add(lamps, halos);
     // Persecución tipo pista de aterrizaje: cada lámpara guarda su orden x — el
     // pulso corre de un extremo a otro del pit lane (se anima en el loop)
     {
@@ -5141,7 +5139,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 376;
+const BUILD_NO = 377;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -9024,9 +9022,9 @@ function loop(now) {
     for (let i = 0; i < L.seq.length; i++) {
       const w = (ph - L.seq[i] + 10) % 1;
       const s = w < 0.1 ? 1.7 - w * 8 : 0.8;                    // destello que decae sobre base visible
-      L.m.makeScale(s, s, s); L.m.setPosition(L.pts[i][0], 1.05, L.pts[i][1]);
+      L.m.makeScale(s, s, s); L.m.setPosition(L.pts[i][0], 0.08, L.pts[i][1]);
       L.lm.setMatrixAt(i, L.m);
-      L.m.makeScale(s * 1.7, s * 1.7, s * 1.7); L.m.setPosition(L.pts[i][0], 1.05, L.pts[i][1]);
+      L.m.makeScale(s * 1.7, s, s * 1.7); L.m.setPosition(L.pts[i][0], 0.1, L.pts[i][1]);
       L.hm.setMatrixAt(i, L.m);
     }
     L.lm.instanceMatrix.needsUpdate = L.hm.instanceMatrix.needsUpdate = true;
