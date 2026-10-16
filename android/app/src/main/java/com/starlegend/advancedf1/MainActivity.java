@@ -85,6 +85,14 @@ public class MainActivity extends Activity {
         if (hasFocus) hideSystemUi();
     }
 
+    // Al girar el móvil (la actividad sobrevive por configChanges) el sistema
+    // puede restaurar las barras — las volvemos a ocultar
+    @Override
+    public void onConfigurationChanged(android.content.res.Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        hideSystemUi();
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
