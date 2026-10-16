@@ -3386,7 +3386,7 @@ function buildWorld() {
     const pi = Math.floor(pathLen * 0.055);                    // centro a mitad de la recta de meta
     const p = path[pi], nx = -p.tz, nz = p.tx;                 // normal izquierda = lado de boxes
     const BL = 130, BD = 14, BH = 8.5;                         // largo × fondo × alto — bajo: no tapa la cámara
-    const off = RW / 2 + 16 + BD / 2;                          // hueco del pit lane + mitad del fondo (edificio alejado)
+    const off = RW / 2 + 34 + BD / 2;                          // complejo más a la izquierda: franja de césped entre pista y calle
     const bcx = p.x - nx * off, bcz = p.z - nz * off;        // lado de la cámara: no tapa la vista
     window._pitExcl = { x: bcx, z: bcz, tx: p.tx, tz: p.tz, hx: BL / 2 + 82, hz: off + 8 }; // huella del complejo
     const pit = new THREE.Group();
@@ -5136,7 +5136,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 362;
+const BUILD_NO = 363;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
