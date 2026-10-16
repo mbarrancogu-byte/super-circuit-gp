@@ -3542,6 +3542,14 @@ function buildWorld() {
     // Colisión: círculos a lo largo del edificio — el muro y el cuerpo frenan al coche
     for (let k = -3; k <= 3; k++)
       obstacles.push({ x: bcx + p.tx * k * (BL / 7), z: bcz + p.tz * k * (BL / 7), r: BD * 0.85 });
+    // Barreras invisibles en los extremos de la calle de boxes: el coche no
+    // puede salirse del circuito ni por la entrada ni por la salida
+    const pit2w = (lx, lz) => ({ x: bcx + lx * pitCs + lz * pitSn, z: bcz - lx * pitSn + lz * pitCs });
+    for (const ex of [-BL / 2 - 49, BL / 2 + 49])                       // tapón en cada extremo
+      for (let lz = lmZ - 7; lz <= lmZ + 7; lz += 3)
+        obstacles.push({ ...pit2w(ex, lz), r: 3.2 });
+    for (let lx = -BL / 2 - 50; lx <= BL / 2 + 50; lx += 4)             // detrás del edificio: no se puede rodear
+      obstacles.push({ ...pit2w(lx, -11), r: 3.4 });
   }
 
   // Flechas de dirección: chevrones pintados sobre el asfalto cada ~60u (todos los circuitos)
@@ -5112,7 +5120,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 388;
+const BUILD_NO = 389;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
