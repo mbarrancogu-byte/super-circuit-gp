@@ -545,14 +545,18 @@
   #teleGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px; width: min(1180px, 96vw); max-height: 72vh; }
   .telePan { position: relative; border-radius: 10px; overflow: hidden;
+    display: flex; flex-direction: column;
     background: linear-gradient(180deg, #0d1524, #080d18);
     border: 1px solid rgba(90,150,230,0.35);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 20px rgba(0,0,0,0.5); }
   .tpT { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: #8fb8e8;
     padding: 7px 10px 4px; border-bottom: 1px solid rgba(90,150,230,0.22);
-    display: flex; justify-content: space-between; }
+    display: flex; justify-content: space-between; flex: 0 0 auto; }
   .tpT b { color: #cfe6ff; }
-  .telePan canvas { display: block; width: 100%; height: auto; }
+  /* El canvas se encaja en el panel: si la fila se comprime (apaisado) la
+     gráfica se escala entera con object-fit en vez de quedar cortada */
+  .telePan canvas { display: block; width: 100%; height: auto;
+    flex: 1 1 auto; min-height: 0; object-fit: contain; }
   @media (max-width: 860px) { #teleGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 560px) { #teleGrid { grid-template-columns: 1fr; max-height: 64vh; overflow-y: auto; } }
 
@@ -1263,6 +1267,15 @@
     border: 1px solid rgba(255,255,255,0.12); image-rendering: pixelated; }
   #pfLbl { font-size: 12px; font-weight: 800; letter-spacing: 3px; color: #ffd060;
     margin-bottom: 7px; text-shadow: 0 0 14px rgba(255,190,60,0.4); }
+  /* Selector de hora del día: píldoras bajo el carrusel de circuitos */
+  #todRow { display: flex; gap: 6px; margin: 2px 0 4px; }
+  .todB { padding: 6px 14px; border-radius: 999px; cursor: pointer;
+    font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #9fb4d8;
+    background: rgba(10,16,32,0.7); border: 1.5px solid rgba(140,170,255,0.25);
+    transition: .15s; }
+  .todB:hover { border-color: rgba(255,208,96,0.6); }
+  .todB.sel { color: #ffe2b0; border-color: #ffd060;
+    box-shadow: 0 0 12px rgba(255,200,80,0.35); }
   /* ===== SIN SCROLL: compresión de pantallas ===== */
   /* Decorativos absolutos en RESULTADOS y TELEMETRÍA nunca deben sacar scroll */
   #results { overflow: hidden; }
@@ -1280,6 +1293,8 @@
     #car3dWrap { height: 92px; margin: 3px auto 7px; }
     .circCard img, .circCard canvas { height: 44px; }
     .circCard .cn { min-height: 18px; padding: 2px; font-size: 8px; }
+    .todB { padding: 4px 10px; font-size: 9.5px; }
+    #todRow { margin: 1px 0 3px; gap: 4px; }
     #nickRow { padding: 4px 12px; margin-bottom: 1px; }
     .mbtn { margin-top: 6px; }
     #menuGrid { gap: 5px 8px; margin-top: 4px; }
@@ -1312,6 +1327,8 @@
     .circCard { width: 70px; }
     .circCard img, .circCard canvas { width: 70px; height: 26px; }
     .circCard .cn { min-height: 12px; padding: 1px; font-size: 7px; line-height: 1.05; }
+    .todB { padding: 3px 8px; font-size: 8.5px; letter-spacing: .5px; }
+    #todRow { margin: 1px 0 2px; gap: 3px; }
     #nickRow { padding: 3px 10px; margin: 0 auto 1px; }
     #nickIn { font-size: 11px; }
     #nickRow svg { width: 13px; height: 13px; }
@@ -1377,9 +1394,13 @@
     #resTitle { font-size: clamp(26px, 6vh, 44px); }
     #resTime { margin: 4px 0; font-size: clamp(30px, 9vh, 60px); }
     .resPill { padding: 7px 14px; margin: 6px 2px 0; font-size: 12px; }
-    #teleTitle { margin: 2px 0 4px; }
-    #teleGrid { max-height: calc(100vh - 120px); overflow-y: auto; }
+    #teleTitle { margin: 2px 0 4px; font-size: clamp(14px, 4.4vh, 22px); }
+    #teleGrid { max-height: calc(100vh - 110px); overflow-y: auto; }
     .tpT { padding: 3px 8px 2px; font-size: 8px; }
+  }
+  /* Apaisado ancho: telemetría en 3 columnas para que las 6 gráficas quepan */
+  @media (max-height: 500px) and (min-width: 700px) {
+    #teleGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
 </style>
 </head>
@@ -1749,6 +1770,12 @@
     <div class="selArr lft" id="circPrev"><svg><use href="#i-chev"/></svg></div>
     <div id="circStrip"></div>
     <div class="selArr" id="circNext"><svg><use href="#i-chev"/></svg></div>
+  </div>
+  <div id="todRow">
+    <button class="todB" data-t="auto" id="todAuto">AUTO</button>
+    <button class="todB" data-t="day" id="todDay">☀️ DÍA</button>
+    <button class="todB" data-t="dusk" id="todDusk">🌇 TARDE</button>
+    <button class="todB" data-t="night" id="todNight">🌙 NOCHE</button>
   </div>
   <div id="nickRow">
     <svg><use href="#i-helmet"/></svg>
@@ -4168,6 +4195,7 @@ function buildWorld() {
     const bgp = new THREE.Mesh(bgGeo, new THREE.MeshBasicMaterial({ map: bgTex, fog: false }));
     bgp.rotation.x = -Math.PI / 2; bgp.position.y = -0.08;
     world.add(bgp);
+    world.userData.bgp = bgp; world.userData.ter = ter;   // tintes DÍA/TARDE/NOCHE
   } else {
     // Suelo realista: hierba verde en todos los trazados — como en las fotos aéreas
     ter.material = new THREE.MeshStandardMaterial({ map: groundTex(false), roughness: 1 });
@@ -4696,28 +4724,30 @@ function buildWorld() {
       m.position.set(Math.cos(a) * r, hAt(Math.cos(a) * r, Math.sin(a) * r) - 3, Math.sin(a) * r);
       world.add(m);
     }
-    if (!neon) {   // cielo estrellado + luna: solo en rallys nocturnos (el NEÓN va a sol puro)
-      const nSt = 500, sp = new Float32Array(nSt * 3);
-      for (let i = 0; i < nSt; i++) {
-        const a = rnd(0, 6.28), e2 = rnd(0.05, 1.5);
-        sp[i * 3] = Math.cos(a) * Math.cos(e2) * 1400;
-        sp[i * 3 + 1] = Math.sin(e2) * 1400;
-        sp[i * 3 + 2] = Math.sin(a) * Math.cos(e2) * 1400;
-      }
-      const stG = new THREE.BufferGeometry(); stG.setAttribute('position', new THREE.BufferAttribute(sp, 3));
-      world.add(new THREE.Points(stG, new THREE.PointsMaterial({ color: 0xcdd8ff, size: 2.2, sizeAttenuation: false, fog: false })));
-      const moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex3(makeGlowTex(200, 210, 255, 0.9)), transparent: true, depthWrite: false, fog: false }));
-      moon.scale.set(160, 160, 1); moon.position.set(600, 800, -900);
-      world.add(moon);
-    } else {
-      // Sol visible sobre el horizonte del NEÓN: disco cálido con halo amplio
-      const sun = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex3(makeGlowTex(255, 190, 110, 1)), transparent: true, depthWrite: false, fog: false }));
-      sun.scale.set(260, 260, 1); sun.position.set(760, 430, -1010);
-      world.add(sun);
-      const sunCore = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex3(makeGlowTex(255, 240, 200, 1)), transparent: true, depthWrite: false, fog: false }));
-      sunCore.scale.set(90, 90, 1); sunCore.position.copy(sun.position);
-      world.add(sunCore);
+    // Cielo: se crean los DOS sets (noche = estrellas+luna, día = sol+halo) y
+    // applyTOD() decide cuál se ve según la hora elegida en el menú
+    const sky = { night: [], sun: [] };
+    world.userData.sky = sky;
+    const nSt = 500, sp = new Float32Array(nSt * 3);
+    for (let i = 0; i < nSt; i++) {
+      const a = rnd(0, 6.28), e2 = rnd(0.05, 1.5);
+      sp[i * 3] = Math.cos(a) * Math.cos(e2) * 1400;
+      sp[i * 3 + 1] = Math.sin(e2) * 1400;
+      sp[i * 3 + 2] = Math.sin(a) * Math.cos(e2) * 1400;
     }
+    const stG = new THREE.BufferGeometry(); stG.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+    const stars = new THREE.Points(stG, new THREE.PointsMaterial({ color: 0xcdd8ff, size: 2.2, sizeAttenuation: false, fog: false }));
+    world.add(stars); sky.night.push(stars);
+    const moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex3(makeGlowTex(200, 210, 255, 0.9)), transparent: true, depthWrite: false, fog: false }));
+    moon.scale.set(160, 160, 1); moon.position.set(600, 800, -900);
+    world.add(moon); sky.night.push(moon);
+    // Sol visible sobre el horizonte: disco cálido con halo amplio
+    const sun = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex3(makeGlowTex(255, 190, 110, 1)), transparent: true, depthWrite: false, fog: false }));
+    sun.scale.set(260, 260, 1); sun.position.set(760, 430, -1010);
+    world.add(sun); sky.sun.push(sun);
+    const sunCore = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex3(makeGlowTex(255, 240, 200, 1)), transparent: true, depthWrite: false, fog: false }));
+    sunCore.scale.set(90, 90, 1); sunCore.position.copy(sun.position);
+    world.add(sunCore); sky.sun.push(sunCore);
   }
 
   // --- Minimapa: polyline de la pista + encuadre cacheado (antes se recalculaba por frame) ---
@@ -4760,6 +4790,58 @@ function setDayMode(day) {
     // Luz solar blanca: fuente principal del NEÓN — blanca cálida e intensa
     moonLight.color.setHex(neon ? 0xfff0d0 : 0x9fb2dd); moonLight.intensity = neon ? 3.7 : 0.45;
     moonOX = 300; moonOZ = -400;
+  }
+}
+// Hora del día elegida en el menú: AUTO / DÍA / TARDE / NOCHE.
+// todMode: -1 auto · 0 día · 1 tarde · 2 noche — sunInt = intensidad base del
+// sol/luna que el frame ajusta con la lluvia.
+let todMode = -1, sunInt = 0.45;
+function applyTOD() {
+  const tod = OPTS.tod || 'auto';
+  const circ = circAt(stage);
+  const neon = !!(circ && !circ.img), traced = !!(circ && circ.img);
+  if (tod === 'auto') {                                   // cada circuito decide como antes
+    todMode = -1;
+    setDayMode(traced);
+    sunInt = neon ? 3.7 : traced ? 1.05 : 0.45;
+  } else {
+    todMode = tod === 'day' ? 0 : tod === 'dusk' ? 1 : 2;
+    dayMode = todMode === 0;                              // faros apagados solo de día
+    noFog = neon;                                         // el neón nunca lleva niebla
+    if (todMode === 0) {                                  // DÍA — sol alto, cielo azul
+      scene3.background.setHex(0x7fb4dc); scene3.fog.color.setHex(0x7fb4dc);
+      ambLight.color.setHex(0xcfe0f0); ambLight.intensity = 1.15;
+      hemiLight.color.setHex(0xd8e8f8); hemiLight.groundColor.setHex(0x3d5a30); hemiLight.intensity = 0.95;
+      moonLight.color.setHex(0xffefd0); moonOX = 200; moonOZ = 120;
+      sunInt = neon ? 3.7 : 1.05;
+    } else if (todMode === 1) {                           // TARDE — hora dorada, sol bajo y naranja
+      scene3.background.setHex(0xcf8f68); scene3.fog.color.setHex(0xcf8f68);
+      ambLight.color.setHex(0xe8c0a0); ambLight.intensity = 0.9;
+      hemiLight.color.setHex(0xe8b088); hemiLight.groundColor.setHex(0x38301f); hemiLight.intensity = 0.7;
+      moonLight.color.setHex(0xffb268); moonOX = 560; moonOZ = -340;   // sol bajo → sombras largas
+      sunInt = neon ? 2.6 : 0.85;
+    } else {                                              // NOCHE — luna fría, estrellas y faros
+      scene3.background.setHex(neon ? 0x10182e : 0x060a16);
+      scene3.fog.color.setHex(neon ? 0x10182e : 0x060a16);
+      ambLight.color.setHex(0x36466a); ambLight.intensity = 0.8;
+      hemiLight.color.setHex(0x2a3d68); hemiLight.groundColor.setHex(0x0e121c); hemiLight.intensity = 0.55;
+      moonLight.color.setHex(0x9fb2dd); moonOX = 300; moonOZ = -400;
+      sunInt = 0.45;
+    }
+    moonLight.intensity = sunInt;
+  }
+  // Cielo: estrellas+luna solo de noche; el disco solar baja al atardecer
+  const night = todMode === 2 || (todMode < 0 && !traced && !neon);
+  const dusk = todMode === 1;
+  const sky = world && world.userData.sky;
+  if (sky) {
+    for (const m of sky.night) m.visible = night;
+    for (const m of sky.sun) { m.visible = !night; if (!night) m.position.y = dusk ? 200 : 430; }
+  }
+  // Foto aérea y hierba base: se tintan para que el suelo acompañe a la hora
+  if (world && world.userData.bgp) {
+    world.userData.bgp.material.color.setHex(todMode === 2 ? 0x2e3c58 : todMode === 1 ? 0xffd0a0 : 0xffffff);
+    world.userData.ter.material.color.setHex(todMode === 2 ? 0x101a12 : todMode === 1 ? 0x332c16 : 0x243d1c);
   }
 }
 // Línea de salida/meta a cuadros sobre la pista
@@ -5404,7 +5486,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 407;
+const BUILD_NO = 408;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -6409,7 +6491,7 @@ function update(dt) {
     crowdBoost = Math.max(0, crowdBoost - dt * 0.8);
     crowdGain.gain.value = (playing && circAt(stage) ? 0.05 : 0) + crowdBoost * 0.09;
     // La lluvia tapa el sol: la luz baja con la tormenta (sensación de nublado)
-    if (moonLight) moonLight.intensity = (noFog ? 3.7 : dayMode ? 1.05 : 0.45) * (1 - rain * 0.22);
+    if (moonLight) moonLight.intensity = sunInt * (1 - rain * 0.22);
     // Lluvia: siseo proporcional a la intensidad de la tormenta
     rainGain.gain.value = playing ? rain * 0.09 : 0;
     // Rebufo: chorro de aire mientras vas pegado a la estela del rival
@@ -7251,12 +7333,12 @@ function startStage(n, seed, mp, mode) {
   rainEnd = rainAt > 0 && Math.random() < 0.45 ? rainAt + 22 + Math.random() * 28 : -1;
   genTrack(seed);
   const _c = circAt(stage);
-  const day = !!(_c && _c.img);                   // con foto aérea = diurno; sin foto = nocturno
-  dayMode = day;                                  // flag antes de crear los coches (faros on/off)
+  const _tod = OPTS.tod || 'auto';                // hora elegida: auto | day | dusk | night
+  dayMode = _tod === 'auto' ? !!(_c && _c.img) : _tod === 'day';   // faros antes de crear los coches
   buildWorld();
-  setDayMode(day);
+  applyTOD();
   carGrp.traverse(o => {
-    if (o.material && o.material.uniforms && o.material.uniforms.op) o.material.uniforms.op.value = day ? 0.13 : 0.16;
+    if (o.material && o.material.uniforms && o.material.uniforms.op) o.material.uniforms.op.value = dayMode ? 0.13 : 0.16;
   });
   lightsOn = null; applyLights();                     // faros automáticos: solo de noche
   // Salida sobre la pista mirando la tangente (en drag: carril izquierdo, tras la línea)
@@ -7510,7 +7592,7 @@ function fmtT(s) {
 }
 /* ================== OPCIONES ================== */
 const OPTS = { sound: 1, shadow: 1, skid: 1, dust: 1, cam: 0, brakeAid: 1, steerAid: 1, car: 0,
-               lefty: 0, vib: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0 };   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
+               lefty: 0, vib: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0, tod: 'auto' };   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
 try { Object.assign(OPTS, JSON.parse(localStorage.getItem('af1_opts') || '{}')); } catch (e) {}
 function saveOpts() { try { localStorage.setItem('af1_opts', JSON.stringify(OPTS)); } catch (e) {} }
 /* ---- Puntuación global: cada victoria suma al total persistente ---- */
@@ -7528,6 +7610,14 @@ function paintSens() {
   b.textContent = T(SENS_KEYS[OPTS.steerSens] || 'sensMid');
 }
 function buzz(p) { if (OPTS.vib && navigator.vibrate) navigator.vibrate(p); }
+// Selector de hora del día del menú: AUTO / DÍA / TARDE / NOCHE
+function paintTOD() {
+  const t = OPTS.tod || 'auto';
+  for (const b of document.querySelectorAll('.todB')) b.classList.toggle('sel', b.dataset.t === t);
+}
+for (const b of document.querySelectorAll('.todB'))
+  b.addEventListener('click', () => { OPTS.tod = b.dataset.t; saveOpts(); paintTOD(); buzz(12); });
+paintTOD();
 function applyOpts() {
   if (master) master.gain.value = OPTS.sound ? 0.4 : 0;
   if (!OPTS.sound && radioEl) try { radioEl.pause(); } catch (e) {}
@@ -7709,6 +7799,7 @@ const I18N = {
     spPow: 'POTENCIA', spWgt: 'PESO', spEng: 'MOTOR', spGear: 'CAMBIO',
     spAero: 'CARGA AERO', spTireL: 'NEUMÁTICOS',
     spEngV: 'V6 TURBO HÍBRIDO', spGearV: 'SECUENCIAL 6 VEL.', ciBtn: 'ℹ FICHA',
+    todAuto: 'AUTO', todDay: '☀️ DÍA', todDusk: '🌇 TARDE', todNight: '🌙 NOCHE',
     inSkip: '✕ SALTAR',
     inCap1t: 'VELOCIDAD PURA', inCap1s: 'máquinas de verdad',
     inCap2t: 'INGENIERÍA EXTREMA', inCap2s: 'telemetría en tiempo real',
@@ -7804,6 +7895,7 @@ const I18N = {
     spPow: 'POWER', spWgt: 'WEIGHT', spEng: 'ENGINE', spGear: 'GEARBOX',
     spAero: 'DOWNFORCE', spTireL: 'TYRES',
     spEngV: 'V6 TURBO HYBRID', spGearV: 'SEQUENTIAL 6 SPD', ciBtn: 'ℹ SHEET',
+    todAuto: 'AUTO', todDay: '☀️ DAY', todDusk: '🌇 DUSK', todNight: '🌙 NIGHT',
     inSkip: '✕ SKIP',
     inCap1t: 'PURE SPEED', inCap1s: 'real machines',
     inCap2t: 'EXTREME ENGINEERING', inCap2s: 'real-time telemetry',
@@ -7948,6 +8040,7 @@ function applyLang() {
   set('spGearL', T('spGear')); set('spAeroL', T('spAero')); set('spTireL', T('spTireL'));
   set('car3dInfo', T('ciBtn')); setI('ciBack', 'back', T('back'));
   set('introExit', T('inSkip'));
+  for (const k of ['todAuto', 'todDay', 'todDusk', 'todNight']) set(k, T(k));
   set('pauseTitle', T('pause'));
   set('resumeBtn', '▶ ' + T('resume'));
   setI('pauseExitBtn', 'back', T('menu'));
