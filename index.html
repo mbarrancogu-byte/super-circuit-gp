@@ -3439,8 +3439,7 @@ function buildWorld() {
       new THREE.MeshStandardMaterial({ color: 0xd42020, roughness: 0.6 }));
     wallTop.position.set(0, 1.42, off - RW / 2 - 3.5); pit.add(wallTop);
     // Calle de boxes: franja de asfalto PARALELA a la recta de meta, de punta a
-    // punta del complejo — los empalmes entran/salen en tangente, sin solapes
-    const teZ = off - RW / 2 + 1.2;                        // borde de pista en local
+    // punta del complejo
     const lmZ = BD / 2 + (off - RW / 2 - BD / 2) / 2 - 1;  // centro del pit lane
     const laneTex = roadTex.clone();                       // misma textura que la pista
     laneTex.needsUpdate = true;
@@ -3490,77 +3489,12 @@ function buildWorld() {
       pit.add(bm);
     }
 
-    // ==== ENTRADA y SALIDA de boxes: cintas de asfalto siguiendo el trazado ====
-    // Cinta asfáltica sobre bezier: 3 puntos = cuadrática, 4 = cúbica (S tangente)
-    const ribbon = (pts, w, y) => {
-      const pos = [], idx = [], N = 22, pv = (t) => {
-        const u = 1 - t;
-        if (pts.length === 4) {
-          const [a, b, c, d] = pts;
-          return [u * u * u * a[0] + 3 * u * u * t * b[0] + 3 * u * t * t * c[0] + t * t * t * d[0],
-                  u * u * u * a[1] + 3 * u * u * t * b[1] + 3 * u * t * t * c[1] + t * t * t * d[1]];
-        }
-        const [a, b, c] = pts;
-        return [u * u * a[0] + 2 * u * t * b[0] + t * t * c[0],
-                u * u * a[1] + 2 * u * t * b[1] + t * t * c[1]];
-      };
-      const uv = [], cum = [0];
-      for (let k = 1; k <= N; k++) {                        // longitud acumulada para el tiling
-        const [ax, az] = pv((k - 1) / N), [bx, bz] = pv(k / N);
-        cum[k] = cum[k - 1] + Math.hypot(bx - ax, bz - az);
-      }
-      for (let k = 0; k <= N; k++) {
-        const t = k / N, [x, z] = pv(t), [x2, z2] = pv(Math.min(1, t + 0.01));
-        let dx = x2 - x, dz = z2 - z; const dl = Math.hypot(dx, dz) || 1;
-        dx /= dl; dz /= dl;
-        const px = -dz, pz = dx;
-        pos.push(x - px * w / 2, y, z - pz * w / 2, x + px * w / 2, y, z + pz * w / 2);
-        uv.push(0, cum[k] / 12, 1, cum[k] / 12);            // V a lo largo del recorrido — rodadas paralelas como en la pista
-        if (k < N) { const b2 = k * 2; idx.push(b2, b2 + 1, b2 + 2, b2 + 1, b2 + 3, b2 + 2); }
-      }
-      const g = new THREE.BufferGeometry();
-      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-      g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-      g.setIndex(idx); g.computeVertexNormals(); return g;
-    };
-    const laneMat = new THREE.MeshStandardMaterial({ map: roadTex, roughness: 0.95,
-      color: neon ? 0x8f949c : 0xffffff });                // misma textura Y mismo tinte que la pista
-    // ENTRADA: recta en diagonal de la pista a la calle — la cinta cruza la
-    // calle entera y muere en el borde de atrás: sin costura visible en la unión
-    const enPath = [[-BL / 2 - 70, teZ],
-      [-BL / 2 - 56, teZ + (lmZ - teZ) / 3], [-BL / 2 - 40, teZ + (lmZ - teZ) * 2 / 3],
-      [-BL / 2 - 26, lmZ - 5.5]];
-    // SALIDA: sale de la calle en tangente y reincorpora a la pista tras la meta
-    const exPath = [[BL / 2 + 26, lmZ - 5.5], [BL / 2 + 38, lmZ], [BL / 2 + 50, teZ], [BL / 2 + 70, teZ]];
-    const enGeo = ribbon(enPath, 8.5, 0.09);
-    const exGeo = ribbon(exPath, 8.5, 0.09);
-    const enM = new THREE.Mesh(enGeo, laneMat); pit.add(enM);
-    const exM = new THREE.Mesh(exGeo, laneMat); pit.add(exM);
+    // Entrada/salida sin cinta asfáltica — se accede directo por la hierba/apron,
+    // los LEDs siguen marcando solo la calle de boxes
 
-    // ==== Puntos de luz NEÓN AZUL a lo largo de entrada, pit lane y salida ====
+    // ==== Puntos de luz ROJOS (LED a ras de suelo) a lo largo del pit lane ====
     const lampPts = [];
-    const along = (pts, side) => {
-      const N = 10, ev = t => {
-        const u = 1 - t;
-        if (pts.length === 4) {
-          const [a, b, c, d] = pts;
-          return [u * u * u * a[0] + 3 * u * u * t * b[0] + 3 * u * t * t * c[0] + t * t * t * d[0],
-                  u * u * u * a[1] + 3 * u * u * t * b[1] + 3 * u * t * t * c[1] + t * t * t * d[1]];
-        }
-        const [a, b, c] = pts;
-        return [u * u * a[0] + 2 * u * t * b[0] + t * t * c[0],
-                u * u * a[1] + 2 * u * t * b[1] + t * t * c[1]];
-      };
-      for (let k = 0; k <= N; k++) {
-        const t = k / N, [x, z] = ev(t), [x2, z2] = ev(Math.min(1, t + 0.02));
-        let dx = x2 - x, dz = z2 - z;
-        const dl = Math.hypot(dx, dz) || 1;
-        lampPts.push([x - dz / dl * side * 4.9, z + dx / dl * side * 4.9]);
-      }
-    };
-    along(enPath, 1); along(enPath, -1);
-    along(exPath, 1); along(exPath, -1);
-    // y a lo largo de TODO el pit lane, por ambos bordes
+    // a lo largo de TODO el pit lane, por ambos bordes
     for (let x = -BL / 2 - 42; x <= BL / 2 + 42; x += 6.2) {
       lampPts.push([x, lmZ - 4.6], [x, lmZ + 4.6]);   // dos filas sobre los bordes de la calle
     }
@@ -5159,7 +5093,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 384;
+const BUILD_NO = 385;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
