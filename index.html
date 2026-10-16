@@ -3446,6 +3446,12 @@ function buildWorld() {
       new THREE.MeshStandardMaterial({ color: 0x30353d, roughness: 0.9 }));
     lane.position.set(0, 0.02, lmZ);
     pit.add(lane);
+    // Suelo del complejo: losa de hormigón gris desde detrás del edificio
+    // hasta la calle de boxes — los garajes no quedan sobre el césped
+    const apron = new THREE.Mesh(new THREE.BoxGeometry(BL + 24, 0.08, lmZ + 16),
+      new THREE.MeshStandardMaterial({ map: makeConcreteTex(), color: 0x9aa0a8, roughness: 0.96 }));
+    apron.position.set(0, 0.015, (lmZ + 16) / 2 - 12);
+    pit.add(apron);
     // Líneas de box pintadas en la calle: una por garaje, con el color del
     // coche de cada jugador — como las marcas de parada reales de la F1
     const pitTh = Math.atan2(p.x - bcx, p.z - bcz);      // giro del grupo: +z local mira a la pista
@@ -5135,7 +5141,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 375;
+const BUILD_NO = 376;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
