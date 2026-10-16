@@ -3488,6 +3488,25 @@ function buildWorld() {
       bm.position.set(-BL / 2 + (i + 0.5) * (BL / 8), 0.09, lmZ);
       pit.add(bm);
     }
+    // Flechas de sentido pintadas sobre el asfalto: indican hacia dónde se
+    // circula por la calle — entrada (−x) → salida (+x), como en un pit real
+    {
+      const ac = document.createElement('canvas'); ac.width = 96; ac.height = 64;
+      const at = ac.getContext('2d');
+      at.fillStyle = 'rgba(240,240,235,0.85)';
+      at.beginPath();                                     // flecha → hacia +x
+      at.moveTo(8, 26); at.lineTo(58, 26); at.lineTo(58, 12); at.lineTo(92, 32);
+      at.lineTo(58, 52); at.lineTo(58, 38); at.lineTo(8, 38); at.closePath();
+      at.fill();
+      const aTex = tex3(ac);
+      for (let i = 0; i < 5; i++) {
+        const am = new THREE.Mesh(new THREE.PlaneGeometry(7.5, 5),
+          new THREE.MeshBasicMaterial({ map: aTex, transparent: true, depthWrite: false, opacity: 0.9 }));
+        am.rotation.x = -Math.PI / 2;
+        am.position.set(-BL / 2 - 30 + i * ((BL + 60) / 4), 0.1, lmZ);
+        pit.add(am);
+      }
+    }
 
     // Entrada/salida sin cinta asfáltica — se accede directo por la hierba/apron,
     // los LEDs siguen marcando solo la calle de boxes
@@ -5093,7 +5112,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 386;
+const BUILD_NO = 387;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
