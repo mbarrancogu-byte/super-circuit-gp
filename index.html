@@ -3525,14 +3525,15 @@ function buildWorld() {
     };
     const laneMat = new THREE.MeshStandardMaterial({ map: roadTex, roughness: 0.95,
       color: neon ? 0x8f949c : 0xffffff });                // misma textura Y mismo tinte que la pista
-    // ENTRADA: recta en diagonal de la pista a la calle — sin curva
+    // ENTRADA: recta en diagonal de la pista a la calle — la cinta cruza la
+    // calle entera y muere en el borde de atrás: sin costura visible en la unión
     const enPath = [[-BL / 2 - 70, teZ],
       [-BL / 2 - 56, teZ + (lmZ - teZ) / 3], [-BL / 2 - 40, teZ + (lmZ - teZ) * 2 / 3],
-      [-BL / 2 - 26, lmZ]];
+      [-BL / 2 - 26, lmZ - 5.5]];
     // SALIDA: sale de la calle en tangente y reincorpora a la pista tras la meta
-    const exPath = [[BL / 2 + 26, lmZ], [BL / 2 + 38, lmZ], [BL / 2 + 50, teZ], [BL / 2 + 70, teZ]];
-    const enGeo = ribbon(enPath, 8.5, 0.115);
-    const exGeo = ribbon(exPath, 8.5, 0.115);
+    const exPath = [[BL / 2 + 26, lmZ - 5.5], [BL / 2 + 38, lmZ], [BL / 2 + 50, teZ], [BL / 2 + 70, teZ]];
+    const enGeo = ribbon(enPath, 8.5, 0.09);
+    const exGeo = ribbon(exPath, 8.5, 0.09);
     const enM = new THREE.Mesh(enGeo, laneMat); pit.add(enM);
     const exM = new THREE.Mesh(exGeo, laneMat); pit.add(exM);
 
@@ -5158,7 +5159,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 383;
+const BUILD_NO = 384;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
