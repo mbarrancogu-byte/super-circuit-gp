@@ -3187,13 +3187,25 @@ function buildWorld() {
           new THREE.TorusGeometry(RW / 2 + 2.6, 0.55, 8, 26, Math.PI), gateMat, nGates);
         const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), eu = new THREE.Euler(),
               vv = new THREE.Vector3(), sc = new THREE.Vector3(), cc = new THREE.Color();
+        // Sin arcos sobre la recta de boxes: ahí el pit lane pisa la verja visual
+        let tl = 0;
+        for (let i = 0; i < pathLen; i++) {
+          const a = path[i], b = path[(i + 1) % pathLen];
+          tl += Math.hypot(b.x - a.x, b.z - a.z);
+        }
+        const pitI = Math.floor(pathLen * 0.055);
+        const pitHalf = Math.ceil(130 / Math.max(tl / pathLen, 0.01));
+        let g = 0;
         for (let k = 0; k < nGates; k++) {
           const i = Math.floor(k * pathLen / nGates), p = path[i],
                 colHex = k % 2 ? 0x14171c : 0x9aa2ac;
+          const di = Math.abs(i - pitI), ci = Math.min(di, pathLen - di);
+          if (!traced && !dragMode && ci < pitHalf) continue;
           eu.set(0, Math.atan2(-p.tx, -p.tz), 0); q.setFromEuler(eu);  // arco vertical atravesando la pista
           m4.compose(vv.set(p.x, 0, p.z), q, sc.set(1, 1, 1));
-          arcs.setMatrixAt(k, m4); arcs.setColorAt(k, cc.setHex(colHex));
+          arcs.setMatrixAt(g, m4); arcs.setColorAt(g, cc.setHex(colHex)); g++;
         }
+        arcs.count = g;
         arcs.instanceMatrix.needsUpdate = true;
         if (arcs.instanceColor) arcs.instanceColor.needsUpdate = true;
         world.add(arcs);
@@ -5110,7 +5122,7 @@ let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 358;
+const BUILD_NO = 359;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
