@@ -14,3 +14,14 @@ capturas/
 _*.png
 _*.jpg
 *.pyc
+
+# Artefactos de test/diagnostico
+_*.py
+_*.txt
+_*.html
+diag*.png
+diagshot*
+_srv.log
+nul
+android/NUL
+*.code-workspace

@@ -59,6 +59,12 @@
     animation: wwBigBlink .26s steps(2) infinite; }
   #wwBig .ic { width: 1.7em; height: 1.7em; margin: 0;
     filter: drop-shadow(0 0 16px rgba(255,60,70,0.95)); }
+  /* Señal STOP octogonal — se ve sobre el aviso de dirección contraria */
+  #wwStop { width: 1.9em; height: 1.9em; margin: 0; display: flex; align-items: center;
+    justify-content: center; background: #d51b26; color: #fff;
+    clip-path: polygon(29.3% 0%, 70.7% 0%, 100% 29.3%, 100% 70.7%, 70.7% 100%, 29.3% 100%, 0% 70.7%, 0% 29.3%);
+    font-size: 0.44em; font-weight: 900; font-style: normal; letter-spacing: 0.1em;
+    text-shadow: none; filter: drop-shadow(0 0 18px rgba(255,50,60,0.95)); }
   @keyframes wwBigBlink { 50% { opacity: 0.12; transform: translate(-50%,-50%) scale(0.96); } }
   /* Aviso de COCHE ROTO (daño 100%): llave + texto en el centro — persistente
      mientras cojea a boxes; pulso suave, no el parpadeo duro del wrongWay */
@@ -144,20 +150,20 @@
     box-shadow: 0 2px 0 rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.5),
       inset 0 4px 10px rgba(0,0,0,0.65), inset 0 -1px 2px rgba(255,255,255,0.12); }
   /* Zona izquierda: pad de dirección ancho tipo cruceta deslizante */
-  #stPad { left: 14px; bottom: 16px; width: 150px; height: 66px; border-radius: 33px;
+  #stPad { left: 14px; bottom: 40px; width: 150px; height: 66px; border-radius: 33px;
     flex-direction: row; padding: 0; overflow: hidden; }
   .stA { flex: 1; height: 100%; display: flex; align-items: center; justify-content: center;
     font-size: 26px; transition: background .1s; }
   .stA:first-child { border-right: 1px solid rgba(255,200,80,0.35); }
   .stA.on { background: rgba(255,190,60,0.35); }
   /* Zona derecha: pedales grandes + nitro/pit al alcance del pulgar */
-  #gasBtn { right: 14px; bottom: 16px; width: 74px; height: 74px; border-color: rgba(80,255,120,0.6); color: #b0ffc0; font-size: 13px; }
-  #brkBtn { right: 121px; bottom: 16px; width: 74px; height: 74px; border-color: rgba(255,80,60,0.6); color: #ffb0a0; font-size: 13px; }
-  #nitroBtn { right: 14px; bottom: 128px; width: 70px; height: 70px; font-size: 26px; }
-  #pitBtn { right: 126px; bottom: 118px; width: 64px; height: 64px; font-size: 13px;
+  #gasBtn { right: 14px; bottom: 40px; width: 74px; height: 74px; border-color: rgba(80,255,120,0.6); color: #b0ffc0; font-size: 13px; }
+  #brkBtn { right: 121px; bottom: 40px; width: 74px; height: 74px; border-color: rgba(255,80,60,0.6); color: #ffb0a0; font-size: 13px; }
+  #nitroBtn { right: 14px; bottom: 154px; width: 70px; height: 70px; font-size: 26px; }
+  #pitBtn { right: 126px; bottom: 144px; width: 64px; height: 64px; font-size: 13px;
     border-color: rgba(255,230,140,0.7); color: #ffe8b0; }
   /* BOXEX: botón cuadrado 3D con degradado radial rojo — autopiloto al box propio */
-  #boxexBtn { right: 14px; bottom: 208px; width: 66px; height: 66px; border-radius: 16px;
+  #boxexBtn { right: 14px; bottom: 234px; width: 66px; height: 66px; border-radius: 16px;
     flex-direction: column; gap: 1px; font-size: 9px; letter-spacing: 1px; color: #fff;
     text-shadow: 0 1px 3px rgba(0,0,0,0.8);
     border: 1px solid rgba(255,150,120,0.85);
@@ -182,7 +188,7 @@
   #boxexChip { top: 108px; left: 50%; transform: translateX(-50%); display: none;
     border-color: rgba(255,90,60,0.8); color: #ffb0a0; }
   /* Pulsador pequeño de faros, encima del PIT */
-  #lightsBtn { right: 137px; bottom: 190px; width: 42px; height: 42px; font-size: 17px;
+  #lightsBtn { right: 137px; bottom: 216px; width: 42px; height: 42px; font-size: 17px;
     border-color: rgba(255,235,150,0.45); color: #8a8f9c; }
   #lightsBtn.on { color: #ffe878; border-color: rgba(255,230,120,0.95);
     background: rgba(96,74,18,0.85); box-shadow: 0 0 14px rgba(255,222,90,0.55); transform: none; }
@@ -253,23 +259,55 @@
     border-color: rgba(255,210,90,0.55); color: #ffe9a0; }
 
   /* ---------- Velocímetro/marchas: centrado sobre el pad de dirección ---------- */
-  #speedBox { position: absolute; left: 114px; transform: translateX(-50%); bottom: 112px;
+  #speedBox { position: absolute; left: 114px; transform: translateX(-50%); bottom: 138px;
     text-align: center; display: none; pointer-events: none; }
   body.lefty #speedBox { left: auto; right: 114px; transform: translateX(50%); }
   #speedNum { font-size: 46px; font-weight: 900; color: #fff; text-shadow: 0 0 14px rgba(255,200,80,0.7); line-height: 1; }
   #speedNum small { font-size: 14px; color: #c8b088; }
-  #gearNum { font-size: 13px; color: #ff8060; font-weight: 800; letter-spacing: 2px; margin-top: 2px; }
+  /* Indicador de marcha: insignia circular con anillo (como el aro de un volante F1) */
+  #gearNum { display: inline-flex; align-items: center; justify-content: center;
+    width: 58px; height: 58px; margin-top: 6px; border-radius: 50%;
+    font-size: 9px; color: var(--gc, #ff8060); font-weight: 800; letter-spacing: 1px;
+    border: 2px solid var(--gc, rgba(255,128,96,0.85));
+    background: radial-gradient(circle, rgba(30,12,8,0.75) 55%, rgba(10,6,4,0.6));
+    box-shadow: 0 0 12px color-mix(in srgb, var(--gc, #ff6e46) 45%, transparent),
+      inset 0 0 10px rgba(0,0,0,0.8);
+    text-shadow: 0 0 6px color-mix(in srgb, var(--gc, #ff6e46) 70%, transparent); }
+  /* Al cambiar de marcha: el aro parpadea muy rápido con neón del color de la marcha */
+  #gearNum.gearFlash { animation: gearBlink .11s steps(2) infinite; }
+  /* Número de marcha ENORME en neón: aparece un instante al cambiar, junto al aro */
+  #gearBig { position: absolute; left: 190px; bottom: 118px; display: none;
+    font-size: 92px; font-weight: 900; font-style: italic; line-height: 1;
+    color: var(--gc, #ff8060); pointer-events: none; letter-spacing: -2px;
+    text-shadow: 0 0 8px var(--gc, #ff8060), 0 0 26px var(--gc, #ff8060),
+      0 0 58px color-mix(in srgb, var(--gc, #ff8060) 80%, transparent),
+      0 3px 4px rgba(0,0,0,0.7); }
+  body.lefty #gearBig { left: auto; right: 190px; }
+  #gearBig.pop { display: block; animation: gearPop .55s ease-out forwards; }
+  @keyframes gearPop {
+    0%   { opacity: 0; transform: scale(1.7); }
+    12%  { opacity: 1; transform: scale(1); }
+    70%  { opacity: 1; }
+    100% { opacity: 0; transform: scale(0.92) translateY(-10px); }
+  }
+  @keyframes gearBlink {
+    0%   { box-shadow: 0 0 34px var(--gc, #ff6e46), 0 0 56px var(--gc, #ff6e46),
+             inset 0 0 16px color-mix(in srgb, var(--gc, #ff6e46) 60%, transparent);
+           border-color: #fff; }
+    100% { box-shadow: 0 0 8px color-mix(in srgb, var(--gc, #ff6e46) 30%, transparent),
+             inset 0 0 10px rgba(0,0,0,0.8); }
+  }
   /* Modo VS/drag: botón de marcha a la izquierda y velocímetro a su lado, a la altura de GAS/FRENO */
   /* 2 JUGADORES: J1 a la izquierda (GAS + ▲MARCHA), J2 a la derecha */
-  #gas2Btn  { right: 14px; bottom: 16px; width: 98px; height: 98px; font-size: 15px;
+  #gas2Btn  { right: 14px; bottom: 40px; width: 98px; height: 98px; font-size: 15px;
     border-color: rgba(130,160,255,0.65); color: #b8ccff; }
-  #shift2Btn { right: 14px; bottom: 122px; width: 88px; height: 88px; font-size: 15px;
+  #shift2Btn { right: 14px; bottom: 148px; width: 88px; height: 88px; font-size: 15px;
     border-color: rgba(130,160,255,0.65); color: #b8ccff; }
   #shift2Btn.hot { border-color: #7dffb0; color: #c8ffdd;
     box-shadow: 0 0 18px rgba(125,255,176,0.55); animation: shPulse .28s infinite alternate; }
   #hud.p2 #gasBtn { right: auto; left: 14px; }
-  #hud.p2 #shiftBtn { bottom: 120px; }
-  #shiftBtn { left: 14px; bottom: 16px; width: 88px; height: 88px;
+  #hud.p2 #shiftBtn { bottom: 146px; }
+  #shiftBtn { left: 14px; bottom: 40px; width: 88px; height: 88px;
     border-color: rgba(255,210,80,0.65); color: #ffe9a0; font-size: 15px; line-height: 1.1; }
   #shiftBtn.hot { border-color: #7dffb0; color: #c8ffdd;
     box-shadow: 0 0 22px rgba(120,255,160,0.55), inset 0 0 18px rgba(120,255,160,0.25);
@@ -282,7 +320,7 @@
   #rivNum { font-size: clamp(42px, 11vw, 66px); font-weight: 900; font-style: italic; color: #fff;
     min-width: 90px; text-align: center; text-shadow: 0 4px 18px rgba(255,180,40,0.6); }
   body.lefty #shiftBtn { left: auto; right: 14px; }
-  #hud.drag #speedBox { left: 114px; right: auto; transform: none; bottom: 32px; text-align: left; }
+  #hud.drag #speedBox { left: 114px; right: auto; transform: none; bottom: 56px; text-align: left; }
   body.lefty #hud.drag #speedBox { left: auto; right: 114px; }
   #hud.drag #gearNum { font-size: 15px; }
   #gearNum.shiftNow { color: #7dffb0; text-shadow: 0 0 10px rgba(120,255,160,0.8); }
@@ -299,7 +337,7 @@
     background: linear-gradient(90deg, #30c060, #ffd040 78%, #ff3a20); }
   #rpmBar.hot { filter: brightness(1.7) saturate(1.5); }
   /* Volante de cabina: centrado abajo, solo con la cámara cerca — gira con la dirección */
-  #wheelWrap { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+  #wheelWrap { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%);
     height: min(22vh, 175px); aspect-ratio: 520/380; pointer-events: none; z-index: 6; }
   /* Sombra de cabina: halo oscuro difuso detrás del volante — lo asienta sobre la
      pista en vez de parecer una pegatina superpuesta */
@@ -323,8 +361,8 @@
     z-index: 7; pointer-events: none; opacity: 1;
     color: #ff9838; font-size: 11px; font-weight: 800; letter-spacing: 1px;
     text-shadow: 0 0 6px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.9); }
-  /* Barra horizontal de RPM cruzando el centro del volante (tras los botones) */
-  #wheelBar { position: absolute; left: 13%; top: 57%; width: 74%; height: 9%;
+  /* Barra horizontal de RPM en la parte SUPERIOR del volante (tras los botones) */
+  #wheelBar { position: absolute; left: 20%; top: 4%; width: 60%; height: 8%;
     display: flex; gap: 1.7%; padding: 1.1%; border-radius: 12px; z-index: 6;
     background: linear-gradient(180deg, #04060b, #0d1119 55%, #04060b);
     border: 1px solid rgba(140,170,255,0.22);
@@ -347,7 +385,8 @@
 
   /* ---------- Selector de circuito en OPCIONES ---------- */
   #circStrip { display: flex; gap: 10px; overflow-x: auto; padding: 4px 6px 10px;
-    flex-shrink: 0; width: min(560px, 100%); margin: 0 auto; scrollbar-width: none; }
+    flex-shrink: 0; width: min(560px, 100%); margin: 0 auto; scrollbar-width: none;
+    justify-content: safe center; }                        /* centra las tarjetas cuando caben; si no, scroll normal */
   #circStrip::-webkit-scrollbar { display: none; }
   /* Selectores con flechas laterales (coche y circuito) — sin barras de scroll */
   .selRow { display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -386,17 +425,6 @@
   .circCard.on .cn { color: #ffe2b0; }
 
   /* ---------- Nitro ---------- */
-  #nitroWrap { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px;
-    width: min(300px, 42vw); height: 16px; border-radius: 999px; display: none;
-    background: rgba(8,14,30,0.7); border: 1px solid rgba(80,200,255,0.5); overflow: hidden; }
-  #nitroWrap span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 9px; font-weight: 900; letter-spacing: 3px; color: #dff4ff; text-shadow: 0 1px 3px #000; }
-  #nitroBar { height: 100%; width: 50%; border-radius: 999px;
-    background: linear-gradient(90deg, #2080ff, #50e0ff, #a0ffff); transition: width .12s; }
-  #nitroWrap.full #nitroBar { box-shadow: 0 0 12px #60e0ff; }
-  #nitroWrap.hot { border-color: rgba(255,90,30,0.9); animation: hotBlink .3s steps(2) infinite; }
-  #nitroWrap.hot #nitroBar { background: linear-gradient(90deg, #ff6020, #ffb020); }
-  @keyframes hotBlink { 50% { box-shadow: 0 0 16px #ff5010; } }
   /* Barra de carga del GLB 3D en la portada */
   #glbLoad { position: absolute; left: 50%; bottom: 14%; transform: translateX(-50%);
     width: min(300px, 60vw); display: none; text-align: center; z-index: 6; }
@@ -802,7 +830,8 @@
   #ctlStrip { display: flex; gap: 6px; overflow-x: auto; padding: 3px 2px 6px;
     scrollbar-width: none; flex-shrink: 0; }
   #ctlStrip::-webkit-scrollbar { display: none; }
-  .ctlChip { display: flex; align-items: center; gap: 6px; padding: 3px 9px 3px 5px; flex: 0 0 auto;
+  .ctlChip { display: flex; align-items: center; gap: 6px; padding: 3px 9px 3px 5px; flex: 1 0 auto;
+    justify-content: center;                                 /* llenan el panel; en estrecho: scroll */
     border-radius: 9px; background: rgba(10,16,32,0.7); border: 1px solid rgba(120,160,255,0.25); }
   .ctlIc { width: 24px; height: 24px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
     border-radius: 7px; background: linear-gradient(160deg, rgba(255,200,80,0.22), rgba(120,160,255,0.12));
@@ -954,28 +983,28 @@
     #timeChip { font-size: 13px; min-width: 78px; }
     #vsChip { right: 106px; top: 38px; }
     #wrongWay { font-size: 12px; top: 52px; }
-    #speedBox { left: 94px; right: auto; bottom: 96px; }
+    #speedBox { left: 94px; right: auto; bottom: 118px; }
     #speedNum { font-size: 34px; }
     #speedNum small { font-size: 11px; }
     #gearNum { font-size: 11px; }
     /* Controles táctiles escalados */
     .tbtn { width: 72px; height: 72px; font-size: 24px; }
-    #stPad { left: 10px; bottom: 14px; width: 128px; height: 56px; border-radius: 28px; }
+    #stPad { left: 10px; bottom: 36px; width: 128px; height: 56px; border-radius: 28px; }
     .stA { font-size: 22px; }
-    #gasBtn { width: 62px; height: 62px; font-size: 11px; right: 10px; bottom: 14px; }
-    #shiftBtn { width: 76px; height: 76px; font-size: 12px; left: 10px; bottom: 14px; }
-    #gas2Btn { width: 84px; height: 84px; font-size: 13px; right: 10px; bottom: 14px; }
-    #shift2Btn { width: 76px; height: 76px; font-size: 12px; right: 10px; bottom: 106px; }
+    #gasBtn { width: 62px; height: 62px; font-size: 11px; right: 10px; bottom: 36px; }
+    #shiftBtn { width: 76px; height: 76px; font-size: 12px; left: 10px; bottom: 36px; }
+    #gas2Btn { width: 84px; height: 84px; font-size: 13px; right: 10px; bottom: 36px; }
+    #shift2Btn { width: 76px; height: 76px; font-size: 12px; right: 10px; bottom: 128px; }
     #hud.p2 #gasBtn { left: 10px; }
-    #hud.p2 #shiftBtn { bottom: 102px; }
-    #hud.drag #speedBox { left: 96px; bottom: 26px; }
+    #hud.p2 #shiftBtn { bottom: 124px; }
+    #hud.drag #speedBox { left: 96px; bottom: 48px; }
     body.lefty #hud.drag #speedBox { left: auto; right: 96px; }
-    #brkBtn { right: 99px; bottom: 14px; width: 62px; height: 62px; font-size: 11px; }
-    #nitroBtn { width: 58px; height: 58px; font-size: 20px; right: 10px; bottom: 108px; }
-    #pitBtn { width: 56px; height: 56px; font-size: 11px; right: 102px; bottom: 100px; }
-    #boxexBtn { width: 52px; height: 52px; font-size: 8px; right: 10px; bottom: 174px; border-radius: 13px; }
+    #brkBtn { right: 99px; bottom: 36px; width: 62px; height: 62px; font-size: 11px; }
+    #nitroBtn { width: 58px; height: 58px; font-size: 20px; right: 10px; bottom: 130px; }
+    #pitBtn { width: 56px; height: 56px; font-size: 11px; right: 102px; bottom: 122px; }
+    #boxexBtn { width: 52px; height: 52px; font-size: 8px; right: 10px; bottom: 196px; border-radius: 13px; }
     #boxexBtn svg { width: 18px; height: 18px; }
-    #lightsBtn { width: 36px; height: 36px; font-size: 14px; right: 112px; bottom: 164px; }
+    #lightsBtn { width: 36px; height: 36px; font-size: 14px; right: 112px; bottom: 186px; }
     body.lefty #stPad { left: auto; right: 10px; }
     body.lefty #speedBox { left: auto; right: 94px; }
     body.lefty #gasBtn { left: 10px; }
@@ -1012,16 +1041,20 @@
     .chip { font-size: 11px; padding: 3px 9px; }
     #speedNum { font-size: 32px; }
     .tbtn { width: 64px; height: 64px; font-size: 22px; }
-    #gasBtn { width: 56px; height: 56px; font-size: 11px; }
-    #brkBtn { width: 56px; height: 56px; right: 92px; }
-    #stPad { width: 120px; height: 50px; bottom: 12px; }
-    #speedBox { left: 94px; bottom: 82px; }
+    #gasBtn { width: 56px; height: 56px; font-size: 11px; bottom: 30px; }
+    #brkBtn { width: 56px; height: 56px; right: 92px; bottom: 30px; }
+    #stPad { width: 120px; height: 50px; bottom: 28px; }
+    #speedBox { left: 94px; bottom: 98px; }
     body.lefty #speedBox { left: auto; right: 94px; }
-    #nitroBtn { width: 52px; height: 52px; bottom: 96px; right: 14px; }
-    #pitBtn { width: 48px; height: 48px; bottom: 92px; right: 96px; font-size: 10px; }
-    #boxexBtn { width: 46px; height: 46px; bottom: 158px; right: 14px; font-size: 8px; border-radius: 11px; }
+    #nitroBtn { width: 52px; height: 52px; bottom: 112px; right: 14px; }
+    #pitBtn { width: 48px; height: 48px; bottom: 108px; right: 96px; font-size: 10px; }
+    #boxexBtn { width: 46px; height: 46px; bottom: 174px; right: 14px; font-size: 8px; border-radius: 11px; }
     #boxexBtn svg { width: 16px; height: 16px; }
-    #lightsBtn { width: 32px; height: 32px; font-size: 12px; right: 104px; bottom: 148px; }
+    #lightsBtn { width: 32px; height: 32px; font-size: 12px; right: 104px; bottom: 164px; }
+    /* fila superior compacta: sin hueco vertical, los controles de abajo empiezan ~156px */
+    .zbtn { width: 34px; height: 30px; }
+    #zoomIn { right: 48px; top: 56px; } #zoomOut { right: 10px; top: 56px; }
+    #rstBtn { right: 48px; top: 94px; } #exitBtn { right: 10px; top: 94px; } #pauseBtn { right: 86px; top: 94px; }
     body.lefty #pitBtn { left: 96px; }
     body.lefty #boxexBtn { left: 14px; }
     body.lefty #lightsBtn { left: 104px; }
@@ -1719,7 +1752,6 @@
   <div class="hudBtn" id="pauseBtn"><svg class="ic"><use href="#i-pause"/></svg></div>
   <div class="hudBtn" id="rstBtn"><svg class="ic"><use href="#i-restart"/></svg></div>
   <div class="hudBtn" id="exitBtn"><svg class="ic"><use href="#i-exit"/></svg></div>
-  <div id="nitroWrap"><div id="nitroBar"></div><span><svg class="ic"><use href="#i-bolt"/></svg>NITRO</span></div>
   <div class="chip" id="timeChip">0:00.0</div>
   <div class="chip" id="cpChip">◯ ◯ ◯</div>
   <div class="chip" id="sectChip"></div>
@@ -1731,10 +1763,11 @@
   <div class="chip" id="reChip" style="display:none;top:76px;left:50%;transform:translateX(-50%);border-color:rgba(120,200,255,0.8);color:#9fd8ff">⏪ REPLAY</div>
   <div id="tuto"></div>
   <div class="chip" id="wrongWay"><svg class="ic"><use href="#i-warn"/></svg>SENTIDO CONTRARIO</div>
-  <div id="wwBig"><svg class="ic"><use href="#i-warn"/></svg><span id="wwBigTxt">DIRECCIÓN CONTRARIA</span></div>
+  <div id="wwBig"><div id="wwStop">STOP</div><span id="wwBigTxt">DIRECCIÓN CONTRARIA</span></div>
   <div id="brokenBig"><svg class="ic"><use href="#i-wrench"/></svg><span id="brokenTxt">COCHE ROTO</span></div>
   <div class="chip" id="vsChip"><svg class="ic"><use href="#i-vs"/></svg>P1</div>
   <div id="speedBox"><div id="speedNum">0<small> km/h</small></div><div id="gearNum">MARCHA 1</div><div id="rpmWrap"><div id="rpmBar"></div></div></div>
+  <div id="gearBig"></div>
   <div id="wheelWrap">
     <img id="wheelImg" src="volante.png" alt="">
     <div id="wheelLayer" style="position:absolute;inset:0;transform-origin:50% 50%;opacity:0;transition:opacity .2s">
@@ -2360,7 +2393,7 @@ let cpu = null, cpu2 = null;            // rivales CPU: {s, v, dmg, fin, tm, grp
 let cpus = [];                          // todos los rivales activos (cpu/cpu2 = alias de cpus[0..1])
 let champRivals = Math.min(6, Math.max(1, +(localStorage.getItem('af1_rivals') || 2)));  // rivales del campeonato
 // Arcade: nitro (ERS), mini-turbo por derrape, rebufo, neumáticos, clima, boxes
-let nitro = 60, nitroOn = false, inNitro = false, slipT = 0, nitroHeat = 0;
+let nitro = 60, nitroOn = false, inNitro = false, slipT = 0, nitroHeat = 0, nitroHotF = false;
 let fuel = 100, endurMode = false;                  // ENDURANCE: combustible que obliga a repostar
 let driftT = 0, boostT = 0;
 let tireWear = 0;                       // 0-100 (solo blandos gastan rápido)
@@ -2377,6 +2410,9 @@ let koTimer = 30;
 let champPts = 0, champCpuPts = 0, champRaces = 0, champRivPts = [];   // puntos de cada rival CPU
 const KO_LIMIT = 25;
 let gear = 1, shiftT = 0, shiftCd = 0;  // caja automática: marcha + corte + anti-flapping
+// Color propio de cada marcha para el aro del indicador (R = marcha atrás)
+const GEAR_COL = { 0: '#ff8060', 1: '#52ff7d', 2: '#39e6ff', 3: '#4f8dff',
+  4: '#a06bff', 5: '#ff5ce1', 6: '#ffb02e', 7: '#ff6a3d', 8: '#ff4545', R: '#ff3b30' };
 let launchWin = 0;                      // ventana de salida lanzada tras apagarse las luces
 let limT = 0;                           // cadencia del petardeo del limitador
 let launchDone = false;                 // toast de salida perfecta una sola vez
@@ -2391,7 +2427,7 @@ let pfOn = false, pfCv = null, pfCtx = null, pfTmp = null, pfTctx = null, pfVec 
 let pfCols = 0, pfSlowT = 0, pfGap = 0, pfFired = false, pfMark = -1;
 let trackSegM = 0;                            // metros por índice de trazado (para huecos en segundos)
 const PF_W = 640, PF_H = 200;
-let obstacles = [], offroad = 0, wrongWay = 0, wwAlarmT = 0, wheelDegS = 0, wheelLeds = null, wheelSegs = null;
+let obstacles = [], offroad = 0, wrongWay = 0, wwBack = 0, wwAlarmT = 0, wheelDegS = 0, wheelLeds = null, wheelSegs = null;
 let lakeWaterTex = null, lakeSurf = null;   // agua del lago: textura y capa de oleaje
 let noFog = false;                          // NEÓN: niebla desactivada — solo el sol
 let oilSpots = [], oilT = 0;            // manchas de aceite + temporizador de patinazo
@@ -2406,8 +2442,13 @@ function circAt(s) {
     const nx = window.CIRCUITOS.findIndex(c => !c.img);
     if (nx >= 0) return window.CIRCUITOS[nx];
   }
-  // Solo queda el PRINCIPAL: cualquier selección guardada cae en él
-  if (window.CIRCUITOS && window.CIRCUITOS[0]) return window.CIRCUITOS[0];
+  // Selección del usuario en OPCIONES: 'rally' → anillo procedural (sin archivo);
+  // índice → ese circuito; 'auto' o valor inválido → PRINCIPAL
+  if (OPTS.circSel === 'rally') return null;
+  if (window.CIRCUITOS && window.CIRCUITOS.length) {
+    const sel = OPTS.circSel;
+    return window.CIRCUITOS[(typeof sel === 'number' && window.CIRCUITOS[sel]) ? sel : 0];
+  }
   if (s === 1 && window.TRACK1) return { name: 'CIRCUITO 01', img: 'fondo.jpg', ar: 682 / 1024, pts: window.TRACK1 };
   return null;
 }
@@ -2475,18 +2516,49 @@ let fpsAcc = 0, fpsN = 0, perfChecked = false;     // auto-modo rendimiento
 let tutoT = 0;                                     // cuenta atrás del tutorial inicial
 let trackCX = 0, trackCZ = 0, trackSpanX = 1, trackSpanZ = 1;
 let carGrp = null, wheelF = [], wheelR = [], beamL = null, beamR = null, tailSpr = [];
+let carGlowK = 0;                                  // autoluminación nocturna de los coches (0 = apagada)
+// Emisivo propio tenue: cada material conserva su emisivo base (discos de
+// freno, luces) y se le suma un gris frío que solo se nota en la oscuridad
+function carSelfGlow(grp) {
+  if (!grp) return;
+  grp.traverse(o => {
+    if (!o.isMesh || !o.material || !('emissive' in o.material)) return;
+    const m = o.material;
+    if (!m.userData._glowBase) m.userData._glowBase = { r: m.emissive.r, g: m.emissive.g, b: m.emissive.b };
+    const b = m.userData._glowBase;
+    // El emisivo se dosifica por la luminosidad del material: el carbono negro
+    // solo recibe un susurro (sigue NEGRO, no se lava a gris) y las piezas
+    // claras se levantan — la noche la modela la cúpula, no el emisivo plano
+    const lum = m.color ? clamp((m.color.r + m.color.g + m.color.b) / 3, 0, 1) : 0.5;
+    const k = carGlowK * (0.22 + 0.78 * lum);
+    m.emissive.setRGB(b.r + k, b.g + k * 1.12, b.b + k * 1.35);   // ligeramente frío
+  });
+}
+function applyCarGlowAll() {
+  carSelfGlow(carGrp);
+  for (const c of cpus) if (c.grp) carSelfGlow(c.grp);
+  if (ghostCar) carSelfGlow(ghostCar);
+  if (carGrp && carGrp.userData.dome)
+    carGrp.userData.dome.intensity = carGlowK >= 0.15 ? 3.1 : carGlowK > 0 ? 1.4 : 0;
+  if (carGrp && carGrp.userData.uglow)
+    carGrp.userData.uglow.material.opacity = carGlowK >= 0.15 ? 0.5 : carGlowK * 2.2;
+}
 let ledMats = [], ledFR = null, ledFL = null;         // señales LED: materiales y frames por lado
 let beacons = [];                                     // balizas rojo intenso de las curvas
 let raceBoards = [], lastBoardT = 0, craneHook = null; // pantallas gigantes + brazo de la grúa
+let marshalFlags = [];                                 // banderas de los puestos de comisario
+let heliObj = null, heliT = 0;                         // helicóptero de TV sobrevolando el circuito
+const _helV = new THREE.Vector3(), _helUp = new THREE.Vector3(0, 1, 0);   // orientación del haz del foco
 let reBuf = [], replaying = false, reI = 0;            // replay post-carrera: buffer + reproducción
 let skidPool = [], dustPool = [], moonLight = null, pathPts = null;
+let puddlePool = [], ripplePool = [];                  // charcos de lluvia + ondas de las gotas
 let mmMinX = 0, mmMinZ = 0, mmScale = 1, mmSpanX = 1, mmSpanZ = 1; // encuadre justo del minimapa (cacheado por etapa)
-let ambLight = null, hemiLight = null, moonOX = 300, moonOZ = -400;
+let ambLight = null, hemiLight = null, moonOX = 300, moonOZ = -400, moonPoolK = 0;
 let gateMeshes = [];
 
 /* --- Texturas canvas --- */
 function tex3(c) { const t = new THREE.Texture(c); t.needsUpdate = true; return t; }
-function makeRoadTex() {
+function makeRoadTex(marks = true) {
   const c = document.createElement('canvas'); c.width = 128; c.height = 128;
   const t = c.getContext('2d');
   t.fillStyle = '#6b563e'; t.fillRect(0, 0, 128, 128);
@@ -2496,7 +2568,7 @@ function makeRoadTex() {
     t.fillRect(ri(0, 127), ri(0, 127), ri(1, 2), ri(1, 2));
   }
   // Rodadas oscuras de los neumáticos (dos bandas)
-  for (const bx of [38, 90]) {
+  if (marks) for (const bx of [38, 90]) {
     const gr = t.createLinearGradient(bx - 16, 0, bx + 16, 0);
     gr.addColorStop(0, 'rgba(30,22,14,0)'); gr.addColorStop(0.5, 'rgba(30,22,14,0.55)'); gr.addColorStop(1, 'rgba(30,22,14,0)');
     t.fillStyle = gr; t.fillRect(bx - 16, 0, 32, 128);
@@ -2510,7 +2582,7 @@ function makeRoadTex() {
   const tx = tex3(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; return tx;
 }
 // Asfalto gris OSCURO para el trazado NEÓN/drag: grano de hormigón con rodadas
-function makeAsphaltTex() {
+function makeAsphaltTex(marks = true) {
   const c = document.createElement('canvas'); c.width = 128; c.height = 128;
   const t = c.getContext('2d');
   t.fillStyle = '#2a2d33'; t.fillRect(0, 0, 128, 128);
@@ -2519,7 +2591,7 @@ function makeAsphaltTex() {
     t.fillStyle = `rgba(${v},${v},${v + ri(0, 8)},${rnd(0.25, 0.6)})`;
     t.fillRect(ri(0, 127), ri(0, 127), ri(1, 2), ri(1, 2));
   }
-  for (const bx of [38, 90]) {
+  if (marks) for (const bx of [38, 90]) {
     const gr = t.createLinearGradient(bx - 16, 0, bx + 16, 0);
     gr.addColorStop(0, 'rgba(12,13,16,0)'); gr.addColorStop(0.5, 'rgba(12,13,16,0.55)'); gr.addColorStop(1, 'rgba(12,13,16,0)');
     t.fillStyle = gr; t.fillRect(bx - 16, 0, 32, 128);
@@ -3108,7 +3180,7 @@ function genTrack(seed) {
 
 function buildWorld() {
   if (world) scene3.remove(world);
-  world = new THREE.Group(); obstacles = []; gateMeshes = []; lakeSurf = null;
+  world = new THREE.Group(); obstacles = []; gateMeshes = []; lakeSurf = null; window._lakeExcl = null;
   window._pitBoxes = null;                            // marcas de box: se regeneran abajo si hay pit lane
   window._pitLamps = null;                            // luces del pit: idem
   tunI0 = tunI1 = -1; tunA = 0; tunIn = 0;
@@ -3185,12 +3257,19 @@ function buildWorld() {
         const p = path[i], pn = path[(i + 1) % pathLen];
         const seg = Math.hypot(pn.x - p.x, pn.z - p.z) || 1;
         const ang = Math.atan2(-(pn.z - p.z), pn.x - p.x);   // box alineada con el tramo
+        // en el interior de curvas cerradas el borde real de la calzada se
+        // estrecha (anti-pliegue): el muro lo abraza en vez de quedar flotando
+        const turnW = p.tx * pn.tz - p.tz * pn.tx;
+        const rEstW = seg / Math.max(Math.abs(turnW), 1e-3);
+        const wP = (turnW > 0 ? clamp(rEstW * 0.8, 3, RW / 2) : RW / 2) + 0.45;
+        const wN = (turnW < 0 ? clamp(rEstW * 0.8, 3, RW / 2) : RW / 2) + 0.45;
         for (const s of [1, -1]) {
           if (s === -1 && pitGap(i)) continue;             // lado de boxes: entrada/salida abiertas
           const nx = -p.tz * s, nz = p.tx * s;
-          const wx = p.x + nx * (RW / 2 + 0.45), wz = p.z + nz * (RW / 2 + 0.45);
+          const off = s === 1 ? wP : wN;
+          const wx = p.x + nx * off, wz = p.z + nz * off;
           wE.set(0, ang, 0); wQ.setFromEuler(wE);
-          wM.compose(wV.set(wx, 0.62 + bankYAt(i, s * (RW / 2 + 0.45)), wz), wQ, wS.set(seg + 0.35, 1, 1));
+          wM.compose(wV.set(wx, 0.62 + bankYAt(i, s * off), wz), wQ, wS.set(seg + 0.35, 1, 1));
           walls.setMatrixAt(wi++, wM);
         }
       }
@@ -3208,10 +3287,14 @@ function buildWorld() {
           const seg = Math.hypot(pn.x - p.x, pn.z - p.z) || 1;
           dirV.set((pn.x - p.x) / seg, 0, (pn.z - p.z) / seg);
           wQ.setFromUnitVectors(up, dirV);                        // eje Y del cilindro → dirección del tramo
+          const turnC = p.tx * pn.tz - p.tz * pn.tx;              // interior de curva: abraza el borde real
+          const rEstC = seg / Math.max(Math.abs(turnC), 1e-3);
           for (const s of [1, -1]) {
             if (s === -1 && pitGap(i)) continue;            // los tubos también dejan el hueco
             const nx = -p.tz * s, nz = p.tx * s;
-            wM.compose(wV.set(p.x + nx * (RW / 2 + 0.45), 1.3 + bankYAt(i, s * (RW / 2 + 0.45)), p.z + nz * (RW / 2 + 0.45)),
+            const offC = ((s === 1 ? turnC > 0 : turnC < 0)
+              ? clamp(rEstC * 0.8, 3, RW / 2) : RW / 2) + 0.45;
+            wM.compose(wV.set(p.x + nx * offC, 1.3 + bankYAt(i, s * offC), p.z + nz * offC),
                        wQ, wS.set(1, seg + 0.5, 1));              // solape 0.5 → cadena continua sin huecos
             cyl.setMatrixAt(k, wM);
             cyl.setColorAt(k, cc2.setHex(i % 2 ? 0xffffff : 0xe02030));
@@ -3248,9 +3331,11 @@ function buildWorld() {
           const rEst = segLen / Math.max(Math.abs(turn), 1e-3);
           const eP = turn > 0 ? clamp(rEst * 0.8, 3, RW / 2) : RW / 2;
           const eN = turn < 0 ? clamp(rEst * 0.8, 3, RW / 2) : RW / 2;
-          // lado interior de curva: el arcén se estrecha para no plegarse
-          const oP = eP + (turn > 0 ? clamp(rEst * 0.8 - eP, 0.4, W_OUT) : W_OUT);
-          let oN = eN + (turn < 0 ? clamp(rEst * 0.8 - eN, 0.4, W_OUT) : W_OUT);
+          // lado interior de curva: el arcén se estrecha pero siempre queda
+          // PEGADO al borde real de la calzada y nunca pasa del centro de la
+          // curva (anti-pliegue); en horquillas llega hasta ~el radio de giro
+          const oP = eP + (turn > 0 ? clamp(rEst - eP - 0.15, 0.4, W_OUT) : W_OUT);
+          let oN = eN + (turn < 0 ? clamp(rEst - eN - 0.15, 0.4, W_OUT) : W_OUT);
           // Hueco del arcén en la entrada/salida de boxes — la curva de entrada
           // conecta directo con el asfalto sin la banda gris/azul por debajo
           if (pitGap(i)) oN = eN - 0.5;
@@ -3316,6 +3401,7 @@ function buildWorld() {
             const segLen = Math.hypot(pn.x - p.x, pn.z - p.z) || 1;
             const turn = p.tx * pn.tz - p.tz * pn.tx;
             const rEst = segLen / Math.max(Math.abs(turn), 1e-3);
+            const free = sd => !(sd < 0 && pitGap(i));         // lado de boxes sin arcén: no manchar
             if (rEst < 150) {                                 // TODA curva lleva goma en el exterior
               const side = turn > 0 ? -1 : 1;
               const tight = rEst < 34;                        // horquillas: abanico cargado
@@ -3325,20 +3411,42 @@ function buildWorld() {
                 const drift = rnd(-0.05, 0.15);               // leve deriva hacia fuera
                 let dx = p.tx + nx * side * drift, dz = p.tz + nz * side * drift;
                 const dl = Math.hypot(dx, dz); dx /= dl; dz /= dl;
-                put(i, p.x + nx * side * lat, p.z + nz * side * lat,
-                    dx, dz, 0.65 + rnd(0, 1) * 0.75, 3 + rnd(0, 1) * 8.5,
-                    side * lat, rnd(0.6, 1));                 // más anchas, largas y oscuras
+                if (free(side))
+                  put(i, p.x + nx * side * lat, p.z + nz * side * lat,
+                      dx, dz, 0.65 + rnd(0, 1) * 0.75, 3 + rnd(0, 1) * 8.5,
+                      side * lat, rnd(0.6, 1));               // más anchas, largas y oscuras
               }
-              continue;
+              // Interior de la curva: roderas de los que cortan el vértice
+              if (free(-side) && rnd(0, 1) < 0.4) {
+                const lat = RW / 2 + 0.4 + rnd(0, 1) * (W_OUT - 0.9);
+                put(i, p.x - nx * side * lat, p.z - nz * side * lat,
+                    p.tx, p.tz, 0.5 + rnd(0, 1) * 0.6, 2.5 + rnd(0, 1) * 6,
+                    -side * lat, rnd(0.4, 0.8));
+              }
             }
-            // Rectas: solo tramos aleatorios sueltos — hay zonas limpias
-            if (run <= 0 && rnd(0, 1) < 0.14) run = 4 + (rnd(0, 1) * 14 | 0);
-            if (run-- > 0 && rnd(0, 1) < 0.7) {
+            // Rectas: tramos aleatorios sueltos — hay zonas limpias
+            if (run <= 0 && rnd(0, 1) < 0.2) run = 4 + (rnd(0, 1) * 14 | 0);
+            if (run-- > 0 && rnd(0, 1) < 0.8) {
               const sd = rnd(0, 1) < 0.5 ? 1 : -1;
               const lat = RW / 2 + 0.4 + rnd(0, 1) * (W_OUT - 0.9);
-              put(i, p.x + nx * sd * lat, p.z + nz * sd * lat,
-                  p.tx, p.tz, 0.55 + rnd(0, 1) * 0.65, 2 + rnd(0, 1) * 7.5,
-                  sd * lat, rnd(0.45, 0.9));
+              if (free(sd))
+                put(i, p.x + nx * sd * lat, p.z + nz * sd * lat,
+                    p.tx, p.tz, 0.55 + rnd(0, 1) * 0.65, 2 + rnd(0, 1) * 7.5,
+                    sd * lat, rnd(0.45, 0.9));
+            }
+            // Manchas sueltas aleatorias por TODO el circuito: roderas
+            // aisladas en cualquier banda, curva o recta
+            if (rnd(0, 1) < 0.32) {
+              const sd = rnd(0, 1) < 0.5 ? 1 : -1;
+              if (free(sd)) {
+                const lat = RW / 2 + 0.3 + rnd(0, 1) * (W_OUT - 0.7);
+                const dr2 = rnd(-0.2, 0.2);
+                let dx = p.tx + nx * sd * dr2, dz = p.tz + nz * sd * dr2;
+                const dl = Math.hypot(dx, dz); dx /= dl; dz /= dl;
+                put(i, p.x + nx * sd * lat, p.z + nz * sd * lat,
+                    dx, dz, 0.45 + rnd(0, 1) * 0.6, 2 + rnd(0, 1) * 9,
+                    sd * lat, rnd(0.35, 0.85));
+              }
             }
           }
           const sg = new THREE.BufferGeometry();
@@ -3595,9 +3703,12 @@ function buildWorld() {
           map: lakeWaterTex, transparent: true, opacity: 0.3, depthWrite: false }));
         lakeSurf.position.set(cx, 0.06, cz);
         world.add(lakeSurf);
+        window._lakeExcl = { x: cx, z: cz, r: LR * 1.15 };   // ni vegetación ni props en el agua
       }
       // --- Farolas de circuito: mástil alto + brazo sobre la pista con cabezal
-      // de luz BLANCA, charco de luz en el suelo — estilo Singapur ---
+      // de luz BLANCO-ANARANJADA, charco de luz en el suelo — estilo Singapur.
+      // Mucho más densas en las curvas: el trazado queda iluminado en la
+      // aproximación, el vértice y la salida ---
       {
         const poleGeo = new THREE.CylinderGeometry(0.10, 0.24, 10.6, 7);
         const poleMat = new THREE.MeshStandardMaterial({ color: 0x2c3138, roughness: 0.6, metalness: 0.55 });
@@ -3605,20 +3716,27 @@ function buildWorld() {
         const headGeo = new THREE.BoxGeometry(1.9, 0.30, 0.85);
         const headMat = new THREE.MeshStandardMaterial({ color: 0x181c22, roughness: 0.55, metalness: 0.5 });
         const faceGeo = new THREE.PlaneGeometry(1.75, 0.68);
-        const faceMat = new THREE.MeshBasicMaterial({ color: 0xf2f6ff, fog: false });
-        const glowTx2 = tex3(makeGlowTex(235, 243, 255, 0.95));
-        const poolMat = new THREE.MeshBasicMaterial({ map: tex3(makeGlowTex(210, 224, 255, 0.8)),
+        const faceMat = new THREE.MeshBasicMaterial({ color: 0xffe9c4, fog: false });
+        const glowTx2 = tex3(makeGlowTex(255, 218, 165, 0.95));
+        const poolMat = new THREE.MeshBasicMaterial({ map: tex3(makeGlowTex(255, 206, 148, 0.8)),
           transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
         const poolGeo = new THREE.PlaneGeometry(17, 17);
-        const lampGlows = [];
+        const lampGlows = [], lampRefs = [];
         let acc3 = 0, lside = 1;
         for (let i = 0; i < pathLen; i++) {
           const p = path[i], pn = path[(i + 1) % pathLen];
           acc3 += Math.hypot(pn.x - p.x, pn.z - p.z);
-          if (acc3 < 30) continue;                            // una cada ~30u
+          // Curvatura local: en curva fuerte una cada ~9u, en curva media ~14u
+          // y en recta ~22u — las curvas quedan iluminadas de la
+          // aproximación al vértice
+          const pa3 = path[(i + 7) % pathLen];
+          const turn = Math.abs(p.tx * pa3.tz - p.tz * pa3.tx);
+          if (acc3 < (turn > 0.24 ? 9 : turn > 0.10 ? 14 : 22)) continue;
           acc3 = 0;
-          if (pitGap(i) || (i >= tunI0 && i <= tunI1)) continue;   // ni en boxes ni en el túnel
-          const s = lside; lside = -lside;                    // lados alternos
+          if (i >= tunI0 && i <= tunI1) continue;            // en el túnel no
+          // En los tramos de boxes la farola va solo por el lado EXTERIOR
+          // (s=+1) — la entrada/salida de la calle queda libre
+          const s = pitGap(i) ? 1 : (lside = -lside, lside);
           const nx = -p.tz * s, nz = p.tx * s;
           const lamp = new THREE.Group();
           lamp.position.set(p.x + nx * (RW / 2 + 3.2), 0, p.z + nz * (RW / 2 + 3.2));
@@ -3632,7 +3750,7 @@ function buildWorld() {
           const face = new THREE.Mesh(faceGeo, faceMat);
           face.rotation.x = -Math.PI / 2 + 0.30; face.position.set(0, -0.17, 0.05);
           head.add(face);
-          const gm = new THREE.SpriteMaterial({ map: glowTx2, color: 0xdfeaff,
+          const gm = new THREE.SpriteMaterial({ map: glowTx2, color: 0xffcf96,
             transparent: true, opacity: 0.32, depthWrite: false, fog: false });
           const gl = new THREE.Sprite(gm);
           gl.scale.set(5.2, 3.4, 1); gl.position.set(0, -0.4, 0.3);
@@ -3642,8 +3760,25 @@ function buildWorld() {
           pool.position.set(0, 0.09, 3.9);                    // charco de luz bajo el cabezal
           lamp.add(pole, arm, head, pool);
           world.add(lamp);
+          lampRefs.push({ face, gm, pool });
         }
-        world.userData.lamps = { poolMat, faceMat, glows: lampGlows };  // applyTOD ajusta el brillo
+        // ~6% de farolas "rotas": parpadeo irregular muy rápido, como si el
+        // foco estuviera a punto de fundirse — materiales clonados para que
+        // el apagón solo afecte a esa farola
+        const broken = [];
+        {
+          const nBr = Math.max(2, Math.round(lampRefs.length * 0.08));
+          const picked = new Set(); let guard = 0;
+          while (broken.length < nBr && guard++ < 600) {
+            const r = lampRefs[(Math.random() * lampRefs.length) | 0];
+            if (!r || picked.has(r.face)) continue;
+            picked.add(r.face);
+            r.face.material = r.face.material.clone();
+            r.pool.material = r.pool.material.clone();
+            broken.push({ gm: r.gm, fm: r.face.material, pm: r.pool.material });
+          }
+        }
+        world.userData.lamps = { poolMat, faceMat, glows: lampGlows, broken, k: 1 };  // applyTOD ajusta el brillo
       }
     }
   }
@@ -3739,6 +3874,23 @@ function buildWorld() {
     const parapet = new THREE.Mesh(new THREE.BoxGeometry(BL + 1.4, 1.1, BD + 1.4),
       new THREE.MeshStandardMaterial({ color: 0x181c24, roughness: 0.9 }));
     parapet.position.y = BH + 0.35; pit.add(parapet);
+    // Puntos de luz blanca coronando el tejado: separados a intervalos regulares
+    // por el borde del peto, como los balizamiento de los edificios reales
+    {
+      const rdGeo = new THREE.SphereGeometry(0.3, 8, 6);
+      const rdMat = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false });
+      const rdTex = tex3(makeGlowTex(220, 230, 255, 0.85));
+      for (let i = 0; i <= 12; i++) {
+        for (const ez of [-1, 1]) {
+          const dx = -BL / 2 + 4 + i * ((BL - 8) / 12);
+          const d = new THREE.Mesh(rdGeo, rdMat);
+          d.position.set(dx, BH + 0.98, ez * (BD / 2 + 0.35)); pit.add(d);
+          const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: rdTex, color: 0xeaf2ff,
+            transparent: true, opacity: 0.4, depthWrite: false, fog: false }));
+          gl.scale.set(1.6, 1.6, 1); gl.position.copy(d.position); pit.add(gl);
+        }
+      }
+    }
     // Marquesina sobre las puertas: losa volada con pilares cada box
     const canopy = new THREE.Mesh(new THREE.BoxGeometry(BL, 0.5, 4.6),
       new THREE.MeshStandardMaterial({ color: 0x2c313a, roughness: 0.7, metalness: 0.4 }));
@@ -3821,6 +3973,55 @@ function buildWorld() {
         color: neon ? 0x8f949c : 0xffffff }));               // mismo tinte que la pista — no se quema a blanco
     lane.position.set((LANE_X0 + LANE_X1) / 2, 0.02, lmZ);
     pit.add(lane);
+    // Rodadura y manchas de gasoil/aceite sobre la calle: dos bandas de goma
+    // a lo largo del carril + goteo oscuro donde los coches se paran —
+    // un pit lane real está siempre marcado por los neumáticos y los fluidos
+    {
+      const wc = document.createElement('canvas'); wc.width = 2048; wc.height = 128;
+      const wt = wc.getContext('2d');
+      const u2x = lx => (lx - LANE_X0) / (LANE_X1 - LANE_X0) * 2048;
+      const vOf = dz => 64 + dz * 14;                    // lz respecto a lmZ → fila
+      for (const sd of [-0.85, 0.85]) {                  // dos bandas de goma onduladas
+        for (const [wd, al] of [[7.5, 0.42], [4, 0.3]]) {
+          wt.strokeStyle = `rgba(10,10,12,${al})`; wt.lineWidth = wd; wt.lineCap = 'round';
+          wt.beginPath();
+          for (let lx = LANE_X0; lx <= LANE_X1; lx += 4) {
+            const yy = vOf(sd + Math.sin(lx * 0.06 + sd) * 0.5 + rnd(-0.3, 0.3));
+            lx === LANE_X0 ? wt.moveTo(u2x(lx), yy) : wt.lineTo(u2x(lx), yy);
+          }
+          wt.stroke();
+        }
+      }
+      for (let i = 0; i < 8; i++) {                      // frenada + fluidos en cada box
+        const bxL = -BL / 2 + (i + 0.5) * (BL / 8);
+        wt.strokeStyle = 'rgba(8,8,10,0.45)'; wt.lineWidth = 6;
+        for (const sd of [-0.85, 0.85]) {
+          wt.beginPath();
+          wt.moveTo(u2x(bxL - 14), vOf(sd + rnd(-0.4, 0.4)));
+          wt.lineTo(u2x(bxL + 4), vOf(sd + rnd(-0.3, 0.3)));
+          wt.stroke();
+        }
+        for (let j = 0, nj = ri(3, 6); j < nj; j++) {
+          const ox = u2x(bxL + rnd(-6, 6)), oy = vOf(rnd(-1.7, 1.7)), rr = rnd(3, 9);
+          const g = wt.createRadialGradient(ox, oy, 0, ox, oy, rr);
+          g.addColorStop(0, 'rgba(8,8,10,0.55)'); g.addColorStop(1, 'rgba(8,8,10,0)');
+          wt.fillStyle = g;
+          wt.beginPath(); wt.ellipse(ox, oy, rr * 1.7, rr, 0, 0, 7); wt.fill();
+        }
+      }
+      for (let j = 0; j < 34; j++) {                     // salpicado de gasoil/aceite
+        const ox = u2x(rnd(LANE_X0, LANE_X1)), oy = vOf(rnd(-2.6, 2.6)), rr = rnd(1.5, 5);
+        const g = wt.createRadialGradient(ox, oy, 0, ox, oy, rr);
+        g.addColorStop(0, 'rgba(9,9,11,0.4)'); g.addColorStop(1, 'rgba(9,9,11,0)');
+        wt.fillStyle = g;
+        wt.beginPath(); wt.ellipse(ox, oy, rr * 2.2, rr, 0, 0, 7); wt.fill();
+      }
+      const wear = new THREE.Mesh(new THREE.PlaneGeometry(LANE_X1 - LANE_X0, 9),
+        new THREE.MeshBasicMaterial({ map: tex3(wc), transparent: true, depthWrite: false }));
+      wear.rotation.x = -Math.PI / 2;
+      wear.position.set((LANE_X0 + LANE_X1) / 2, 0.085, lmZ);
+      pit.add(wear);
+    }
     // Suelo del complejo: losa de hormigón gris desde detrás del edificio
     // hasta la calle de boxes — los garajes no quedan sobre el césped
     const apron = new THREE.Mesh(new THREE.BoxGeometry(BL + 24, 0.08, lmZ + 16),
@@ -3941,7 +4142,7 @@ function buildWorld() {
     // Salida: la calle confluye con la pista donde el circuito gira hacia
     // boxes (~lx 102-114) — el final sigue la curvatura real del trazado.
     const eOut2 = edgeAt(102), eOut3 = edgeAt(114);   // borde real en la salida
-    const PIT_EN = [[-148, teZ + 0.4], [-108, teZ + 0.4], [-100, lmZ], [-88, lmZ + 1]];
+    const PIT_EN = [[-148, teZ + 0.4], [-110, teZ + 0.4], [-104, lmZ], [-98, lmZ]];
     const PIT_EX = [[80, lmZ + 1], [93, lmZ + 0.5],
                     [eOut2[0], eOut2[1] + 0.5], [eOut3[0], eOut3[1] + 0.5]];
     const PIT_LN = [-88, 74];                       // tramo recto por la calle
@@ -4187,6 +4388,22 @@ function buildWorld() {
         gl2.scale.set(7, 2.6, 1);
         gl2.position.set(_g.x, by2 + roofY - 0.55, _g.z);
         world.add(gl2);
+      }
+      // Puntos de luz blanca sobre el tejado de la grada, espaciados a lo largo
+      {
+        const rdG = new THREE.SphereGeometry(0.28, 8, 6);
+        const rdM = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false });
+        const rdT = tex3(makeGlowTex(220, 230, 255, 0.85));
+        for (let si = 0; si < segs.length; si++) {
+          const i = segs[si];
+          const _r = gPos(i, 0, D0 + 2.2 + ROWS * STEP - SD * 0.16);
+          const by3 = terrAt(_r.x, _r.z);
+          const d = new THREE.Mesh(rdG, rdM);
+          d.position.set(_r.x, by3 + roofY + 0.3, _r.z); world.add(d);
+          const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: rdT, color: 0xeaf2ff,
+            transparent: true, opacity: 0.35, depthWrite: false, fog: false }));
+          gl.scale.set(1.4, 1.4, 1); gl.position.copy(d.position); world.add(gl);
+        }
       }
       world.userData.standLamps = { faceMat: stFaceMat, glowMat: stGlowMat };
       // Banda publicitaria sobre la primera fila, en la parte recta (cerca de pi)
@@ -4476,11 +4693,13 @@ function buildWorld() {
       accB += Math.hypot(pn.x - p.x, pn.z - p.z);                // distancia acumulada total
       if (turn > 0.09) continue;                                 // solo se coloca en rectas
       if (accB < pathLen / N_B * 4) continue;                    // repartidas por la pista
-      accB = 0; bN++;
       const s = bN % 2 ? 1 : -1;                                 // alterna lado
       const hw = (neon ? RW / 2 + 7 : ((trackHW && trackHW[i]) || RW / 2) + 5.5);
       const nx = -p.tz * s, nz = p.tx * s;
       const bx = p.x + nx * hw, bz = p.z + nz * hw;
+      const lkb = window._lakeExcl;                              // la pantalla no se hunde en el lago
+      if (lkb && Math.hypot(lkb.x - bx, lkb.z - bz) < lkb.r + 5) continue;
+      accB = 0; bN++;
       const c = document.createElement('canvas'); c.width = 256; c.height = 96;
       const tex = tex3(c);
       const scr = new THREE.Mesh(new THREE.PlaneGeometry(13, 4.9),
@@ -4496,6 +4715,7 @@ function buildWorld() {
 
   // --- Puestos de comisarios naranjas en la salida de curvas fuertes ---
   {
+    marshalFlags = [];
     const legMat = new THREE.MeshStandardMaterial({ color: 0x33383e, roughness: 0.9 });
     const cabMat = new THREE.MeshStandardMaterial({ color: 0xff7a10, roughness: 0.65 });
     const roofMat = new THREE.MeshStandardMaterial({ color: 0x20242a, roughness: 0.9 });
@@ -4517,6 +4737,8 @@ function buildWorld() {
       const hw = (neon ? RW / 2 + 5 : ((trackHW && trackHW[i]) || RW / 2) + 4);
       const nx = -p.tz * s, nz = p.tx * s;
       const bx = p.x + nx * hw, bz = p.z + nz * hw;
+      const lk = window._lakeExcl;                           // el puesto no se planta en el agua
+      if (lk && Math.hypot(lk.x - bx, lk.z - bz) < lk.r + 4) continue;
       const g = new THREE.Group();
       for (const [lx, lz] of [[-0.8, -0.6], [0.8, -0.6], [-0.8, 0.6], [0.8, 0.6]]) {
         const leg = new THREE.Mesh(legGeo, legMat);
@@ -4524,9 +4746,18 @@ function buildWorld() {
       }
       const cab = new THREE.Mesh(cabGeo, cabMat); cab.position.y = 2.95;
       const roof = new THREE.Mesh(roofGeo, roofMat); roof.position.y = 3.78;
+      const roofDot = new THREE.Mesh(new THREE.SphereGeometry(0.14, 7, 5),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false }));
+      roofDot.position.set(-0.9, 3.95, -0.7); g.add(roofDot);      // luz blanca en el tejado
       const fig = new THREE.Mesh(figGeo, figMat); fig.position.set(0.4, 4.32, 0);  // comisario sobre el tejado
       const head = new THREE.Mesh(headGeo, figMat); head.position.set(0.4, 4.95, 0);
-      g.add(cab, roof, fig, head);
+      const fpole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.7, 5), legMat);
+      fpole.position.set(-0.7, 4.6, -0.7);
+      const flag = new THREE.Mesh(new THREE.PlaneGeometry(1.05, 0.68),
+        new THREE.MeshBasicMaterial({ color: 0x22cc44, side: THREE.DoubleSide }));
+      flag.position.set(-0.17, 5.1, -0.7); flag.userData.ph = mN * 1.9;
+      g.add(cab, roof, fig, head, fpole, flag);
+      marshalFlags.push(flag);
       g.position.set(bx, 0, bz);
       g.rotation.y = Math.atan2(p.x - bx, p.z - bz);             // mirando a la pista
       world.add(g);
@@ -4534,19 +4765,83 @@ function buildWorld() {
     }
   }
 
+  // --- Placas de frenada 150 / 100 / 50 m antes de las curvas fuertes ---
+  {
+    const mkBoardTex = n => {
+      const c = document.createElement('canvas'); c.width = 128; c.height = 96;
+      const x = c.getContext('2d');
+      x.fillStyle = '#f2f3f5'; x.fillRect(0, 0, 128, 96);
+      x.strokeStyle = '#14171c'; x.lineWidth = 10; x.strokeRect(6, 6, 116, 84);
+      x.fillStyle = '#14171c'; x.font = '900 56px Arial, system-ui';
+      x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(n, 64, 52);
+      return tex3(c);
+    };
+    const bTexs = { 150: mkBoardTex('150'), 100: mkBoardTex('100'), 50: mkBoardTex('50') };
+    const bGeo = new THREE.PlaneGeometry(2.3, 1.7);
+    const postGeoB = new THREE.CylinderGeometry(0.07, 0.09, 1.4, 6);
+    const postMatB = new THREE.MeshStandardMaterial({ color: 0x2c3036, roughness: 0.9 });
+    // Entrada de frenada fuerte: la curvatura sube por delante tras un tramo rápido
+    const curvAt = i => {
+      const p = path[i % pathLen], pa = path[(i + 8) % pathLen];
+      return Math.abs(p.tx * pa.tz - p.tz * pa.tx);
+    };
+    let brkN = 0, lastBrk = -pathLen;
+    for (let i = 0; i < pathLen && brkN < 6; i++) {
+      if (curvAt(i) > 0.14) continue;                    // todavía en recta
+      let pk = 0;
+      for (let k = 1; k <= 14; k++) pk = Math.max(pk, curvAt(i + k));
+      if (pk < 0.4) continue;                            // la curva que viene es fuerte
+      let straight = true;                               // aproximación rápida (recta previa)
+      for (let k = 1; k <= 20; k++) if (curvAt(i - k + pathLen) > 0.14) { straight = false; break; }
+      if (!straight) continue;
+      if (i - lastBrk < 150) continue;                   // una zona de frenada por curva
+      lastBrk = i; brkN++;
+      const pk8 = path[(i + 8) % pathLen], pk16 = path[(i + 16) % pathLen];
+      const s = (pk8.tx * pk16.tz - pk8.tz * pk16.tx) > 0 ? -1 : 1;   // exterior
+      for (const [dist, lab] of [[150, '150'], [100, '100'], [50, '50']]) {
+        // andar hacia atrás `dist` metros por el trazado
+        let j = i, acc = 0;
+        while (acc < dist) {
+          const q = path[j], qn = path[(j - 1 + pathLen) % pathLen];
+          acc += Math.hypot(q.x - qn.x, q.z - qn.z) || 0.6; j = (j - 1 + pathLen) % pathLen;
+        }
+        const q = path[j];
+        const hw = (neon ? RW / 2 + 5 : ((trackHW && trackHW[j]) || RW / 2) + 3.6);
+        const nx = -q.tz * s, nz = q.tx * s;
+        const g = new THREE.Group();
+        const post = new THREE.Mesh(postGeoB, postMatB); post.position.y = 0.7;
+        const bd = new THREE.Mesh(bGeo, new THREE.MeshBasicMaterial({ map: bTexs[lab], side: THREE.DoubleSide }));
+        bd.position.y = 1.75;
+        g.add(post, bd);
+        g.position.set(q.x + nx * hw, 0, q.z + nz * hw);
+        g.rotation.y = Math.atan2(-q.tx, -q.tz);         // cara al coche que se aproxima
+        world.add(g);
+      }
+    }
+  }
+
   // --- Grúa de rescate aparcada tras la barrera junto a una curva fuerte ---
   {
-    let craneAt = -1;
+    let craneAt = -1, cbx = 0, cbz = 0;
     for (let i = Math.floor(pathLen * 0.25); i < pathLen; i++) {
       const p = path[i], pa = path[(i + 9) % pathLen];
-      if (Math.abs(p.tx * pa.tz - p.tz * pa.tx) > 0.3) { craneAt = i; break; }
+      if (Math.abs(p.tx * pa.tz - p.tz * pa.tx) <= 0.3) continue;
+      const s2 = (p.tx * pa.tz - p.tz * pa.tx) > 0 ? -1 : 1;
+      const hw2 = (neon ? RW / 2 + 9 : ((trackHW && trackHW[i]) || RW / 2) + 7.5);
+      const cx2 = p.x - p.tz * s2 * hw2, cz2 = p.z + p.tx * s2 * hw2;
+      const lk = window._lakeExcl;                          // la grúa no se aparca en el lago
+      if (lk && Math.hypot(lk.x - cx2, lk.z - cz2) < lk.r + 6) continue;
+      craneAt = i; cbx = cx2; cbz = cz2; break;
     }
-    if (craneAt < 0) craneAt = Math.floor(pathLen * 0.4);
+    if (craneAt < 0) {                                     // sin curva fuera del lago: posición original
+      craneAt = Math.floor(pathLen * 0.4);
+      const p2 = path[craneAt], pa2 = path[(craneAt + 9) % pathLen];
+      const s2 = (p2.tx * pa2.tz - p2.tz * pa2.tx) > 0 ? -1 : 1;
+      const hw2 = (neon ? RW / 2 + 9 : ((trackHW && trackHW[craneAt]) || RW / 2) + 7.5);
+      cbx = p2.x - p2.tz * s2 * hw2; cbz = p2.z + p2.tx * s2 * hw2;
+    }
     const p = path[craneAt], pa = path[(craneAt + 9) % pathLen];
-    const s = (p.tx * pa.tz - p.tz * pa.tx) > 0 ? -1 : 1;
-    const hw = (neon ? RW / 2 + 9 : ((trackHW && trackHW[craneAt]) || RW / 2) + 7.5);
-    const nx = -p.tz * s, nz = p.tx * s;
-    const bx = p.x + nx * hw, bz = p.z + nz * hw;
+    const bx = cbx, bz = cbz;
     const cr = new THREE.Group();
     const bedMat = new THREE.MeshStandardMaterial({ color: 0xffc81a, roughness: 0.6, metalness: 0.2 });
     const darkMat = new THREE.MeshStandardMaterial({ color: 0x1c2026, roughness: 0.9 });
@@ -4572,6 +4867,101 @@ function buildWorld() {
     cr.rotation.y = Math.atan2(p.x - bx, p.z - bz) + Math.PI / 2;
     world.add(cr);
     obstacles.push({ x: bx, z: bz, r: 3.4 });
+  }
+
+  // --- Helicóptero de TV: fuselaje + rotor principal y de cola, órbita en el loop ---
+  {
+    const hb = new THREE.Group();
+    const hMat = new THREE.MeshPhysicalMaterial({ color: 0xe9edf2, roughness: 0.28,
+      metalness: 0.72, clearcoat: 0.8, clearcoatRoughness: 0.2 });   // blanco metalizado, laca
+    const hAcc = new THREE.MeshStandardMaterial({ color: 0xd8302a, roughness: 0.5 });
+    const cab = new THREE.Mesh(new THREE.SphereGeometry(1.6, 20, 14), hMat);
+    cab.scale.set(1.55, 0.9, 0.95); hb.add(cab);
+    const glassH = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 12),
+      new THREE.MeshPhysicalMaterial({ color: 0x0a1420, roughness: 0.1, metalness: 0.9, transparent: true, opacity: 0.72 }));
+    glassH.position.set(1.35, 0.18, 0); glassH.scale.set(1, 0.75, 0.85); hb.add(glassH);
+    const boom = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.42, 5.4, 12), hMat);
+    boom.rotation.z = Math.PI / 2; boom.position.set(-3.4, 0.25, 0); hb.add(boom);
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.3, 0.7), hAcc);
+    fin.position.set(-6.1, 0.6, 0); hb.add(fin);
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.3, 1.9), hAcc);
+    stripe.position.y = -0.25; hb.add(stripe);                     // franja bajo la cabina
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.5, 6), hMat);
+    mast.position.y = 1.15; hb.add(mast);
+    const bladeMat = new THREE.MeshStandardMaterial({ color: 0x101317, roughness: 0.28,
+      metalness: 0.9 });                                           // aspas: negro metálico
+    const rot = new THREE.Mesh(new THREE.BoxGeometry(9.5, 0.07, 0.42), bladeMat);
+    rot.position.y = 1.45; hb.add(rot);
+    const rot2 = rot.clone(); rot2.rotation.y = Math.PI / 2; hb.add(rot2);
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.7, 0.3), bladeMat);
+    tail.position.set(-6.2, 0.7, 0.2); hb.add(tail);               // rotor de cola
+    // Discos de difuminado: a régimen de giro las palas se ven como un velo
+    // translúcido con el borde desvanecido — sin arista dura en el perímetro
+    const rdCv = document.createElement('canvas'); rdCv.width = rdCv.height = 64;
+    {
+      const rc = rdCv.getContext('2d');
+      const rg = rc.createRadialGradient(32, 32, 2, 32, 32, 32);
+      rg.addColorStop(0, 'rgba(20,26,33,0.30)');
+      rg.addColorStop(0.7, 'rgba(20,26,33,0.22)');
+      rg.addColorStop(0.92, 'rgba(20,26,33,0.07)');
+      rg.addColorStop(1, 'rgba(20,26,33,0)');
+      rc.fillStyle = rg; rc.fillRect(0, 0, 64, 64);
+    }
+    const blurMat = new THREE.MeshBasicMaterial({ map: tex3(rdCv), transparent: true,
+      side: THREE.DoubleSide, depthWrite: false });
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(4.9, 30), blurMat);
+    disc.rotation.x = -Math.PI / 2; disc.position.y = 1.46; hb.add(disc);
+    const tailDisc = new THREE.Mesh(new THREE.CircleGeometry(0.95, 14), blurMat);
+    tailDisc.rotation.y = Math.PI / 2; tailDisc.position.set(-6.2, 0.7, 0.24); hb.add(tailDisc);
+    // Estabilizador horizontal, tobera de escape y antena
+    const stab = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.08, 1.7), hMat);
+    stab.position.set(-5.3, 0.5, 0); hb.add(stab);
+    const exh = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.22, 0.8, 7), hMat);
+    exh.rotation.z = Math.PI / 2; exh.position.set(-2.3, 0.5, 0.4); hb.add(exh);
+    const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.05, 0.75, 4), hMat);
+    ant.rotation.z = 0.35; ant.position.set(0.5, -1.2, 0.25); hb.add(ant);
+    for (const s of [-1, 1]) {                                     // patines de aterrizaje
+      const skid = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 3.4, 6), hMat);
+      skid.rotation.z = Math.PI / 2; skid.position.set(0.4, -1.45, s * 0.9); hb.add(skid);
+      const st = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.7, 0.08), hMat);
+      st.position.set(0.9, -1.1, s * 0.9); hb.add(st);
+      const st2 = st.clone(); st2.position.x = -0.4; hb.add(st2);
+    }
+    const cam = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6), hMat);   // bola de la cámara TV
+    cam.position.set(1.6, -0.9, 0); hb.add(cam);
+    // Luces de navegación: rojo babor / verde estribor / blanco cola, más el
+    // estrobo anticolisión de la deriva y la baliza roja de la panza
+    const navTx = tex3(makeGlowTex(255, 255, 255, 0.9));
+    const mkNav = (color, x, y, z, s) => {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: navTx, color,
+        transparent: true, opacity: 0.9, depthWrite: false, fog: false,
+        blending: THREE.AdditiveBlending }));
+      sp.scale.set(s, s, 1); sp.position.set(x, y, z); hb.add(sp); return sp;
+    };
+    const navL = mkNav(0xff2a20, 0.2, 0.1, -1.15, 0.85);           // babor: rojo
+    const navR = mkNav(0x30ff60, 0.2, 0.1, 1.15, 0.85);            // estribor: verde
+    const navT = mkNav(0xffffff, -6.45, 0.62, 0, 0.7);             // cola: blanca fija
+    const navStrobe = mkNav(0xffffff, -6.1, 1.42, 0, 1.5);         // estrobo doble destello
+    const navBeacon = mkNav(0xff1a10, 0.1, -1.5, 0, 1.1);          // baliza rotativa panza
+    hb.scale.setScalar(1.15);
+    // hOuter lleva posición y guiñada; hb dentro lleva cabeceo y alabeo reales
+    const hOuter = new THREE.Group(); hOuter.add(hb); world.add(hOuter);
+    // Foco blanco potente bajo el fuselaje — solo brilla de noche: en cada
+    // pasada rasante sobre el coche lo ilumina como un heli de TV real
+    const beam = new THREE.SpotLight(0xffffff, 0, 170, 0.30, 0.5, 1.0);
+    beam.position.set(0.5, -1.2, 0); hb.add(beam);
+    const beamTgt = new THREE.Object3D(); world.add(beamTgt); beam.target = beamTgt;
+    const beamCone = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 16, 1, true),
+      new THREE.MeshBasicMaterial({ color: 0xfff8e4, transparent: true, opacity: 0.08,
+        blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+    beamCone.visible = false; world.add(beamCone);
+    const beamPool = new THREE.Mesh(new THREE.CircleGeometry(8, 24),
+      new THREE.MeshBasicMaterial({ map: tex3(makeGlowTex(255, 250, 235, 0.9)), color: 0xfff4dc,
+        transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    beamPool.rotation.x = -Math.PI / 2; world.add(beamPool);
+    heliObj = { grp: hOuter, body: hb, rot, rot2, tail, beam, beamTgt, beamCone, beamPool,
+      navStrobe, navBeacon, t0: performance.now(), px: 0, py: 55, pz: 0, yaw: 0,
+      pitch: 0, roll: 0, fw: 0, followT: 0, cd: 8, warm: 0 };  // fw = envolvente del seguimiento
   }
 
 
@@ -4765,7 +5155,7 @@ function buildWorld() {
   if (!traced && !dragMode) {
     // Bosque variado: pinos (4 conos), ROBLES de copa redondeada y CIPRESES
     // altos y finos — tres especies instanciadas repartidas por el entorno
-    const nTrees = 160;
+    const nTrees = 560;
     const _m = (x, y, z, sx, sy, sz) => new THREE.Matrix4().compose(
       new THREE.Vector3(x, y, z), new THREE.Quaternion(), new THREE.Vector3(sx, sy, sz));
     // Copa de pino: conos superpuestos de abajo arriba — cada uno cubre la base del siguiente
@@ -4795,7 +5185,7 @@ function buildWorld() {
     const oakMat = new THREE.MeshStandardMaterial({ color: 0xcfe0a8, roughness: 0.95, map: foliageTex });
     const cypMat = new THREE.MeshStandardMaterial({ color: 0x9ab88e, roughness: 0.95, map: foliageTex });
     const barkMat = new THREE.MeshStandardMaterial({ color: 0xc8b8a0, roughness: 1, map: barkTex });
-    const CAP = { pine: 190, oak: 150, cyp: 90 };
+    const CAP = { pine: 420, oak: 330, cyp: 180 };
     const pines = new THREE.InstancedMesh(leafGeo, leafMat, CAP.pine);
     const oaks = new THREE.InstancedMesh(oakGeo, oakMat, CAP.oak);
     const cyps = new THREE.InstancedMesh(cypGeo, cypMat, CAP.cyp);
@@ -4880,6 +5270,8 @@ function buildWorld() {
       if (window._standPts)                                    // puntos a lo largo de la grada
         for (const sp of window._standPts)
           if (Math.hypot(sp.x - x, sp.z - z) < sp.r) return true;
+      const lk = window._lakeExcl;                             // nada plantado dentro del lago
+      if (lk && Math.hypot(lk.x - x, lk.z - z) < lk.r) return true;
       return false;
     };
     // Coloca un árbol de especie aleatoria en (x,z) — devuelve false si no cabe
@@ -4913,17 +5305,17 @@ function buildWorld() {
       pm.makeScale(sr * 2, 1, sr * 2);
       pm.setPosition(x + sOff.x * sr * 0.35, y0 + 0.12, z + sOff.z * sr * 0.35);
       shades.setMatrixAt(ti, pm);
-      obstacles.push({ x, z, r: 3 * s });
+      obstacles.push({ x, z, r: 3 * s, veg: 1 });
       ti++;
       return true;
     };
     // Cinturón arbolado que SIGUE el circuito: a cada pocos metros, a ambos
     // lados, a 24-70u del eje — la zona cercana queda llena de árboles variados
-    for (let i = 0; i < pathLen; i += 3) {
+    for (let i = 0; i < pathLen; i += 2) {
       const p = path[i], nx = -p.tz, nz = p.tx;
       for (const sd of [1, -1]) {
-        if (rnd(0, 1) < 0.45) continue;                      // huecos naturales, no es una pared
-        const lat = 24 + rnd(0, 46);
+        if (rnd(0, 1) < 0.30) continue;                      // huecos naturales, no es una pared
+        const lat = 23 + rnd(0, 58);
         const x = p.x + nx * sd * lat + rnd(-7, 7);
         const z = p.z + nz * sd * lat + rnd(-7, 7);
         if (nearRoad(x, z, 14)) continue;
@@ -4931,9 +5323,9 @@ function buildWorld() {
       }
     }
     // Relleno disperso del entorno lejano
-    while (ti < nTrees + 160 && guard++ < 9000) {
+    while (ti < nTrees + 160 && guard++ < 24000) {
       const x = rnd(-900, 900), z = rnd(-900, 900);
-      if (nearRoad(x, z, 10)) continue;
+      if (nearRoad(x, z, 16)) continue;
       putTree(x, z);
     }
     pines.count = nP; oaks.count = nO; cyps.count = nC; shades.count = ti;
@@ -4955,7 +5347,7 @@ function buildWorld() {
     };
     for (let i = 0; i < 90 && guard++ < 4000; i++) {         // cantos rodados: no obstáculo
       const x = rnd(-850, 850), z = rnd(-850, 850);
-      if (nearRoad(x, z, 9) || inPitArea(x, z)) { i--; continue; }
+      if (nearRoad(x, z, 9) || inPitArea(x, z)) { i--; continue; }   // inPitArea ya cubre el lago
       putRock(rocksS, i, x, z, rnd(0.35, 1.1), 0.18);
       rocksS.setColorAt(i, tCol.setHSL(0, 0, rnd(0.55, 1)));
     }
@@ -5021,7 +5413,7 @@ function buildWorld() {
                                { geo: gp2, m: new THREE.Matrix4() }]);
     const tuftMat = new THREE.MeshStandardMaterial({
       map: window._grassTex, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.95 });
-    const NT = LOW_POWER ? 1100 : 3400;
+    const NT = LOW_POWER ? 2000 : 6200;
     const tufts = new THREE.InstancedMesh(tuftGeo, tuftMat, NT);
     tufts.frustumCulled = false;
     const tm = new THREE.Matrix4(), tq = new THREE.Quaternion(), tv = new THREE.Vector3(),
@@ -5036,6 +5428,8 @@ function buildWorld() {
             Math.abs(-dx * pe.tz + dz * pe.tx) < pe.hz) return false;
       }
       for (const o of obstacles) if (o.r > 5 && Math.hypot(o.x - x, o.z - z) < o.r + 4) return false;
+      const lk = window._lakeExcl;                          // la hierba no nace dentro del lago
+      if (lk && Math.hypot(lk.x - x, lk.z - z) < lk.r) return false;
       return true;
     };
     // 70% en la banda que bordea la pista (24-95u), 30% por el entorno lejano
@@ -5071,7 +5465,7 @@ function buildWorld() {
       { geo: new THREE.SphereGeometry(0.8, 7, 6),  m: _mm(-0.85, 0.55, -0.3, 1, 0.65, 1) },
     ]);
     const bushMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, map: foliageTex });
-    const NB = LOW_POWER ? 130 : 380;
+    const NB = LOW_POWER ? 240 : 720;
     const bushes = new THREE.InstancedMesh(bushGeo, bushMat, NB);
     bushes.frustumCulled = false;
     // Helechos VOLUMÉTRICOS: roseta de 7 conos inclinados hacia fuera — frondas
@@ -5087,7 +5481,7 @@ function buildWorld() {
       return { geo: g, m };
     }));
     const fernMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 });  // el tono verde lo da el color de instancia
-    const NF = LOW_POWER ? 140 : 400;
+    const NF = LOW_POWER ? 260 : 750;
     const ferns = new THREE.InstancedMesh(fernGeo, fernMat, NF);
     ferns.frustumCulled = false;
     // Flores silvestres: dos planos cruzados con corola pintada (el matiz va por instancia)
@@ -5109,7 +5503,7 @@ function buildWorld() {
     const florGeo = mergeGeos([{ geo: fl1, m: new THREE.Matrix4() }, { geo: fl2, m: new THREE.Matrix4() }]);
     const florMat = new THREE.MeshStandardMaterial({
       map: window._florTex, alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.9 });
-    const NFL = LOW_POWER ? 220 : 700;
+    const NFL = LOW_POWER ? 400 : 1300;
     const flors = new THREE.InstancedMesh(florGeo, florMat, NFL);
     flors.frustumCulled = false;
     // Colocación compartida: misma banda cercana/lejana y exclusiones que la hierba
@@ -5185,6 +5579,16 @@ function buildWorld() {
     const moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex3(makeGlowTex(200, 210, 255, 0.9)), transparent: true, depthWrite: false, fog: false }));
     moon.scale.set(160, 160, 1); moon.position.set(600, 800, -900);
     world.add(moon); sky.night.push(moon);
+    // Núcleo nítido de la luna sobre el halo + haz de luz que proyecta al suelo
+    const moonCore = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex3(makeGlowTex(238, 244, 255, 1)), transparent: true, depthWrite: false, fog: false }));
+    moonCore.scale.set(58, 58, 1); moonCore.position.copy(moon.position);
+    world.add(moonCore); sky.night.push(moonCore);
+    // Charco de luz lunar: mancha fría y amplia sobre el asfalto, sigue al coche
+    const moonPoolMat = new THREE.MeshBasicMaterial({ map: tex3(makeGlowTex(168, 188, 238, 0.8)),
+      transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+    const moonPool = new THREE.Mesh(new THREE.PlaneGeometry(340, 340), moonPoolMat);
+    moonPool.rotation.x = -Math.PI / 2; moonPool.renderOrder = 2;
+    world.add(moonPool); world.userData.moonPool = moonPool;
     // Sol visible sobre el horizonte: disco cálido con halo amplio
     const sun = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex3(makeGlowTex(255, 190, 110, 1)), transparent: true, depthWrite: false, fog: false }));
     sun.scale.set(260, 260, 1); sun.position.set(760, 430, -1010);
@@ -5209,6 +5613,120 @@ function buildWorld() {
     mmScale = Math.min(1 / mmSpanX, 1 / mmSpanZ);
   }
   scene3.add(world);
+  optimizeWorld();
+}
+
+// ==== FUSIÓN DE MESHES ESTÁTICOS + SPRITES → PUNTOS ========================
+// El mundo acumula ~1000+ decoraciones (farolas, tejados, gradas, puntos de
+// luz…) que nunca cambian de transform: cada una era un draw call.
+//   · Meshes: se agrupan por material COMPARTIDO, se hornea su matrixWorld en
+//     la geometría y se concatenan en UN mesh por material → -700 draw calls.
+//     Los materiales se conservan tal cual: applyTOD y las farolas rotas
+//     siguen regulando/parpadeando igual (los clones rotos no comparten
+//     material y no se fusionan entre sí).
+//   · Sprites estáticos → THREE.Points: cada punto es un billboard con su
+//     color; un solo draw call por textura+brillo. Se excluyen los sprites
+//     cuyo material se anima por frame (halos de farola, cielo, heli).
+function optimizeWorld() {
+  if (!world) return;
+  world.updateMatrixWorld(true);
+  // Raíces cuyo transform (o el de sus hijos) se mueve por frame — no fusionar
+  const skip = new Set();
+  const addSkip = o => { if (o) skip.add(o); };
+  if (heliObj) { addSkip(heliObj.grp); addSkip(heliObj.beamTgt); addSkip(heliObj.beamCone); addSkip(heliObj.beamPool); }
+  addSkip(lakeSurf); addSkip(craneHook);
+  for (const f of marshalFlags) addSkip(f);
+  for (const g of gateMeshes) addSkip(g);
+  const sky = world.userData.sky;
+  if (sky) { for (const m of sky.night || []) addSkip(m); for (const m of sky.sun || []) addSkip(m); }
+  // Materiales animados por frame: no fusionar nada que los use
+  const animMat = new Set();
+  const lm = world.userData.lamps, pl = world.userData.pitLamps;
+  for (const g of (lm && lm.glows) || []) animMat.add(g);
+  for (const g of (pl && pl.glows) || []) animMat.add(g);
+  for (const b of (lm && lm.broken) || []) { animMat.add(b.gm); animMat.add(b.fm); animMat.add(b.pm); }
+
+  const wInv = new THREE.Matrix4().copy(world.matrixWorld).invert();
+  const rel = new THREE.Matrix4();
+  const byMat = new Map(), sprGroups = new Map();
+  (function walk(o) {
+    if (skip.has(o)) return;
+    if (o.isMesh && !o.isInstancedMesh && !o.isSkinnedMesh && o.geometry && o.material &&
+        !Array.isArray(o.material) && !animMat.has(o.material)) {
+      if (!byMat.has(o.material)) byMat.set(o.material, []);
+      byMat.get(o.material).push(o);
+    } else if (o.isSprite && o.material && o.material.map && !animMat.has(o.material)) {
+      const m = o.material;
+      if (Math.abs(m.rotation || 0) < 1e-4) {
+        const sig = [m.map.uuid, m.blending, m.fog, m.depthWrite, m.depthTest,
+                     (m.opacity || 1).toFixed(2), Math.max(o.scale.x, o.scale.y).toFixed(1)].join('|');
+        if (!sprGroups.has(sig)) sprGroups.set(sig, []);
+        sprGroups.get(sig).push(o);
+      }
+    }
+    for (const c of o.children) walk(c);
+  })(world);
+
+  // Meshes → un mesh por material compartido
+  for (const [mat, list] of byMat) {
+    if (list.length < 3) continue;                    // no compensa fusionar 1-2
+    const ref = list[0].geometry.attributes;
+    if (!ref.position) continue;
+    const names = Object.keys(ref).filter(n => ref[n].isBufferAttribute &&
+      list.every(m => { const a = m.geometry.attributes[n]; return a && a.isBufferAttribute && a.itemSize === ref[n].itemSize; }));
+    if (!names.length) continue;
+    const parts = [];
+    for (const m of list) {
+      const g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone();
+      rel.multiplyMatrices(wInv, m.matrixWorld);
+      g.applyMatrix4(rel);
+      parts.push(g);
+    }
+    const geo = new THREE.BufferGeometry();
+    for (const n of names) {
+      const is = ref[n].itemSize;
+      const arr = new Float32Array(parts.reduce((s, g) => s + g.attributes[n].count, 0) * is);
+      let off = 0;
+      for (const g of parts) { arr.set(g.attributes[n].array, off); off += g.attributes[n].array.length; }
+      geo.setAttribute(n, new THREE.BufferAttribute(arr, is));
+    }
+    const mm = new THREE.Mesh(geo, mat);
+    mm.matrixAutoUpdate = false;
+    mm.castShadow = list.some(m => m.castShadow);
+    mm.receiveShadow = list.some(m => m.receiveShadow);
+    mm.renderOrder = list[0].renderOrder;
+    mm.frustumCulled = false;
+    world.add(mm);
+    for (const m of list) m.parent.remove(m);
+  }
+
+  // Sprites estáticos → puntos billbordeados (un draw call por grupo)
+  const sv = new THREE.Vector3();
+  for (const list of sprGroups.values()) {
+    if (list.length < 4) continue;
+    const ref = list[0].material;
+    const n = list.length;
+    const pa = new Float32Array(n * 3), ca = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const s = list[i];
+      s.getWorldPosition(sv).applyMatrix4(wInv);
+      pa[i * 3] = sv.x; pa[i * 3 + 1] = sv.y; pa[i * 3 + 2] = sv.z;
+      ca[i * 3] = s.material.color.r; ca[i * 3 + 1] = s.material.color.g; ca[i * 3 + 2] = s.material.color.b;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pa, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(ca, 3));
+    const pts = new THREE.Points(geo, new THREE.PointsMaterial({
+      map: ref.map, size: Math.max(list[0].scale.x, list[0].scale.y), sizeAttenuation: true,
+      vertexColors: true, transparent: ref.transparent, opacity: ref.opacity,
+      blending: ref.blending, depthWrite: ref.depthWrite, depthTest: ref.depthTest,
+      fog: ref.fog, alphaTest: 0.01 }));
+    pts.matrixAutoUpdate = false;
+    pts.renderOrder = list[0].renderOrder;
+    pts.frustumCulled = false;
+    world.add(pts);
+    for (const s of list) s.parent.remove(s);
+  }
 }
 
 // Modo día (Gran Premio): luz de sol, cielo azul y menos peso de los faros
@@ -5277,23 +5795,32 @@ function applyTOD() {
   // Cielo: estrellas+luna solo de noche; el disco solar baja al atardecer
   const night = todMode === 2 || (todMode < 0 && !traced && !neon);
   const dusk = todMode === 1;
+  // Autoiluminación de coches: en la oscuridad llevan un brillo propio tenue
+  // (el coche negro no se funde con el asfalto nocturno)
+  carGlowK = night ? 0.20 : dusk ? 0.07 : 0;
+  applyCarGlowAll();
   const sky = world && world.userData.sky;
   if (sky) {
     for (const m of sky.night) m.visible = night;
     for (const m of sky.sun) { m.visible = !night; if (!night) m.position.y = dusk ? 200 : 430; }
   }
+  // Luz proyectada por la luna: charco frío sobre la pista solo de noche
+  moonPoolK = night ? 0.34 : dusk ? 0.10 : 0;
+  const mp = world && world.userData.moonPool;
+  if (mp) mp.material.opacity = moonPoolK;
   // Foto aérea y hierba base: se tintan para que el suelo acompañe a la hora
   if (world && world.userData.bgp) {
     world.userData.bgp.material.color.setHex(todMode === 2 ? 0x2e3c58 : todMode === 1 ? 0xffd0a0 : 0xffffff);
     world.userData.ter.material.color.setHex(todMode === 2 ? 0x101a12 : todMode === 1 ? 0x332c16 : 0x243d1c);
   }
-  // Farolas: luz blanca fuerte de noche, media a la tarde, casi apagadas de día
+  // Farolas: luz blanco-anaranjada fuerte de noche, media a la tarde, casi apagadas de día
   const lm = world && world.userData.lamps;
   if (lm) {
     const k = todMode === 2 ? 1 : todMode === 1 ? 0.6 : 0.12;
+    lm.k = k;                                            // las rotas lo usan de base al parpadear
     lm.poolMat.opacity = 0.55 * k;
     for (const g of lm.glows) g.opacity = 0.9 * k;
-    lm.faceMat.color.setHex(k > 0.7 ? 0xffffff : k > 0.3 ? 0xcfd8e8 : 0x9aa4b4);
+    lm.faceMat.color.setHex(k > 0.7 ? 0xffe6b8 : k > 0.3 ? 0xe8cf9e : 0xa8988a);
   }
   // Downlights de la marquesina de boxes: mismo escalado que las farolas
   const pl = world && world.userData.pitLamps;
@@ -5324,7 +5851,9 @@ function nearRoad(x, z, ex) {
 function buildCar(paintHex, withLight) {
   const grp = new THREE.Group();
   const wF = [], wR = [], tails = [];
-  const paint = new THREE.MeshStandardMaterial({ color: paintHex, roughness: 0.35, metalness: 0.5 });
+  // pintura metálica: mismo color, acabado de laca con capa transparente
+  const paint = new THREE.MeshPhysicalMaterial({ color: paintHex, roughness: 0.3, metalness: 0.62,
+    clearcoat: 1, clearcoatRoughness: 0.14 });
   const dark = new THREE.MeshStandardMaterial({ color: 0x181c24, roughness: 0.6, metalness: 0.3 });
   const red = new THREE.MeshStandardMaterial({ color: 0xd42020, roughness: 0.4, metalness: 0.4 });
   // Luna de la cabina: cristal tintado transparente con brillo especular
@@ -5382,16 +5911,16 @@ function buildCar(paintHex, withLight) {
     const lens = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.5), lensM);
     lens.position.set(s, 1.7, 4.32); grp.add(lens);
   }
-  const bLen = 85;
+  const bLen = 55;
   const mkBeam = () => {
-    const bg = new THREE.ConeGeometry(11, bLen, 18, 1, true);
+    const bg = new THREE.ConeGeometry(7.5, bLen, 18, 1, true);
     bg.translate(0, -bLen / 2, 0); bg.rotateX(-Math.PI / 2);
     return new THREE.Mesh(bg, beamMat(0xffe0a8, 0.16, bLen));
   };
   const bl = mkBeam(); bl.position.set(-1.5, 1.8, 4.4); bl.rotation.x = 0.05; grp.add(bl);
   const br = mkBeam(); br.position.set(1.5, 1.8, 4.4); br.rotation.x = 0.05; grp.add(br);
   if (withLight) {
-    const light = new THREE.SpotLight(0xffe0a8, 3.6, 240, 0.52, 0.55, 1.05);
+    const light = new THREE.SpotLight(0xffe0a8, 3.4, 95, 0.46, 0.6, 1.7);
     light.position.set(0, 2.2, 4); light.target.position.set(0, 0, 60);
     grp.add(light, light.target);
   }
@@ -5403,6 +5932,141 @@ function buildCar(paintHex, withLight) {
     grp.add(ts); tails.push(ts);
   }
   grp.userData = { wF, wR, tails };
+  return grp;
+}
+// F1 procedural de alta definición ("SCGP-X"): monocasco escalonado, alerón
+// delantero multiplano con placas y cascadas, morro con tubo pitot, cockpit
+// con casco + halo + retrovisores, toma de aire, aleta de tiburón, pontones
+// con entradas y ranuras, suelo con cercas, alerón trasero con DRS y pilones
+// de cuello de cisne, difusor con estrías, escapes, antenas, bargeboards,
+// suspensión de tirantes y ruedas que giran y direccionan de verdad.
+function buildF1Pro(tint) {
+  const grp = new THREE.Group();
+  const paint = new THREE.MeshPhysicalMaterial({ color: tint, roughness: 0.26, metalness: 0.6,
+    clearcoat: 1, clearcoatRoughness: 0.12 });
+  const carbon = new THREE.MeshStandardMaterial({ color: 0x15181e, roughness: 0.55, metalness: 0.5 });
+  const darkM = new THREE.MeshStandardMaterial({ color: 0x272c34, roughness: 0.4, metalness: 0.75 });
+  const tireM = new THREE.MeshStandardMaterial({ color: 0x0b0c0f, roughness: 0.92 });
+  const rimM = new THREE.MeshStandardMaterial({ color: 0xb4b9c2, roughness: 0.28, metalness: 0.9 });
+  const brkM = new THREE.MeshStandardMaterial({ color: 0x4c443a, roughness: 0.5, metalness: 0.55 });
+  const seatM = new THREE.MeshStandardMaterial({ color: 0x101318, roughness: 0.9 });
+  const helmM = new THREE.MeshStandardMaterial({ color: 0xf4f6fa, roughness: 0.32, metalness: 0.25 });
+  const redLM = new THREE.MeshBasicMaterial({ color: 0xff2020 });
+  const B = (geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) => {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, y, z); m.rotation.set(rx, ry, rz); grp.add(m); return m;
+  };
+  const rod = (x1, y1, z1, x2, y2, z2, r) => {                 // tirante entre dos puntos
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r,
+      Math.hypot(x2 - x1, y2 - y1, z2 - z1), 6), darkM);
+    m.position.set((x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0),
+      new THREE.Vector3(x2 - x1, y2 - y1, z2 - z1).normalize());
+    grp.add(m); return m;
+  };
+  // ---- Alerón delantero: plano + 2 flaps + placas laterales + cascadas ----
+  B(new THREE.BoxGeometry(4.35, 0.06, 0.55), carbon, 0, 0.30, 5.05);
+  B(new THREE.BoxGeometry(4.15, 0.05, 0.30), carbon, 0, 0.41, 5.30, -0.16);
+  B(new THREE.BoxGeometry(3.9, 0.05, 0.26), carbon, 0, 0.53, 5.52, -0.27);
+  for (const s of [-1, 1]) {
+    B(new THREE.BoxGeometry(0.05, 0.6, 0.95), carbon, s * 2.17, 0.52, 5.2, 0, s * 0.05);
+    B(new THREE.BoxGeometry(0.5, 0.04, 0.22), paint, s * 1.3, 0.66, 5.0, -0.35);   // cascada
+    B(new THREE.BoxGeometry(0.4, 0.24, 0.35), carbon, s * 1.55, 0.78, 4.1);        // conducto de freno
+    B(new THREE.BoxGeometry(0.05, 0.5, 0.85), carbon, s * 0.9, 0.62, 2.55, 0, s * 0.5); // bargeboard
+  }
+  // ---- Morro: punta afilada + cuerpo + tubo pitot ----
+  B(new THREE.BoxGeometry(0.3, 0.2, 1.5), paint, 0, 0.62, 4.55);
+  B(new THREE.BoxGeometry(0.55, 0.38, 1.9), paint, 0, 0.78, 3.5);
+  B(new THREE.CylinderGeometry(0.025, 0.025, 0.5, 5), darkM, 0, 0.97, 4.85, Math.PI / 2 - 0.1);
+  // ---- Monocasco + cockpit hundido ----
+  B(new THREE.BoxGeometry(1.35, 0.8, 3.0), paint, 0, 0.95, 1.35);
+  B(new THREE.BoxGeometry(1.05, 0.5, 2.3), paint, 0, 1.35, 1.0);
+  B(new THREE.BoxGeometry(0.92, 0.16, 1.5), seatM, 0, 1.47, 1.15);              // boca del cockpit
+  // Piloto: casco + visera + apoyacabezas laterales
+  B(new THREE.SphereGeometry(0.42, 14, 11), helmM, 0, 1.68, 1.05);
+  B(new THREE.BoxGeometry(0.55, 0.16, 0.12), seatM, 0, 1.75, 1.42);
+  B(new THREE.BoxGeometry(0.14, 0.3, 0.4), seatM, -0.45, 1.6, 1.0);
+  B(new THREE.BoxGeometry(0.14, 0.3, 0.4), seatM, 0.45, 1.6, 1.0);
+  // Halo: anillo + pilar frontal
+  B(new THREE.TorusGeometry(0.66, 0.09, 10, 24), darkM, 0, 1.8, 1.12, Math.PI / 2);
+  rod(0, 1.42, 1.78, 0, 1.8, 1.75, 0.07);
+  // Retrovisores en sus brazos + antenas
+  for (const s of [-1, 1]) {
+    rod(s * 0.6, 1.42, 1.7, s * 0.95, 1.55, 1.72, 0.03);
+    B(new THREE.BoxGeometry(0.36, 0.14, 0.09), paint, s * 0.98, 1.58, 1.72);
+    B(new THREE.CylinderGeometry(0.02, 0.03, 0.55, 5), darkM, s * 0.28, 1.9, 0.9);
+  }
+  // ---- Toma de aire + cubierta motor + aleta de tiburón + cámara T ----
+  B(new THREE.BoxGeometry(0.6, 0.55, 0.75), paint, 0, 1.85, 0.1);
+  B(new THREE.BoxGeometry(0.42, 0.16, 0.45), seatM, 0, 2.02, 0.28);             // admisión
+  B(new THREE.BoxGeometry(0.95, 0.7, 2.5), paint, 0, 1.3, -1.5);
+  B(new THREE.BoxGeometry(0.07, 0.85, 2.3), paint, 0, 1.82, -2.1);              // shark fin
+  B(new THREE.BoxGeometry(0.5, 0.14, 0.26), seatM, 0, 2.2, 0.15);               // T-cam
+  B(new THREE.BoxGeometry(0.5, 0.05, 0.27), redLM, 0, 2.26, 0.15);
+  // ---- Pontones con entradas de radiador y ranuras de refrigeración ----
+  for (const s of [-1, 1]) {
+    B(new THREE.BoxGeometry(1.1, 0.68, 2.4), paint, s * 0.9, 0.72, -0.7);
+    B(new THREE.BoxGeometry(0.5, 0.32, 0.55), seatM, s * 0.9, 0.95, 0.5);       // boca radiador
+    for (let i = 0; i < 3; i++)
+      B(new THREE.BoxGeometry(0.03, 0.05, 0.5), carbon, s * 1.43, 0.72 + i * 0.15, -1.0, 0, s * 0.12);
+    B(new THREE.BoxGeometry(0.04, 0.28, 0.9), carbon, s * 1.18, 0.45, -1.6, 0, s * 0.12); // cerca del suelo
+  }
+  // ---- Suelo ----
+  B(new THREE.BoxGeometry(2.4, 0.1, 5.2), carbon, 0, 0.3, -1.5);
+  // ---- Alerón trasero: placas + plano + flap + pilones cisne + DRS ----
+  for (const s of [-1, 1]) {
+    B(new THREE.BoxGeometry(0.06, 1.05, 1.15), carbon, s * 1.95, 1.95, -4.55);
+    B(new THREE.BoxGeometry(0.12, 0.85, 0.4), darkM, s * 0.35, 1.4, -4.4, 0.5); // pilón
+  }
+  B(new THREE.BoxGeometry(3.9, 0.07, 0.72), carbon, 0, 1.8, -4.5, -0.1);
+  B(new THREE.BoxGeometry(3.9, 0.05, 0.42), carbon, 0, 2.36, -4.72, -0.24);     // flap DRS
+  B(new THREE.CylinderGeometry(0.09, 0.09, 0.5, 8), darkM, 0, 2.05, -4.58, 0, 0, Math.PI / 2);
+  B(new THREE.BoxGeometry(3.3, 0.05, 0.35), carbon, 0, 1.2, -4.5, -0.18);       // beam wing
+  // ---- Difusor con estrías + escapes + luz de lluvia ----
+  B(new THREE.BoxGeometry(2.7, 0.08, 1.25), carbon, 0, 0.45, -4.6, -0.48);
+  for (const dx of [-1.05, -0.35, 0.35, 1.05])
+    B(new THREE.BoxGeometry(0.05, 0.34, 0.95), carbon, dx, 0.55, -4.55, -0.48);
+  for (const s of [-1, 1])
+    B(new THREE.CylinderGeometry(0.09, 0.12, 0.45, 8), darkM, s * 0.18, 0.9, -4.8, Math.PI / 2);
+  B(new THREE.BoxGeometry(0.45, 0.6, 0.06), redLM, 0, 1.6, -4.92);              // rain light
+  // ---- Ruedas: giran (spin = children[0]) y direccionan (grupo) ----
+  const wF = [], wR = [];
+  const wheel = (x, z, r, wdt, front) => {
+    const g = new THREE.Group(); g.position.set(x, r, z);
+    const spin = new THREE.Group();
+    const tire = new THREE.Mesh(new THREE.CylinderGeometry(r, r, wdt, 20), tireM);
+    tire.rotation.z = Math.PI / 2; spin.add(tire);
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.62, r * 0.62, wdt + 0.04, 12), rimM);
+    rim.rotation.z = Math.PI / 2; spin.add(rim);
+    const brk = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.38, r * 0.38, wdt + 0.06, 12), brkM);
+    brk.rotation.z = Math.PI / 2; spin.add(brk);
+    const cov = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.3, r * 0.3, wdt + 0.08, 10), paint);
+    cov.rotation.z = Math.PI / 2; spin.add(cov);              // cubre-rueda del color
+    g.add(spin); grp.add(g);
+    const s = Math.sign(x);                                   // tirantes doble horquilla
+    rod(s * 0.72, 0.95, z + 0.35, x - s * 0.28, r + 0.15, z + 0.05, 0.035);
+    rod(s * 0.72, 0.95, z - 0.35, x - s * 0.28, r + 0.15, z - 0.05, 0.035);
+    rod(s * 0.72, 0.55, z + 0.35, x - s * 0.28, r - 0.15, z + 0.05, 0.035);
+    rod(s * 0.72, 0.55, z - 0.35, x - s * 0.28, r - 0.15, z - 0.05, 0.035);
+    (front ? wF : wR).push(g); return g;
+  };
+  wheel(-1.9, 3.3, 0.7, 0.78, true); wheel(1.9, 3.3, 0.7, 0.78, true);
+  wheel(-2.0, -3.3, 0.76, 0.88, false); wheel(2.0, -3.3, 0.76, 0.88, false);
+  // ---- Dorsal 7: disco blanco sobre la aleta y el morro ----
+  const ncv = document.createElement('canvas'); ncv.width = ncv.height = 64;
+  {
+    const nc = ncv.getContext('2d');
+    nc.fillStyle = '#f4f6fa'; nc.beginPath(); nc.arc(32, 32, 29, 0, 7); nc.fill();
+    nc.fillStyle = '#14171c'; nc.font = 'bold 34px Arial';
+    nc.textAlign = 'center'; nc.textBaseline = 'middle'; nc.fillText('7', 32, 34);
+  }
+  const numM = new THREE.MeshBasicMaterial({ map: tex3(ncv), transparent: true });
+  const nf = new THREE.Mesh(new THREE.PlaneGeometry(0.66, 0.66), numM);
+  nf.position.set(0.06, 1.85, -2.1); nf.rotation.y = Math.PI / 2; grp.add(nf);
+  const nf2 = nf.clone(); nf2.position.x = -0.06; nf2.rotation.y = -Math.PI / 2; grp.add(nf2);
+  const nn = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.55), numM);
+  nn.rotation.x = -Math.PI / 2; nn.position.set(0, 1.0, 3.45); grp.add(nn);
+  grp.userData = { wF, wR, tails: [] };
   return grp;
 }
 // Modelos de F1: misma silueta, livery = tinte multiplicativo del sprite
@@ -5417,6 +6081,8 @@ const CARS = [
   { name: 'R26',      tint: 0x2a5fd0, img: 'f1_r26.png', shx: 64,
     sh: [[48, 29], [80, 29], [48, 93], [80, 93]],
     st: { top: 1.04, acc: 1.06, grip: 1.04, res: 0.97 } },
+  { name: 'SCGP-X',   tint: 0x8ea4c4, pro: true,
+    st: { top: 1.05, acc: 1.05, grip: 1.03, res: 1.00 } },
 ];
 // Stats del coche elegido (velocidad punta / aceleración / agarre / resistencia)
 const carSt = () => CARS[Math.min(OPTS.car || 0, CARS.length - 1)].st;
@@ -5598,12 +6264,27 @@ function buildF1(tint) {
   // Chasis real r26.glb para TODOS los coches en pista (misma vista 3D que el
   // visor): llega asíncrono — mientras carga se ve el sprite plano. Cada coche
   // va repintado con su color; el R26 conserva su librea. El coche fantasma
-  // (contrarreloj) se queda como sprite translúcido.
-  if (tint !== 0x9ff2ff) c3dR26().then(src => {
+  // (contrarreloj) monta el mismo chasis con materiales translúcidos espectrales.
+  // El SCGP-X en cambio monta el F1 procedural de alta definición al instante.
+  const proDef = CARS.find(c => c.tint === tint && c.pro);
+  let proW = null;
+  if (proDef) {
+    const pm = buildF1Pro(tint);
+    const w = c3dNorm(pm, 10.2);
+    grp.add(w); spr.visible = false; grp.userData.r26 = w;
+    proW = pm.userData;                             // ruedas reales (giro+dirección)
+    carSelfGlow(grp);
+  }
+  if (!proDef) c3dR26().then(src => {
     if (!grp.parent) return;
     const m = tint === 0x2a5fd0 ? src.clone(true) : c3dTintR26(src, tint);
     const w = c3dNorm(m, 10.2);                     // misma huella que el sprite
+    if (tint === 0x9ff2ff) w.traverse(o => {        // fantasma: espectral, sin oclusión dura
+      if (o.material) { o.material = o.material.clone(); o.material.transparent = true;
+        o.material.opacity = 0.58; o.material.depthWrite = false; }
+    });
     grp.add(w); spr.visible = false; grp.userData.r26 = w;
+    carSelfGlow(grp);                               // el GLB llega async: aplica la autoluminación actual
     // Pegatinas: cada plano se pega a la superficie real del GLB con un raycast
     // en la dirección de su cara (arriba / laterales / trasera)
     if (grp.userData.decals && grp.userData.decals.length)
@@ -5617,9 +6298,9 @@ function buildF1(tint) {
     lens.userData.isHeadlight = true; lens.visible = !dayMode;
     grp.add(lens);
   }
-  const bLen = 85;
+  const bLen = 55;
   const mkBeam = () => {
-    const bg = new THREE.ConeGeometry(11, bLen, 18, 1, true);
+    const bg = new THREE.ConeGeometry(7.5, bLen, 18, 1, true);
     bg.translate(0, -bLen / 2, 0); bg.rotateX(-Math.PI / 2);
     const m = new THREE.Mesh(bg, beamMat(0xffe0a8, 0.16, bLen));
     m.userData.isHeadlight = true; m.visible = !dayMode;
@@ -5657,7 +6338,15 @@ function buildF1(tint) {
     map: tex3(makeGlowTex(255, 30, 20, 0.95)), transparent: true, depthWrite: false }));
   rainGlow.scale.set(2.3, 2.3, 1); rainGlow.position.set(0, 2.3, -4.6);
   grp.add(rainGlow);
-  grp.userData = { wF: [], wR: [], tails, flames, rain: { bar: rainBar, glow: rainGlow }, decals: decMeshes };
+  // Discos de freno: resplandor naranja dentro de cada llanta que se enciende al frenar
+  const brakes = [], brakeTex = tex3(makeGlowTex(255, 110, 20, 0.95));
+  for (const [bx, bz] of [[-2.3, 3.3], [2.3, 3.3], [-2.3, -3.4], [2.3, -3.4]]) {
+    const bs = new THREE.Sprite(new THREE.SpriteMaterial({ map: brakeTex, transparent: true, depthWrite: false, opacity: 0 }));
+    bs.scale.set(1.5, 1.5, 1); bs.position.set(bx, 0.9, bz);
+    grp.add(bs); brakes.push(bs);
+  }
+  grp.userData = { wF: (proW && proW.wF) || [], wR: (proW && proW.wR) || [], r26: grp.userData.r26,
+    tails, flames, rain: { bar: rainBar, glow: rainGlow }, decals: decMeshes, brakes };
   grp.scale.setScalar(0.36);                        // ~3.7u ancho sobre ~8u de asfalto
   return grp;
 }
@@ -5687,11 +6376,26 @@ function rainTick(grp) {
 function spawnCar() {
   if (carGrp) scene3.remove(carGrp);
   carGrp = buildF1(CARS[Math.min(OPTS.car || 0, CARS.length - 1)].tint);
-  wheelF = []; wheelR = []; tailSpr = carGrp.userData.tails;
-  const light = new THREE.SpotLight(0xffe0a8, 3.6, 240, 0.52, 0.55, 1.05);
+  wheelF = carGrp.userData.wF || []; wheelR = carGrp.userData.wR || [];   // el SCGP-X expone sus ruedas
+  tailSpr = carGrp.userData.tails;
+  const light = new THREE.SpotLight(0xffe0a8, 3.4, 95, 0.46, 0.6, 1.7);
   light.position.set(0, 2.2, 4); light.target.position.set(0, 0, 60);
   carGrp.add(light, light.target);
   carGrp.userData.spot = light;
+  // Cúpula de autoluminación: punto de luz tenue encima del coche que solo se
+  // enciende de noche — modela la carrocería sin cambiar la escena
+  const dome = new THREE.PointLight(0x9fb6dd, 0, 19, 1.6);
+  dome.position.set(0, 6.5, 0);
+  carGrp.add(dome); carGrp.userData.dome = dome;
+  // Halo frío bajo el coche: charco de luz lunar que enmarca la silueta y la
+  // separa del asfalto negro — solo se ve en la oscuridad
+  const ug = new THREE.Mesh(new THREE.PlaneGeometry(13, 20),
+    new THREE.MeshBasicMaterial({ map: tex3(makeGlowTex(190, 210, 255, 0.9)),
+      color: 0xbdd2f5, transparent: true, opacity: 0, depthWrite: false,
+      blending: THREE.AdditiveBlending, fog: false }));
+  ug.rotation.x = -Math.PI / 2; ug.position.y = 0.12;
+  carGrp.add(ug); carGrp.userData.uglow = ug;
+  carSelfGlow(carGrp);
   scene3.add(carGrp);
 }
 
@@ -5701,7 +6405,7 @@ let LOW_POWER = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMe
 function init3() {
   if (renderer3 || typeof THREE === 'undefined') return;
   renderer3 = new THREE.WebGLRenderer({ canvas: cv, antialias: !LOW_POWER, powerPreference: 'high-performance' });
-  renderer3.setPixelRatio(LOW_POWER ? Math.min(DPR, 1.5) : DPR); renderer3.setSize(W, H, false);
+  renderer3.setPixelRatio(LOW_POWER ? Math.min(DPR, 1.5) : Math.min(DPR, 2)); renderer3.setSize(W, H, false);
   renderer3.shadowMap.enabled = !!OPTS.shadow && !LOW_POWER;
   renderer3.shadowMap.type = THREE.PCFSoftShadowMap;
   scene3 = new THREE.Scene();
@@ -5798,6 +6502,56 @@ function init3() {
     s.visible = false; s.userData = { life: 0, vx: 0, vz: 0 };
     scene3.add(s); dustPool.push(s);
   }
+  // Charcos de lluvia: manchas oscuras y brillantes que crecen bajo la lluvia
+  // y se secan solas con el tiempo; al pisarlas el coche acuaplana un poco
+  const pudTex = tex3((() => {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const x = c.getContext('2d');
+    // mancha irregular: varias elipses oscuras solapadas
+    for (let i = 0; i < 7; i++) {
+      const px = 64 + (Math.random() - 0.5) * 60, py = 64 + (Math.random() - 0.5) * 50;
+      const rx = 18 + Math.random() * 30, ry = rx * (0.5 + Math.random() * 0.4);
+      const g = x.createRadialGradient(px, py, 0, px, py, rx);
+      g.addColorStop(0, 'rgba(14,22,34,0.55)');
+      g.addColorStop(0.6, 'rgba(16,26,40,0.4)');
+      g.addColorStop(1, 'rgba(16,26,40,0)');
+      x.save(); x.translate(px, py); x.scale(1, ry / rx); x.translate(-px, -py);
+      x.fillStyle = g; x.beginPath(); x.arc(px, py, rx, 0, 7); x.fill(); x.restore();
+    }
+    // brillo especular: el agua refleja el cielo en su parte alta
+    const g2 = x.createLinearGradient(24, 24, 104, 104);
+    g2.addColorStop(0, 'rgba(200,220,245,0.35)');
+    g2.addColorStop(0.45, 'rgba(200,220,245,0.06)');
+    g2.addColorStop(1, 'rgba(200,220,245,0)');
+    x.fillStyle = g2;
+    x.beginPath(); x.ellipse(56, 50, 34, 22, -0.5, 0, 7); x.fill();
+    return c;
+  })());
+  const pudGeo = new THREE.PlaneGeometry(1, 1); pudGeo.rotateX(-Math.PI / 2);
+  puddlePool = [];
+  for (let i = 0; i < (LOW_POWER ? 18 : 40); i++) {
+    const m = new THREE.Mesh(pudGeo, new THREE.MeshBasicMaterial({ map: pudTex, transparent: true, depthWrite: false, opacity: 0 }));
+    m.visible = false; m.renderOrder = 2;
+    m.userData = { wet: 0, maxWet: 1, r: 1 };
+    scene3.add(m); puddlePool.push(m);
+  }
+  // Ondas de la lluvia: anillos diminutos que se expanden donde cae cada gota
+  const ripTex = tex3((() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const x = c.getContext('2d');
+    x.strokeStyle = 'rgba(200,225,255,0.8)'; x.lineWidth = 3;
+    x.beginPath(); x.arc(32, 32, 24, 0, 7); x.stroke();
+    x.strokeStyle = 'rgba(200,225,255,0.4)'; x.lineWidth = 2;
+    x.beginPath(); x.arc(32, 32, 16, 0, 7); x.stroke();
+    return c;
+  })());
+  const ripGeo = new THREE.PlaneGeometry(1, 1); ripGeo.rotateX(-Math.PI / 2);
+  ripplePool = [];
+  for (let i = 0; i < (LOW_POWER ? 24 : 60); i++) {
+    const m = new THREE.Mesh(ripGeo, new THREE.MeshBasicMaterial({ map: ripTex, transparent: true, depthWrite: false, opacity: 0 }));
+    m.visible = false; m.renderOrder = 2; m.userData.life = 0;
+    scene3.add(m); ripplePool.push(m);
+  }
   spawnCar();
 }
 
@@ -5860,7 +6614,7 @@ function bindBtn(id, on, off) {
 })();
 let pitReq = false;                                   // botón PIT mantenido
 let boxexReq = false, boxexPt = null;                 // BOXEX: autopiloto al box del color del coche
-let pitAuto = 0, pitWp = 0;                           // estado del autopiloto por el pit lane
+let pitAuto = 0, pitWp = 0, pitStuck = 0;             // estado del autopiloto por el pit lane
 let lightsOn = null;                                  // faros: null = automático (noche on / día off)
 function applyLights() {
   const on = lightsOn === null ? !dayMode : lightsOn;
@@ -5952,11 +6706,12 @@ function skidMark(x, z, a, k = 1) {
 
 /* ================== LÓGICA ================== */
 let skidT = 0, skidD = 0, dustT = 0, cutMax = null, slowT = 0;
+let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, ondas y derrape por agua
 // Refs DOM cacheadas: getElementById por frame obliga al navegador a buscar en el árbol
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 445;
+const BUILD_NO = 497;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -5965,20 +6720,60 @@ let lastKmh = -1, lastGear = -1, lastTenth = -1;    // el HUD solo escribe al ca
 // Persecución pura: apunta a un punto de la pista por delante y regula el gas según la curva que viene
 function aiDrive(x, z, vx, vz, a, pi) {
   const spd = Math.hypot(vx, vz);
-  const tp = path[(pi + 6 + Math.floor(spd * 0.42)) % pathLen];
-  let da = Math.atan2(tp.z - z, tp.x - x) - a;
-  while (da > Math.PI) da -= 2 * Math.PI;
-  while (da < -Math.PI) da += 2 * Math.PI;
   const p0 = path[pi];
-  let worst = 0;
+  // Curva más cerrada próxima: magnitud, signo (interior) y distancia a su vértice
+  let worst = 0, wSign = 1, wAt = 0;
   const lim = 8 + Math.floor(spd * 0.35);
   for (let k = 4; k <= lim; k += 4) {
     const pa = path[(pi + k) % pathLen];
-    const cr = Math.abs(p0.tx * pa.tz - p0.tz * pa.tx);
-    if (cr > worst) worst = cr;
+    const crs = p0.tx * pa.tz - p0.tz * pa.tx;
+    if (Math.abs(crs) > worst) { worst = Math.abs(crs); wSign = Math.sign(crs) || 1; wAt = k; }
   }
-  const vMax = Math.max(16, 105 - worst * 140);         // velocidad que aguanta la curva (IA más rápida)
-  return { steer: clamp(da * 2.4, -1, 1), gas: spd < vMax ? 1 : 0, brake: spd > vMax + 6 ? 1 : 0, hb: 0 };
+  // Trazada perfecta (out-in-out): el punto de mira se desplaza al exterior
+  // ANTES del vértice, al interior EN el vértice y vuelve al exterior a la
+  // salida. La fase se mide respecto al punto de mira, no al coche.
+  const la = 6 + Math.floor(spd * 0.42);
+  const hwL = trackHW ? Math.max(2.6, (trackHW[(pi + la) % pathLen] || RW / 2) - 3.4) : RW / 2 - 1.6;
+  let line = 0;
+  if (worst > 0.02) {
+    const apexK = Math.min(1, worst * 8);
+    const rel = wAt - la;                                  // vértice respecto al punto de mira
+    if (rel > 8) line = -wSign * hwL * 0.55 * apexK;       // entrada: abre al exterior
+    else if (rel >= -4) line = wSign * hwL * 0.62 * apexK; // vértice: por dentro
+    else line = -wSign * hwL * 0.5 * apexK;                // salida: suelta al exterior
+  }
+  // Tráfico: si un rival va delante se abre por el lado libre; si tapona
+  // y es más lento, no lo empotra. En recta larga pegado a otro, hay rebufo.
+  let avoid = 0, blkV = 0, slip = false;
+  for (const o of cpus) {
+    if (!o || o.elim) continue;
+    const dx = o.x - x, dz = o.z - z;
+    const fwd = dx * p0.tx + dz * p0.tz, side = -dx * p0.tz + dz * p0.tx;
+    if (fwd > 1 && fwd < 26 && Math.abs(side) < 3.8) {
+      const w = (3.8 - Math.abs(side)) * (fwd < 10 ? 1.5 : 1);
+      const dir = side >= 0 ? -1 : 1;
+      if (Math.abs(avoid) < w) avoid = dir * Math.min(w, hwL * 0.9);
+      if (fwd < 10 && o.v < spd) blkV = o.v;
+      if (fwd > 5 && fwd < 20 && Math.abs(side) < 2.2 && worst < 0.05) slip = true;
+    }
+  }
+  const lat = clamp(line + avoid, -hwL, hwL);
+  const tp = path[(pi + la) % pathLen];
+  const gx = tp.x + (-tp.tz) * lat, gz = tp.z + tp.tx * lat;
+  let da = Math.atan2(gz - z, gx - x) - a;
+  while (da > Math.PI) da -= 2 * Math.PI;
+  while (da < -Math.PI) da += 2 * Math.PI;
+  // Velocidad objetivo: curva próxima + rebufo + coche tapón delante.
+  // En DEMO el líder de la IA va un pelín más suave — la parrilla no se rompe
+  // y los CPU siempre tienen P1 a tiro para pelearla.
+  let vMax = Math.max(16, 105 - worst * 140) * (demoMode ? 0.94 : 1);
+  if (slip) vMax += 6;
+  if (blkV) vMax = Math.min(vMax, Math.max(14, blkV + 4));
+  // Freno progresivo: coast antes de clavar frenos — entra fino, no de golpe
+  let gas = 1, brake = 0;
+  if (spd > vMax + 7) { gas = 0; brake = 1; }
+  else if (spd > vMax + 2) gas = 0;
+  return { steer: clamp(da * 2.4, -1, 1), gas: gas, brake: brake, hb: 0 };
 }
 
 // El rival CPU avanza sobre la spline con perfil de velocidad (no es kinematic jugable, es "slot car")
@@ -6003,28 +6798,43 @@ function cpuDrive(c, dt) {
   const i0 = ((Math.floor(c.s) % pathLen) + pathLen) % pathLen;
   const p0 = path[i0];
   // velocidad objetivo: curva más cerrada próxima, penalizada por daño
-  let worst = 0, wSign = 1;
+  let worst = 0, wSign = 1, wAt = 0;
   const look = 8 + Math.floor(c.v * 0.35);
   for (let k = 4; k <= look; k += 4) {
     const pa = path[(i0 + k) % pathLen];
     const crs = p0.tx * pa.tz - p0.tz * pa.tx;
     const cr = Math.abs(crs);
-    if (cr > worst) { worst = cr; wSign = Math.sign(crs) || 1; }
+    if (cr > worst) { worst = cr; wSign = Math.sign(crs) || 1; wAt = k; }
   }
   // Errores de pilotaje: pérdida de ritmo puntual + bloqueos de frenada + salidas
   // largas de curva. El CPU bueno (k alto) se equivoca menos, pero nadie es infalible.
   if (c.errT === undefined) { c.errT = 0; c.wideT = 0; c.lockT = 0; c.lungeT = 0; }
-  if (c.errT <= 0 && Math.random() < dt * 0.09 / c.k) c.errT = rnd(0.35, 1.0);
+  const errK = demoMode ? 0.55 : 1;               // en demo fallan menos: exhibición limpia
+  if (c.errT <= 0 && Math.random() < dt * 0.09 / c.k * errK) c.errT = rnd(0.35, 1.0);
   else c.errT -= dt;
-  if (c.wideT <= 0 && c.errT <= 0 && Math.random() < dt * 0.05 / c.k) c.wideT = rnd(0.5, 1.1);
+  if (c.wideT <= 0 && c.errT <= 0 && Math.random() < dt * 0.05 / c.k * errK) c.wideT = rnd(0.5, 1.1);
   else c.wideT -= dt;
   // Bloqueo de frenada: llega pasado a la curva, se va largo y pierde velocidad al salir
-  if (c.lockT <= 0 && worst > 0.10 && c.v > 52 && Math.random() < dt * 0.05 / c.k) c.lockT = rnd(0.35, 0.8);
+  if (c.lockT <= 0 && worst > 0.10 && c.v > 52 && Math.random() < dt * 0.05 / c.k * errK) c.lockT = rnd(0.35, 0.8);
   else if (c.lockT > 0) { c.lockT -= dt; if (c.lockT <= 0) c.v *= 0.84; }
-  // Ataque: si el jugador va justo por delante, apura frenada y empuja más;
-  // los pilotos más listos atacan más fuerte (hasta 1.10 en etapas altas)
+  // Ventana de ataque aleatoria: cada 10–24 s un CPU aprieta 2.5–5.5 s
+  // para intentar pasar al de delante — adelantamientos de forma aleatoria
+  if (c.atkT === undefined) { c.atkT = 0; c.atkCd = rnd(4, 14); c.atkTost = true; }
+  c.atkCd -= dt;
+  if (c.atkT > 0) c.atkT -= dt;
+  else if (c.atkCd <= 0) { c.atkT = rnd(2.5, 5.5); c.atkCd = rnd(10, 24); c.atkTost = false; }
+  // Ataque al jugador: SIEMPRE intentan quitarle la P1 — mientras vaya por
+  // delante (a cualquier distancia) apuran frenada y empujan para darle caza.
+  // Solo dejan de empujar si ellos ya le sacan mucho (ya van líderes).
   const gap = (lapsDone * pathLen + pathIdx) - c.s;
-  const atk = (gap > -35 && gap < 45) ? 1.02 + 0.08 * clamp((c.k - 0.85) / 0.45, 0, 1) : 1;
+  // Extra por remontada: cuanto más se les escapa el líder, más fuerte aprietan
+  // (hasta +25%) — siempre vuelven a por la P1 y la batalla nunca muere
+  const hunt = 1.02 + 0.08 * clamp((c.k - 0.85) / 0.45, 0, 1) + clamp(gap, 0, 300) / 300 * 0.5
+    + (demoMode && gap > 0 ? 0.12 : 0);          // demo: presión fija de caza al líder
+  let atk = (gap > -90) ? hunt : 1;
+  if (c.atkT > 0) atk = Math.max(atk, 1.04 + 0.06 * clamp((c.k - 0.85) / 0.45, 0, 1));
+  // Resistencia por nivel: a más etapa, más difícil adelantarlos
+  const defK = clamp((stage - 1) * 0.035 / 0.28, 0, 1);   // 0 en etapa 1 → 1 en el tope
   const errMul = (c.errT > 0 ? 0.7 : 1) * (c.lockT > 0 ? 1.16 : 1);   // al bloquear entra pasado
   // En curvas los mejores pilotos frenan más tarde: el castigo por curvatura
   // baja con la habilidad (k 1.0 → ×1.0 · k 1.3 → ×0.9)
@@ -6037,28 +6847,50 @@ function cpuDrive(c, dt) {
   for (const o of cpus) if (o && o !== c && !o.elim) others.push(o);
   if (remote && remote.grp) others.push(remote);
   if (ghostCar && ghostCar.visible) others.push(ghostProxy());
-  let avd = 0;
+  let avd = 0, slip = false;
   for (const o of others) {
     if (!o) continue;
     const dx = o.x - c.x, dz = o.z - c.z;
     const fwd = dx * p0.tx + dz * p0.tz, side = -dx * p0.tz + dz * p0.tx;
+    // Rebufo: en recta, pegado a estela de otro coche → sale con más velocidad
+    if (demoMode && worst < 0.05 && fwd > 4 && fwd < 20 && Math.abs(side) < 2.6) slip = true;
+    // Cedido: un rival atacando pegado por detrás → el de delante levanta un
+    // pelín y la pasada se completa (el azar del atacante decide cuándo pasa)
+    if (fwd < -1 && fwd > -9 && Math.abs(side) < 4 && (o.atkT || 0) > 0) vMax *= 0.975;
     if (fwd > 2 && fwd < 17 && Math.abs(side) < 3.4) {
-      const w = clamp((3.4 - Math.abs(side)) * (fwd < 8 ? 1.5 : 1), 0, 6);
+      // Contra el JUGADOR siempre atacan (quieren la P1) — apertura fuerte
+      const hunting = c.atkT > 0 || o === car;
+      const w = clamp((3.4 - Math.abs(side)) * (fwd < 8 ? 1.5 : 1), 0, 6) * (hunting ? 1.5 : 1);
       const dir = side >= 0 ? -1 : 1;                    // abre por el lado opuesto
       if (Math.abs(avd) < w) avd = dir * w;
       const ov = o === car ? Math.hypot(car.vx, car.vz) : (o.v !== undefined ? o.v : (o.spd || 12));
-      if (fwd < 8 && ov < c.v) vMax = Math.min(vMax, Math.max(12, ov * 1.02));
-      // DIVEBOMB: hueco + curva cerca → el CPU lanza el ataque por dentro y entra pasado
-      if (fwd > 3 && fwd < 13 && worst > 0.10 && c.k > 0.92 && c.lungeT <= 0 && Math.random() < dt * 0.55) {
+      // Atacando (o contra el jugador) levanta el bloqueo: puede pasar de verdad
+      if (fwd < 8 && ov < c.v) vMax = Math.min(vMax, Math.max(12, ov * (o === car ? 1.22 : (hunting ? 1.14 : 1.02))));
+      // Toast del ataque: una sola vez por ventana, cuando hay blanco delante
+      if (!c.atkTost && fwd > 2 && fwd < 15) {
+        c.atkTost = true;
+        showToast('⚔️ ' + (c.nm || 'CPU') + ' ' + T('attacks') + ' ' + (o === car ? 'TÚ' : (o.nm || 'CPU')));
+      }
+      // DIVEBOMB: hueco + curva cerca → el CPU lanza el ataque por dentro y entra
+      // pasado. Contra el jugador se lanza con curva más abierta y más a menudo.
+      if (fwd > 3 && fwd < 13 && worst > (o === car ? 0.06 : 0.10) && c.k > 0.92 &&
+          c.lungeT <= 0 && Math.random() < dt * (o === car ? 0.75 : 0.55)) {
         c.lungeT = rnd(0.35, 0.7); showToast('⚔️ ' + (c.nm || 'CPU') + ' ' + T('divebomb'));
       }
     }
   }
+  if (slip) vMax *= 1.06;                                  // rebufo: empujón de estela en recta
+  // Empuje defensivo escalado: a más nivel, si el jugador les pisa los talones
+  // aprietan el ritmo para no soltar la posición (hasta +10%)
+  if (gap < -1 && gap > -40) vMax *= 1 + defK * 0.10;
   // Defensa de posición: con el jugador pegado por detrás llegando a una curva,
-  // el CPU toma la trazada defensiva por dentro — tapar el hueco del divebomb
-  if (c.lungeT <= 0 && c.wideT <= 0 && gap > -30 && gap < -1 && worst > 0.06 &&
+  // el CPU toma la trazada defensiva por dentro — tapar el hueco del divebomb.
+  // A más nivel: empiezan a defender desde más lejos, en curvas más suaves
+  // y cierran la puerta con más fuerza.
+  if (c.lungeT <= 0 && c.wideT <= 0 && gap > -(30 + defK * 20) && gap < -1 &&
+      worst > (0.06 - defK * 0.035) &&
       Math.hypot(car.vx, car.vz) > c.v * 0.9) {
-    const def = wSign * 4.8;
+    const def = wSign * (4.8 + defK * 1.8);
     if (Math.abs(avd) < Math.abs(def)) avd = def;
   }
   if (c.lungeT > 0) { c.lungeT -= dt; avd = wSign * 6; vMax *= 1.07; }   // estirada por dentro
@@ -6119,17 +6951,34 @@ function cpuDrive(c, dt) {
   const iN = (i + 1) % pathLen, f = c.s - Math.floor(c.s);
   const pa = path[i], pb = path[iN];
   const hw = trackHW ? Math.max(3, trackHW[i] - 3.5) : RW / 2;
-  const lat = clamp((dragMode ? 0 : Math.sin(c.s * 0.21 + i0 * 0.5) * 1.3) + c.latBias, -hw, hw);
+  // TRAZADA PERFECTA (out-in-out) siempre que puedan: abierto al entrar,
+  // vértice por dentro, abierto al salir. Solo se desvían para adelantar o
+  // cuando cometen un error.
+  let lineOff = 0;
+  if (worst > 0.02) {
+    const k2 = Math.min(1, worst * 8);
+    lineOff = (wAt <= 6 ? wSign * 0.62 : -wSign * 0.55) * hw * k2;
+  } else {
+    // saliendo de curva: la curvatura actual manda — deriva al exterior
+    const pa4 = path[(i0 + 4) % pathLen];
+    const cr0 = p0.tx * pa4.tz - p0.tz * pa4.tx;
+    if (Math.abs(cr0) > 0.012)
+      lineOff = -Math.sign(cr0) * hw * 0.55 * Math.min(1, Math.abs(cr0) * 10);
+  }
+  const wobK = demoMode ? 0.15 : 0.3;                      // líneas limpias, casi sin zigzag
+  const lat = clamp((dragMode ? 0 : Math.sin(c.s * 0.21 + i0 * 0.5) * 1.3 * wobK) + c.latBias + lineOff, -hw, hw);
   c.x = pa.x + (pb.x - pa.x) * f + (-pa.tz) * lat;
   c.z = pa.z + (pb.z - pa.z) * f + pa.tx * lat;
-  // Separación física: nunca se monta encima de otro coche
+  // Separación física: nunca se monta encima de otro coche. Solo levanta el
+  // pie si el otro va DELANTE — en paralelo no se congela y la pasada entra
   for (const o of others) {
     if (!o) continue;
     const dx = c.x - o.x, dz = c.z - o.z, dd = Math.hypot(dx, dz);
     if (dd < 6 && dd > 0.01) {
       c.x = o.x + dx / dd * 6; c.z = o.z + dz / dd * 6;
       const ov = o === car ? Math.hypot(car.vx, car.vz) : (o.v !== undefined ? o.v : (o.spd || 12));
-      if (c.v > ov) c.v = ov;
+      const fwd2 = (o.x - c.x) * p0.tx + (o.z - c.z) * p0.tz;
+      if (c.v > ov && fwd2 > 0) c.v = ov;
     }
   }
   c.a = Math.atan2(pa.tz, pa.tx);
@@ -6140,6 +6989,11 @@ function cpuDrive(c, dt) {
   for (const w of c.grp.userData.wF) w.children[0].rotation.x += wsp;
   for (const w of c.grp.userData.wR) w.children[0].rotation.x += wsp;
   flameTick(c.grp, c.v > 12 && !c.fin);               // escapes echando fuego en marcha
+  // Frenos incandescentes + luz de freno: se calientan al entrar pasado a la curva
+  const cBrk = c.v > vMax + 3;
+  c.brakeHeat = clamp((c.brakeHeat || 0) + (cBrk && c.v > 14 ? dt * 2.4 : -dt * 0.9), 0, 1);
+  if (c.grp.userData.brakes) for (const b of c.grp.userData.brakes) b.material.opacity = c.brakeHeat * 0.9;
+  if (c.grp.userData.tails) for (const t of c.grp.userData.tails) t.material.opacity = cBrk ? 0.95 : 0.3;
 }
 function cpuTick(dt) {
   for (const c of cpus) {
@@ -6199,7 +7053,6 @@ function koOut() {
   document.getElementById('results').classList.add('show');
   document.getElementById('hud').style.display = 'none';
   document.getElementById('speedBox').style.display = 'none';
-  el('nitroWrap').style.display = 'none';
   for (const id of TOUCH_IDS) document.getElementById(id).style.display = 'none';
 }
 /* ---- Coche fantasma: repite la mejor vuelta grabada ---- */
@@ -6287,7 +7140,6 @@ function exitToMenu() {
   el('speedVig').style.opacity = 0;
   document.getElementById('hud').style.display = 'none';
   document.getElementById('speedBox').style.display = 'none';
-  el('nitroWrap').style.display = 'none';
   for (const id of TOUCH_IDS) document.getElementById(id).style.display = 'none';
   document.getElementById('menu').classList.add('show');
 }
@@ -6336,8 +7188,8 @@ function update(dt) {
           // Se engancha solo si aún puede entrar por el hueco de muro (antes del
           // murete, lx < -30) o si ya está dentro de la calle. Si pasó la
           // entrada, sigue la vuelta y entrará en la siguiente.
-          if ((dEn < 95 && lx < -30) || inLane) {
-            pitAuto = 1;
+          if (((dEn < 95 && lx < -30) || inLane) && lz > -15) {
+            pitAuto = 1; pitStuck = 0;
             let w = 0;                                   // primer waypoint por delante
             while (w < rt.pts.length - 1 && rt.lxs[w] < lx - 2) w++;
             pitWp = w;
@@ -6357,11 +7209,15 @@ function update(dt) {
                  (Math.hypot(rt.pts[pitWp].x - car.x, rt.pts[pitWp].z - car.z) < 9 ||
                   rt.lxs[pitWp] < lx - 4)) pitWp++;      // solo avanza — nunca hacia atrás
           const bd = boxexPt ? Math.hypot(boxexPt.x - car.x, boxexPt.z - car.z) : 99;
+          // Quieto contra un muro apuntando al objetivo (atasco real): re-apunta
+          // a la boca de entrada — el pivoteo lo orienta y sale por delante
+          if (pitAuto === 1 && spd2 < 1) pitStuck += dt; else pitStuck = 0;
           // lookahead: a velocidad apunta al siguiente waypoint — la trazada
           // queda tensa y el coche no se sale de la cinta de asfalto de entrada
           const wpt = rt.pts[Math.min(pitWp + (spd2 > 14 ? 1 : 0), rt.pts.length - 1)];
           // fase 2 (salida): solo waypoints — ya no apunta a la marca de box
-          const tg = (pitAuto === 1 && bd < 15) ? boxexPt : wpt;
+          const tg = pitStuck > 1.2 ? rt.pts[0]
+                   : (pitAuto === 1 && bd < 15) ? boxexPt : wpt;
           let da = Math.atan2(tg.z - car.z, tg.x - car.x) - car.a;
           while (da > Math.PI) da -= 2 * Math.PI;
           while (da < -Math.PI) da += 2 * Math.PI;
@@ -6375,9 +7231,10 @@ function update(dt) {
           brake = pitAuto === 2 ? (spd2 > lim + 6 ? 0.8 : 0)
               : bd < 3.5 ? (spd2 > 1.2 ? 1 : 0) : (spd2 > lim + 6 ? 0.85 : 0);
           hb = 0;
-          // Arrancando de la marca en cruz: primero pivota en el sitio hasta
-          // encarar la calle — si acelera mirando al edificio se estrella
-          if (pitAuto === 2 && spd2 < 4 && Math.abs(da) > 0.35) {
+          // Parado y desalineado (arranque en cruz o atasco contra el muro):
+          // pivota en el sitio hasta encarar el siguiente punto — si acelera
+          // mal orientado se estrella o queda bloqueado para siempre
+          if (pitAuto && spd2 < 4 && Math.abs(da) > 0.35 && !(pitAuto === 1 && bd < 9)) {
             car.a += clamp(da, -1.9 * dt, 1.9 * dt);
             gas = 0; brake = 0;
           }
@@ -6385,7 +7242,7 @@ function update(dt) {
           if (pitAuto === 2) {
             const last = rt.pts[rt.pts.length - 1];
             if (Math.hypot(last.x - car.x, last.z - car.z) < 10) {
-              boxexReq = false; boxexPt = null; pitAuto = 0; pitWp = 0;
+              boxexReq = false; boxexPt = null; pitAuto = 0; pitWp = 0; pitStuck = 0;
               el('boxexBtn').classList.remove('on');
             }
           }
@@ -6483,17 +7340,14 @@ function update(dt) {
   const nitroReq = (inNitro || pad.nitro || keys.ShiftLeft || keys.ShiftRight || keys.KeyN) && go && !dragMode;
   nitroHeat = clamp(nitroHeat + (nitroOn ? 30 : -14) * dt, 0, 100);   // calienta usándolo, enfría al soltar
   nitroOn = nitroReq && nitro > 0 && nitroHeat < 100;
-  if (nitroReq && !nitroOn && nitroHeat >= 100 && !(el('nitroWrap')._hot)) {
-    el('nitroWrap')._hot = true;
+  if (nitroReq && !nitroOn && nitroHeat >= 100 && !nitroHotF) {
+    nitroHotF = true;
     showToast('🌡 ' + T('nitroHot')); sfx.beep(); buzz(90);
   }
-  if (nitroHeat < 55) el('nitroWrap')._hot = false;                   // vuelve tras enfriar
+  if (nitroHeat < 55) nitroHotF = false;                            // vuelve tras enfriar
   if (nitroOn) ach('boost');
   if (nitroOn) nitro = Math.max(0, nitro - 26 * dt);
   else nitro = Math.min(100, nitro + (2.2 + slipT * 6) * dt);
-  el('nitroWrap').classList.toggle('hot', nitroHeat > 62);            // barra rojiza al recalentar
-  const nb = el('nitroBar'); if (nb) nb.style.width = nitro.toFixed(0) + '%';
-  const nw = el('nitroWrap'); if (nw) nw.classList.toggle('full', nitro >= 99);
   // Mini-turbo: mantener el derrape carga un impulso que se suelta al enderezar
   const slidingNow = Math.abs(vl) > 9 || (hb && spd > 12);
   if (slidingNow && spd > 20) driftT += dt;
@@ -6788,7 +7642,7 @@ function update(dt) {
         const rt2 = window._pitRoute;
         if (boxexReq && rt2) {
           // Fase de salida: sale solo por el pit lane hasta incorporarse a pista
-          pitAuto = 2;
+          pitAuto = 2; pitStuck = 0;
           const lx3 = (car.x - rt2.bcx) * rt2.tx + (car.z - rt2.bcz) * rt2.tz;
           let w = 0;
           while (w < rt2.pts.length - 1 && rt2.lxs[w] < lx3 + 1) w++;
@@ -6823,6 +7677,54 @@ function update(dt) {
     rain = Math.max(0, rain - dt / 14);                       // la pista se seca despacio
     if (rain + dt / 14 >= 1 - 1e-4 && rain < 1) {}            // transición silenciosa
     if (rain === 0) { rainEnd = -1; showToast('☀️ ' + T('rainEnd')); }
+  }
+
+  // Charcos de lluvia: las gotas forman manchas de agua sobre el asfalto.
+  // Cada charco vive un rato y se va secando hasta desaparecer; pisarlo con
+  // agua hace que el coche acuaplano un poco (tirón lateral + salpicadura)
+  pudT -= dt; pudSld -= dt;
+  if (rain > 0.25 && pudT <= 0 && pathLen) {
+    pudT = rnd(0.2, 0.7) / rain;
+    const m = puddlePool.find(m => !m.visible);
+    if (m) {
+      const i = (pathIdx - 40 + (Math.random() * 380 | 0) + pathLen) % pathLen;
+      const p = path[i], hw = (trackHW ? trackHW[i] : RW / 2);
+      const lat = rnd(-hw + 1.5, hw - 1.5);
+      const nx3 = -p.tz, nz3 = p.tx;
+      m.position.set(p.x + nx3 * lat, 0.1 + bankYAt(i, lat), p.z + nz3 * lat);
+      const r = rnd(2.2, 5);
+      m.userData.wet = 0; m.userData.maxWet = rnd(0.55, 0.9);
+      m.userData.life = rnd(14, 30); m.userData.r = r;
+      m.rotation.y = rnd(0, Math.PI * 2);
+      m.scale.set(r * 0.4, 1, r * 0.4); m.material.opacity = 0; m.visible = true;
+    }
+  }
+  for (const m of puddlePool) {
+    if (!m.visible) continue;
+    const u = m.userData;
+    u.life -= dt;
+    const filling = rain > 0.2 && u.life > 6;                 // llueve → crece; si no, se seca
+    u.wet = clamp(u.wet + (filling ? dt * 0.5 : -dt * 0.12), 0, u.maxWet);
+    if (u.wet <= 0) { m.visible = false; continue; }
+    m.material.opacity = u.wet;
+    const sh = u.r * (0.55 + 0.45 * (u.wet / u.maxWet));      // al secarse encoge
+    m.scale.set(sh, 1, sh);
+    if (u.wet > 0.3) {
+      const rr = u.r * 0.85;
+      const dx = car.x - m.position.x, dz = car.z - m.position.z;
+      if (dx * dx + dz * dz < rr * rr && pudSld <= 0 && spd > 15) {
+        pudSld = 0.6;                                          // un tirón por charco
+        const k2 = rnd(-1, 1) * spd * 0.05;
+        car.vx += -sf * k2; car.vz += cf * k2;
+        car.wheelVib = Math.max(car.wheelVib || 0, 0.35);
+        dustPuff(car.x, car.z, -car.vx * 0.2, -car.vz * 0.2, 0xbfd8ee, 0.6, rnd(3, 4.5), 0.4);
+      }
+      for (const c of cpus) {
+        if (!c.grp || Math.random() > dt * 2.5) continue;      // los CPU también acuaplanan algo
+        const cx2 = c.x - m.position.x, cz2 = c.z - m.position.z;
+        if (cx2 * cx2 + cz2 * cz2 < rr * rr) c.latBias = clamp(c.latBias + rnd(-0.9, 0.9), -4, 4);
+      }
+    }
   }
 
   // SAFETY CAR: tras un golpe grande se neutraliza la carrera unos segundos —
@@ -6936,12 +7838,22 @@ function update(dt) {
     el('cpChip').textContent = 'V' + (lapsDone + 1) + '/' + LAPS + '  ' + '● '.repeat(cpIdx) + '◯ '.repeat(3 - cpIdx);
   }
 
-  // ¿Sentido contrario? (el índice de pista decrece de forma sostenida)
+  // ¿Sentido contrario? (retroceso acumulado a lo largo del trazado)
   if (spd > 8) {
-    const adv = ((pathIdx - lastIdx + pathLen / 2) % pathLen) - pathLen / 2;
-    wrongWay = clamp(wrongWay + (adv < -0.5 ? dt * 4 : -dt * 6), 0, 1);
-  }
+    let adv = pathIdx - lastIdx;                        // wrap seguro: 639→0 = +1, no −639
+    if (adv > pathLen / 2) adv -= pathLen;
+    else if (adv < -pathLen / 2) adv += pathLen;
+    wwBack = Math.max(0, wwBack - adv);                 // retroceso neto: avanzar descuenta, no resetea
+    wrongWay = clamp(wrongWay + (wwBack > 1.5 ? dt * 4 : -dt * 6), 0, 1);
+  } else { wrongWay = Math.max(0, wrongWay - dt * 0.8); wwBack = 0; }   // parado: la señal aguanta ~1s visible
   lastIdx = pathIdx;
+  // Dirección contraria confirmada → frenado automático: el coche se detiene
+  // a escasos metros mientras parpadea la señal STOP
+  if (wrongWay > 0.5 && !pitAuto) {
+    const k = Math.exp(-9 * dt);
+    car.vx *= k; car.vz *= k;
+    if (spd < 6) { car.vx = 0; car.vz = 0; }
+  }
   // Aviso de dirección contraria: se enciende si CUALQUIER coche va del revés
   // (jugador vía pathIdx; rival online vía su índice de pista recibido por red)
   let anyWW = wrongWay > 0.5;
@@ -6991,15 +7903,18 @@ function update(dt) {
   }
   // Humo real: derrape = humo blanco de neumático en las traseras; fuera de pista =
   // borrones grises y negros de tierra levantada
+  // rd = sentido de marcha: al dar marcha atrás el borde de fuga es el MORRO —
+  // el humo sale por delante y sigue alejándose, nunca cruza el coche
+  const rd = vf < 0 ? -1 : 1;
   if (spd > 12 && dustT <= 0 && (offroad > 0.4 || sliding)) {
     dustT = 0.06;
     if (sliding)
       for (const s of [-1, 1])
-        dustPuff(car.x - cf * 1.4 - sf * s * 0.9, car.z - sf * 1.4 + cf * s * 0.9,
+        dustPuff(car.x - cf * 1.4 * rd - sf * s * 0.9, car.z - sf * 1.4 * rd + cf * s * 0.9,
                  car.vx * 0.4, car.vz * 0.4, 0xf0f0f0, rnd(0.9, 1.4), rnd(2.9, 4.4));
     if (offroad > 0.4)
       for (const s of [-1, 1])   // estela de humo blanco de las dos ruedas traseras al salirse
-        dustPuff(car.x - cf * 1.5 - sf * s * 0.9, car.z - sf * 1.5 + cf * s * 0.9,
+        dustPuff(car.x - cf * 1.5 * rd - sf * s * 0.9, car.z - sf * 1.5 * rd + cf * s * 0.9,
                  car.vx * 0.35, car.vz * 0.35,
                  Math.random() < 0.7 ? 0xffffff : 0xe8e8e8, rnd(1.3, 1.9), rnd(4.4, 6.4), 0.78);
   }
@@ -7008,7 +7923,7 @@ function update(dt) {
   if (brake && spd > 38 && offroad < 0.4 && dustT <= 0) {
     dustT = 0.045;
     for (const s of [-1, 1])
-      dustPuff(car.x + cf * 1.6 - sf * s * 0.7, car.z + sf * 1.6 + cf * s * 0.7,
+      dustPuff(car.x + cf * 1.6 * rd - sf * s * 0.7, car.z + sf * 1.6 * rd + cf * s * 0.7,
                car.vx * 0.3, car.vz * 0.3, 0xf6f6f6, rnd(0.7, 1.1), rnd(2.6, 4), 0.7);
   }
   // Humo de aceleración: quema de rueda al lanzar (blanco de neumático mezclado
@@ -7020,12 +7935,12 @@ function update(dt) {
     if (launch || gas > 0.8) {
       dustT = launch ? 0.036 : 0.06;
       for (const s of [-1, 1])
-        dustPuff(car.x - cf * 1.4 - sf * s * 0.9, car.z - sf * 1.4 + cf * s * 0.9,
+        dustPuff(car.x - cf * 1.4 * rd - sf * s * 0.9, car.z - sf * 1.4 * rd + cf * s * 0.9,
                  -car.vx * 0.25, -car.vz * 0.25,
                  Math.random() < 0.45 ? 0x18181b : 0xf4f4f4,
                  rnd(2.4, 3.6), rnd(4.4, 7.5), (launch ? 0.95 : 0.78) * gasK);
       if (Math.random() < 0.7 * gasK)                           // bocanada negra del escape
-        dustPuff(car.x - cf * 2.8, car.z - sf * 2.8, -car.vx * 0.1, -car.vz * 0.1,
+        dustPuff(car.x - cf * 2.8 * rd, car.z - sf * 2.8 * rd, -car.vx * 0.1, -car.vz * 0.1,
                  0x121215, rnd(1.3, 1.9), rnd(3.2, 5.6), 0.85 * gasK);
     }
   }
@@ -7033,7 +7948,7 @@ function update(dt) {
   if ((nitroOn || boostT > 0) && Math.random() < dt * 30) {
     const s = dustPool.find(s => !s.visible);
     if (s) {
-      s.position.set(car.x - cf * 2.4 + rnd(-0.5, 0.5), 1.1, car.z - sf * 2.4 + rnd(-0.5, 0.5));
+      s.position.set(car.x - cf * 2.4 * rd + rnd(-0.5, 0.5), 1.1, car.z - sf * 2.4 * rd + rnd(-0.5, 0.5));
       s.userData = { life: 0.3, life0: 0.3, vx: -car.vx * 0.15, vz: -car.vz * 0.15, op0: 0.85 };
       s.scale.set(2.1, 2.1, 1);
       s.material.color.setHex(nitroOn ? 0x60c8ff : 0xffa030);
@@ -7071,6 +7986,8 @@ function update(dt) {
     crowdGain.gain.value = (playing && circAt(stage) ? 0.05 : 0) + crowdBoost * 0.09;
     // La lluvia tapa el sol: la luz baja con la tormenta (sensación de nublado)
     if (moonLight) moonLight.intensity = sunInt * (1 - rain * 0.22);
+    const mpw = world && world.userData.moonPool;                  // la luna también se nubla
+    if (mpw) mpw.material.opacity = moonPoolK * (1 - rain * 0.5);
     // Lluvia: siseo proporcional a la intensidad de la tormenta
     rainGain.gain.value = playing ? rain * 0.09 : 0;
     // Rebufo: chorro de aire mientras vas pegado a la estela del rival
@@ -7098,7 +8015,25 @@ function update(dt) {
   const kmh = Math.round(spd * 3.4);
   if (kmh !== lastKmh) { lastKmh = kmh; el('speedNum').innerHTML = kmh + '<small> km/h</small>'; }
   const gearShow = vf < -1 ? 'R' : gear;                                   // marcha atrás
-  if (gearShow !== lastGear) { lastGear = gearShow; el('gearNum').textContent = T('gear') + ' ' + gearShow; }
+  if (gearShow !== lastGear) {
+    lastGear = gearShow;
+    const gn = el('gearNum');
+    gn.textContent = T('gear') + ' ' + gearShow;
+    // color propio por marcha + parpadeo neón del aro al cambiar
+    gn.style.setProperty('--gc', GEAR_COL[gearShow] || GEAR_COL[0]);
+    gn.classList.remove('gearFlash'); void gn.offsetWidth;
+    gn.classList.add('gearFlash');
+    clearTimeout(gn._gf); gn._gf = setTimeout(() => gn.classList.remove('gearFlash'), 520);
+    // número grande en neón del color de la marcha, un instante junto al aro
+    const gb = el('gearBig');
+    if (gb) {
+      gb.textContent = gearShow;
+      gb.style.setProperty('--gc', GEAR_COL[gearShow] || GEAR_COL[0]);
+      gb.classList.remove('pop'); void gb.offsetWidth;
+      gb.classList.add('pop');
+      clearTimeout(gb._gp); gb._gp = setTimeout(() => gb.classList.remove('pop'), 560);
+    }
+  }
   // Tacómetro del drag + aviso de ventana de cambio (antes del ¡YA! muestra el motor revolucionado)
   const rpmNow = dragMode && !go && gas > 0 ? 0.9
                : Math.max(0, (kmh0 - (gear - 1) * GEAR_SPAN) / GEAR_SPAN);
@@ -7198,6 +8133,10 @@ function draw(now) {
   for (const w of wheelF) w.children[0].rotation.x += wSpin;
   for (const w of wheelR) w.children[0].rotation.x += wSpin;
   for (const ts of tailSpr) ts.material.opacity = (inBrake || keys.ArrowDown || keys.KeyS) ? 0.95 : 0.35;
+  // Discos incandescentes: se cargan frenando fuerte y se enfrían rodando
+  car.brakeHeat = clamp((car.brakeHeat || 0) + ((inBrake || keys.ArrowDown || keys.KeyS) && spd > 14 ? dt * 2.4 : -dt * 0.9), 0, 1);
+  if (carGrp.userData.brakes) for (const b of carGrp.userData.brakes)
+    b.material.opacity = car.brakeHeat * 0.9;
   flameTick(carGrp, (inGas > 0 || keys.KeyW || keys.ArrowUp) && playing);   // fuego al acelerar
   if (remote && remote.grp) flameTick(remote.grp, (remote.spd || 0) > 14);
   if (ghostCar && ghostCar.visible) flameTick(ghostCar, true);
@@ -7241,6 +8180,123 @@ function draw(now) {
   }
   // La grúa de rescate balancea el brazo muy leve — vida en el decorado
   if (craneHook) craneHook.rotation.z = Math.sin(now * 0.0008) * 0.05;
+  // Banderas de comisario: ondean y cambian a amarillo bajo Safety Car
+  for (const fl of marshalFlags) {
+    fl.rotation.y = Math.sin(now * 0.007 + fl.userData.ph) * 0.5;
+    fl.scale.x = 1 + Math.sin(now * 0.011 + fl.userData.ph) * 0.12;   // rizo de la tela
+    fl.material.color.setHex(scT > 0 ? 0xffe000 : 0x22cc44);
+  }
+  // Helicóptero de TV: órbita amplia sobre el circuito + pasadas rasantes
+  // sobre el coche del jugador cada ~15 s (de noche lo baña su foco blanco)
+  if (heliObj) {
+    heliT += dt * 0.026;                                      // órbita lenta, de observación
+    const hr = Math.max(trackSpanX, trackSpanZ) * 0.34;
+    const ox = trackCX + Math.cos(heliT) * hr, oz = trackCZ + Math.sin(heliT) * hr;
+    const oy = 55 + Math.sin(now * 0.0011) * 2.5;
+    // Seguimiento tipo TV: cada cierto tiempo el heli deja la órbita, baja y
+    // persigue al coche durante 5–10 s aleatorios antes de volver a subir
+    if (heliObj.followT > 0) {
+      heliObj.followT -= dt;
+      if (heliObj.followT <= 0) heliObj.cd = 9 + Math.random() * 9;    // pausa 9–18 s
+    } else if ((heliObj.cd -= dt) <= 0) {
+      heliObj.followT = 5 + Math.random() * 5;                       // sigue 5–10 s
+    }
+    const following = heliObj.followT > 0;
+    heliObj.fw = clamp(heliObj.fw + (following ? dt * 0.9 : -dt * 0.8), 0, 1);
+    const w = heliObj.fw * heliObj.fw * (3 - 2 * heliObj.fw);        // smoothstep
+    let tx = ox, ty = oy, tz = oz;
+    if (w > 0.001 && car) {
+      const sp2 = Math.hypot(car.vx, car.vz);
+      const lead = 7 + sp2 * 0.4;                                  // un pelín por delante del morro
+      const lx = car.x + (sp2 > 2 ? car.vx / sp2 * lead : 0);
+      const lz = car.z + (sp2 > 2 ? car.vz / sp2 * lead : 0);
+      tx = ox + (lx - ox) * w; tz = oz + (lz - oz) * w;
+      ty = oy + (30 - oy) * w;                                     // baja a ~30 sobre el coche
+    }
+    // Persecución con inercia: el heli llega suave al objetivo y queda
+    // rezagado unos metros mientras dura el seguimiento
+    if (!heliObj.warm) { heliObj.px = ox; heliObj.py = oy; heliObj.pz = oz; heliObj.warm = 1; }
+    const kf = Math.min(1, dt * (following ? 1.05 : 0.5));   // movimiento pausado, con inercia
+    const hx = heliObj.px + (tx - heliObj.px) * kf;
+    const hy = heliObj.py + (ty - heliObj.py) * kf;
+    const hz = heliObj.pz + (tz - heliObj.pz) * kf;
+    const mvx = hx - heliObj.px, mvz = hz - heliObj.pz;
+    heliObj.px = hx; heliObj.py = hy; heliObj.pz = hz;
+    heliObj.grp.position.set(hx, hy, hz);
+    // El morro apunta SIEMPRE al coche, como un heli de TV con la cámara fija
+    // en la acción; si está justo encima conserva el rumbo para no girar en falso
+    {
+      const dxc = car.x - hx, dzc = car.z - hz;
+      const wy = Math.hypot(dxc, dzc) > 8 ? Math.atan2(-dzc, dxc) + Math.PI
+               : Math.hypot(mvx, mvz) > 0.02 ? Math.atan2(-mvz, mvx) + Math.PI
+               : heliObj.yaw;                                 // morro del modelo = +X
+      let dyaw = wy - heliObj.yaw;
+      while (dyaw > Math.PI) dyaw -= Math.PI * 2;
+      while (dyaw < -Math.PI) dyaw += Math.PI * 2;
+      heliObj.yaw += dyaw * Math.min(1, dt * 3.4);
+      heliObj.grp.rotation.y = heliObj.yaw;
+    }
+    // Actitud real del fuselaje: el morro picado proporcional a la velocidad
+    // (así aceleran los heli), alabeo suave con vaivén de flotación
+    {
+      const hv = Math.hypot(mvx, mvz) / Math.max(dt, 1e-3);
+      const pTgt = -0.02 - clamp(hv * 0.0035, 0, 0.16) - w * 0.05;
+      const rTgt = -0.04 - w * 0.05 + Math.sin(now * 0.0009) * 0.04;
+      heliObj.pitch += (pTgt - heliObj.pitch) * Math.min(1, dt * 3);
+      heliObj.roll += (rTgt - heliObj.roll) * Math.min(1, dt * 3);
+      heliObj.body.rotation.z = heliObj.pitch;                 // cabeceo (morro +X)
+      heliObj.body.rotation.x = heliObj.roll;                  // alabeo
+    }
+    heliObj.rot.rotation.y += dt * 38;
+    heliObj.rot2.rotation.y += dt * 38;
+    heliObj.tail.rotation.x += dt * 55;
+    // Luces de navegación: estrobo anticolisión de doble destello (~60/min,
+    // patrón real de aviación) y baliza roja de panza latiendo
+    {
+      const ph2 = (now / 1000) % 1.4;
+      heliObj.navStrobe.material.opacity =
+        (ph2 < 0.07 || (ph2 > 0.18 && ph2 < 0.25)) ? 1 : 0;
+      heliObj.navBeacon.material.opacity = 0.2 + 0.6 * Math.abs(Math.sin(now * 0.0035));
+    }
+    // Foco blanco de noche: solo en la pasada (alcance) y apuntando al coche
+    const nk = Math.min(1, carGlowK / 0.2);                    // 0 día → 1 noche
+    const beamOn = nk > 0 && w > 0.12 && car;
+    heliObj.beam.intensity = beamOn ? 7 * nk * Math.min(1, w * 3) : 0;
+    if (beamOn) {
+      heliObj.beamTgt.position.set(car.x, 0, car.z);
+      // cono visible del haz: del fuselaje al coche, radio = apertura del foco
+      const dd = Math.hypot(car.x - hx, hy - 0, car.z - hz);
+      _helV.set((hx - car.x) / dd, hy / dd, (hz - car.z) / dd);  // base→vértice
+      heliObj.beamCone.visible = true;
+      heliObj.beamCone.quaternion.setFromUnitVectors(_helUp, _helV);
+      heliObj.beamCone.position.set((hx + car.x) / 2, hy / 2, (hz + car.z) / 2);
+      const cr = Math.tan(0.30) * dd * 0.72;
+      heliObj.beamCone.scale.set(cr, dd, cr);
+      heliObj.beamPool.position.set(car.x, 0.16 + bankYAt(pathIdx, 0), car.z);
+      heliObj.beamPool.material.opacity = 0.17 * nk * w;
+    } else {
+      heliObj.beamCone.visible = false;
+      heliObj.beamPool.material.opacity *= 0.85;               // el charco se apaga suave
+    }
+  }
+  // Farolas "rotas": estrobo errático muy rápido — caídas profundas,
+  // micro-vibración y apagones bruscos como un foco a punto de fundirse
+  {
+    const lm = world && world.userData.lamps;
+    if (lm && lm.broken && lm.broken.length) {
+      const k = lm.k ?? 1;
+      const c = k > 0.7 ? 0xffe6b8 : k > 0.3 ? 0xe8cf9e : 0xa8988a;   // mismo tono que applyTOD
+      for (const b of lm.broken) {
+        const r2 = Math.random();
+        const f = r2 < 0.10 ? Math.random() * 0.3          // apagón casi total
+                : r2 < 0.34 ? 0.5 + Math.random() * 0.35   // caída fuerte
+                : 0.88 + Math.random() * 0.12;             // vibración leve
+        b.fm.color.setHex(c).multiplyScalar(f);
+        b.gm.opacity = 0.9 * k * f;
+        b.pm.opacity = 0.55 * k * f;
+      }
+    }
+  }
 
 
   // Coche rival: interpolación suave hacia la última posición recibida
@@ -7265,6 +8321,31 @@ function draw(now) {
     gg.userData.arrow.material.opacity = next ? 0.6 + Math.sin(now / 180) * 0.4 : 0.15;
     gg.userData.arrow.position.y = 15 + (next ? Math.sin(now / 300) * 1.5 : 0);
   });
+
+  // Ondas de lluvia: cada gota dibuja un anillo diminuto al chocar con el
+  // asfalto — nace pequeño, se expande y se desvanece en menos de un segundo
+  ripT -= dt;
+  if (rain > 0.2 && ripT <= 0 && pathLen) {
+    ripT = 0.045 / rain;
+    const m = ripplePool.find(m => !m.visible);
+    if (m) {
+      const i = (pathIdx + ((Math.random() * 220 | 0) - 40) + pathLen) % pathLen;
+      const p = path[i], hw = (trackHW ? trackHW[i] : RW / 2) + 2;
+      const lat = rnd(-hw, hw);
+      m.position.set(p.x - p.tz * lat, 0.12 + bankYAt(i, lat), p.z + p.tx * lat);
+      m.userData.life = 0.55; m.userData.life0 = 0.55;
+      m.scale.set(0.4, 1, 0.4); m.visible = true;
+    }
+  }
+  for (const m of ripplePool) {
+    if (!m.visible) continue;
+    m.userData.life -= dt;
+    if (m.userData.life <= 0) { m.visible = false; continue; }
+    const k = 1 - m.userData.life / m.userData.life0;
+    const sc2 = 0.4 + k * 3.4;                                 // el anillo crece al expandirse
+    m.scale.set(sc2, 1, sc2);
+    m.material.opacity = (1 - k) * 0.5 * rain;
+  }
 
   // Polvo de la zaga
   for (const s of dustPool) {
@@ -7395,6 +8476,11 @@ function draw(now) {
   // La sombra de la luna sigue al coche
   moonLight.position.set(car.x + moonOX, 500, car.z + moonOZ);
   moonLight.target.position.set(car.x, 0, car.z);
+  // El charco de luz lunar se posa sobre la superficie bajo el coche
+  const mp = world && world.userData.moonPool;
+  if (mp && mp.material.opacity > 0.01) {
+    mp.position.set(car.x + moonOX * -0.12, bankYAt(pathIdx, 0) + 0.14, car.z + moonOZ * -0.12);
+  }
 
   renderer3.render(scene3, cam3);
 
@@ -7920,14 +9006,17 @@ function startStage(n, seed, mp, mode) {
     if (o.material && o.material.uniforms && o.material.uniforms.op) o.material.uniforms.op.value = dayMode ? 0.13 : 0.16;
   });
   lightsOn = null; applyLights();                     // faros automáticos: solo de noche
-  // Salida sobre la pista mirando la tangente (en drag: carril izquierdo, tras la línea)
+  // Salida sobre la pista mirando la tangente: el coche se coloca en parrilla,
+  // unos metros DETRÁS de la franja de salida (en drag: carril izquierdo)
   const p0 = path[0];
+  const sIdx = (pathLen - 4 + pathLen) % pathLen;      // ~12m detrás de la línea
+  const ps = path[sIdx];
   if (dragMode) {
     const lnx = -p0.tz, lnz = p0.tx;
     car = { x: p0.x - lnx * 4.8, z: p0.z - lnz * 4.8,
             a: Math.atan2(p0.tz, p0.tx), vx: 0, vz: 0, steer: 0 };
   } else {
-    car = { x: p0.x, z: p0.z, a: Math.atan2(p0.tz, p0.tx), vx: 0, vz: 0, steer: 0 };
+    car = { x: ps.x, z: ps.z, a: Math.atan2(ps.tz, ps.tx), vx: 0, vz: 0, steer: 0 };
   }
   carGrp.position.set(car.x, 0, car.z);
   // Coche rival (multijugador): sale unos metros por detrás
@@ -7942,21 +9031,29 @@ function startStage(n, seed, mp, mode) {
   for (const c of cpus) if (c && c.grp) scene3.remove(c.grp);
   cpus = []; cpu = cpu2 = null;
   // Rivales: VS = 1 · KO = 2 · CAMPEONATO = los elegidos en el selector (parrilla doble)
+  // DEMO = todos los demás coches del selector, cada uno con su livery
   const RTINTS = [0x8fd0ff, 0xffb060, 0xff70c8, 0x90ff90, 0xc0a0ff, 0xfff060];
   const RSKILL = [1, 0.96, 0.93, 0.90, 0.87, 0.85];
-  const nRiv = koMode ? 2 : champMode ? champRivals : (vsMode ? 1 : 0);
+  const nRiv = koMode ? 2 : champMode ? champRivals : (vsMode ? 1 : (demoMode ? CARS.length - 1 : 0));
   // Dificultad progresiva: cada etapa hace a la CPU un ~3.5% más lista (tope +28%)
   const diffK = clamp(1 + (stage - 1) * 0.035, 1, 1.28);
-  for (let i = 0; i < nRiv; i++)
-    cpus.push(cpuSpawn(i, RTINTS[i % RTINTS.length],
-      Math.min(1.3, (koMode ? (i ? 0.93 : 1) : RSKILL[i % RSKILL.length]) * diffK),
-      champMode ? (i % 2 ? 4 : -4) : 0));
+  for (let i = 0; i < nRiv; i++) {
+    let tint = RTINTS[i % RTINTS.length];
+    if (demoMode) {                             // demo: cada rival con la livery de otro coche
+      const myCar = Math.min(OPTS.car || 0, CARS.length - 1);
+      tint = CARS[i + (i >= myCar ? 1 : 0)].tint;
+    }
+    cpus.push(cpuSpawn(i, tint,
+      Math.min(1.3, (demoMode ? 0.96 + (i * 2 % 5) * 0.02 :      // demo: parrilla igualada, batallas juntas
+                     koMode ? (i ? 0.93 : 1) : RSKILL[i % RSKILL.length]) * diffK),
+      (champMode || demoMode) ? (i % 2 ? 4 : -4) : 0));
+  }
   cpu = cpus[0] || null; cpu2 = cpus[1] || null;
   if (dragMode && cpu) { cpu.latBias = 4.8; cpu.react = Math.max(0.08, (0.4 + Math.random() * 0.4) / diffK); cpu.k = 0.94 * diffK; }  // carril contrario + reacción + punta
   if (p2Mode && cpu) { cpu.react = 0; cpu.k = 1; cpu.boost = 0; cpu.launchDone = false; }         // J2: sin IA, salida en su mano
   ghostLoad();                                        // fantasma si hay récord grabado
   pitZone = null;
-  boxexReq = false; boxexPt = null; pitAuto = 0; pitWp = 0;
+  boxexReq = false; boxexPt = null; pitAuto = 0; pitWp = 0; pitStuck = 0;
   const _bxb = el('boxexBtn'); if (_bxb) _bxb.classList.remove('on');
   if (circAt(stage)) {                                // boxes junto a la salida (zona invisible, sin círculo)
     const pp = path[Math.floor(pathLen * 0.06)], pnx = -pp.tz, pnz = pp.tx;
@@ -7964,7 +9061,7 @@ function startStage(n, seed, mp, mode) {
   }
   cam3.position.set(car.x, 62, car.z);
   camZoom = (OPTS.cam || demoMode) ? 1 : 0.12;   // la DEMO siempre arranca con ZOOM OUT (circuito entero)
-  pathIdx = 0; lastIdx = 0; cpIdx = 0; lapsDone = 0; wrongWay = 0; offroad = 0; gear = 1; shiftT = 0; shiftCd = 0; launchWin = 0;
+  pathIdx = dragMode ? 0 : sIdx; lastIdx = pathIdx; cpIdx = 0; lapsDone = 0; wrongWay = 0; wwBack = 0; offroad = 0; gear = 1; shiftT = 0; shiftCd = 0; launchWin = 0;
   goWas = false; prevGas = 1;
   pfOn = false; pfCols = 0; pfSlowT = 0; pfGap = 0; pfFired = false; pfMark = -1;
   trackSegM = 0;
@@ -7976,6 +9073,8 @@ function startStage(n, seed, mp, mode) {
   lastKmh = -1; lastGear = -1; lastTenth = '';      // fuerza repintado del HUD al arrancar
   for (const m of skidPool) m.visible = false;
   for (const s of dustPool) s.visible = false;
+  for (const m of puddlePool) m.visible = false;                    // pista seca al empezar
+  for (const m of ripplePool) m.visible = false;
   document.getElementById('menu').classList.remove('show');
   document.getElementById('versus').classList.remove('show');
   document.getElementById('champSetup').classList.remove('show');
@@ -7998,14 +9097,13 @@ function startStage(n, seed, mp, mode) {
   document.getElementById('tireChip')._w = -1;
   document.getElementById('koChip').style.display = koMode ? 'block' : 'none';
   document.getElementById('koChip')._t = -1;
-  document.getElementById('nitroWrap').style.display = 'block';
   document.getElementById('nitroBtn').style.display = (!demoMode && OPTS.touchUi) ? 'flex' : 'none';
   // MODO DRAG: arriba solo el marcador (vsChip); abajo solo GAS y FRENO
   document.getElementById('hudTop').style.display = dragMode ? 'none' : '';
   document.getElementById('hud').classList.toggle('drag', !!dragMode);
   document.getElementById('hud').classList.toggle('p2', !!p2Mode);
   if (dragMode) {
-    for (const id of ['timeChip', 'cpChip', 'sectChip', 'drsChip', 'nitroWrap', 'nitroBtn', 'koChip', 'tireChip', 'demoChip'])
+    for (const id of ['timeChip', 'cpChip', 'sectChip', 'drsChip', 'nitroBtn', 'koChip', 'tireChip', 'demoChip'])
       el(id).style.display = 'none';
     for (const id of TOUCH_IDS)
       el(id).style.display = (OPTS.touchUi &&
@@ -8162,7 +9260,6 @@ function finishStage() {
   document.getElementById('results').classList.add('show');
   document.getElementById('hud').style.display = 'none';
   document.getElementById('speedBox').style.display = 'none';
-  el('nitroWrap').style.display = 'none';
   for (const id of TOUCH_IDS) document.getElementById(id).style.display = 'none';
 }
 function fmtT(s) {
@@ -8306,6 +9403,7 @@ function tintThumb(tintHex) {
   }
   return c.toDataURL();
 }
+const m3d = { r: null, scene: null, cam: null, car: null, idx: -1, rotY: 0, rotX: 0, drag: null, moved: 0 };
 function selCar(i) {
   const n = carStripEl.children.length; if (!n) return;
   OPTS.car = ((i % n) + n) % n; saveOpts();                 // envuelve: último → primero
@@ -8387,7 +9485,7 @@ const I18N = {
     inCap5t: 'SUPER CIRCUIT GP', inCap5s: 'tu leyenda empieza aquí',
     shiftPerf: '¡CAMBIO PERFECTO!', shiftEarly: 'MUY PRONTO', shiftLate: 'AL CORTE',
     launchOk: '¡SALIDA PERFECTA!',
-    divebomb: 'SE LANZA POR DENTRO', overtakeZone: 'ZONA DE ADELANTAMIENTO', shortcut: '¡ATAJO! +3s',
+    divebomb: 'SE LANZA POR DENTRO', attacks: 'ATACA A', overtakeZone: 'ZONA DE ADELANTAMIENTO', shortcut: '¡ATAJO! +3s',
     fastLap: 'VUELTA RÁPIDA', drsOpen: 'DRS ABIERTO',
     scOut: '¡SAFETY CAR! Ritmo de grupo', scIn: 'SAFETY CAR ENTRA — VERDE',
     rainEnd: '¡ESCAMPA! — la pista se seca', formLap: 'VUELTA DE FORMACIÓN',
@@ -8484,7 +9582,7 @@ const I18N = {
     inCap5t: 'SUPER CIRCUIT GP', inCap5s: 'your legend starts here',
     shiftPerf: 'PERFECT SHIFT!', shiftEarly: 'TOO EARLY', shiftLate: 'AT THE LIMIT',
     launchOk: 'PERFECT LAUNCH!',
-    divebomb: 'DIVES DOWN THE INSIDE', overtakeZone: 'OVERTAKING ZONE', shortcut: 'SHORTCUT! +3s',
+    divebomb: 'DIVES DOWN THE INSIDE', attacks: 'ATTACKS', overtakeZone: 'OVERTAKING ZONE', shortcut: 'SHORTCUT! +3s',
     fastLap: 'FASTEST LAP', drsOpen: 'DRS OPEN',
     scOut: 'SAFETY CAR! Bunch up', scIn: 'SAFETY CAR IN — GREEN',
     rainEnd: 'RAIN STOPS! — track is drying', formLap: 'FORMATION LAP',
@@ -8757,8 +9855,8 @@ function buildCircStrip() {
   s.innerHTML = '';
   const mkCard = (val, name, thumb) => {
     const d = document.createElement('div');
-    // un único circuito: siempre marcado
-    d.className = 'circCard' + (OPTS.circSel === val || (window.CIRCUITOS || []).length === 1 ? ' on' : '');
+    // 'auto' marca el primero; un único circuito queda siempre marcado
+    d.className = 'circCard' + (OPTS.circSel === val || (OPTS.circSel === 'auto' && val === 0) || (window.CIRCUITOS || []).length === 1 ? ' on' : '');
     if (thumb) d.appendChild(thumb);
     const lab = document.createElement('div'); lab.className = 'cn'; lab.textContent = name;
     d.appendChild(lab);
@@ -8964,13 +10062,17 @@ function introStart() {
   introAudioStart();
   introStep();
 }
-document.getElementById('introExit').addEventListener('pointerdown', e => {
-  e.stopPropagation(); e.preventDefault(); introEnd();
-  // SALTAR → directo a la selección de coche (menú), sin pasar por la portada
+const introSkip = () => {
+  introEnd();
+  // Salir de la intro → directo a la selección de coche (menú), sin portada
   document.getElementById('splash').classList.add('hide');
   document.getElementById('menu').classList.add('show');
+};
+document.getElementById('introExit').addEventListener('pointerdown', e => {
+  e.stopPropagation(); e.preventDefault(); introSkip();
 });
-// La intro solo se sale con el botón SALTAR (los toques en la imagen no hacen nada)
+// La intro también se salta tocando en cualquier punto de la imagen
+document.getElementById('intro').addEventListener('pointerdown', introSkip);
 document.getElementById('optsBtn').addEventListener('click', () => {
   buildCircStrip();
   document.getElementById('menu').classList.remove('show');
@@ -9229,8 +10331,8 @@ function c3dTintR26(base, tint) {
   // La librea original es carbono casi negro: para que el color del equipo se
   // lea de verdad, las piezas pintadas pasan a pintura brillante del tono
   // (ruedas, carbono, fondo y suspensiones conservan su material oscuro)
-  const paint = new THREE.MeshStandardMaterial({
-    color: tint, roughness: 0.42, metalness: 0.4 });
+  const paint = new THREE.MeshPhysicalMaterial({
+    color: tint, roughness: 0.3, metalness: 0.62, clearcoat: 1, clearcoatRoughness: 0.14 });
   m.traverse(o => {
     if (!o.isMesh || !o.material) return;
     if (C3D_LIVERY.test(o.material.name || '')) o.material = paint;
@@ -9240,7 +10342,10 @@ function c3dTintR26(base, tint) {
 // Crea un modelo de exposición limpio (sin faros/haces/sprites) para el visor
 async function c3dModel(def) {
   let mdl;
-  {
+  if (def.pro) {                                  // SCGP-X: F1 procedural de alta definición
+    mdl = buildF1Pro(def.tint);
+    mdl.userData.pro = true;
+  } else {
     // De momento TODOS montan el chasis real r26.glb; cada nombre va
     // repintado con su color de equipo (el R26 conserva su librea)
     try {
@@ -9283,7 +10388,7 @@ async function c3dShowAll() {
     for (let i = 0; i < n; i++) {
       const w = c3dNorm(await c3dModel(CARS[i]), 3.7);
       if (rq !== c3d.req) return;                 // se volvió a uno mientras cargaba
-      if (w.userData.r26) w.scale.setScalar(0.62);      // el GLB sale más grande que los procedurales
+      if (w.userData.r26 || w.userData.pro) w.scale.setScalar(0.62);      // GLB/SCGP-X salen más grandes
       placeSponsorDecals(w, w, addSponsorDecals(w, CARS[i].tint));   // pegatinas en todos
       const a = (i / n) * Math.PI * 2;
       w.position.set(Math.sin(a) * R, 0, Math.cos(a) * R);
@@ -9332,7 +10437,9 @@ function c3dLoop() {
   // El gesto vertical ORBITA la cámara alrededor del coche (que queda apoyado
   // en la plataforma): de vista casi cenital arriba a rasante abajo
   const elv = clamp(0.346 + c3d.rotX, 0.04, 1.5);
-  const orbR = 16.4 * c3d.zoom;
+  // encuadre cerrado: el coche llena la ventana del visor (TODOS queda un
+  // paso más atrás para que quepa el círculo completo)
+  const orbR = (c3d.car === c3d.allGrp ? 15.2 : 15.0) * c3d.zoom;
   w.position.set(c3d.panX, 1.4 + Math.sin(elv) * orbR + c3d.panY, Math.cos(elv) * orbR);
   w.lookAt(c3d.panX, 1.4 + c3d.panY, 0);
   const cvEl = document.getElementById('c3dCv'), wrap = document.getElementById('c3dWrap');
@@ -9365,7 +10472,6 @@ document.getElementById('c3dAll').addEventListener('click', function () {
 });
 
 /* ===== Preview 3D del coche elegido, bajo la tira del menú ===== */
-const m3d = { r: null, scene: null, cam: null, car: null, idx: -1, rotY: 0, rotX: 0, drag: null, moved: 0 };
 function m3dInit() {
   if (m3d.r) return;
   const cv = document.getElementById('car3dCv');
@@ -9407,7 +10513,7 @@ async function m3dShow(i) {
   if (m3d.car) { m3d.scene.remove(m3d.car); m3d.car = null; }
   if (m3d.mirr) { m3d.scene.remove(m3d.mirr); m3d.mirr = null; }
   const mdl = c3dNorm(await c3dModel(CARS[i]), 6.4);
-  if (mdl.userData.r26) mdl.scale.multiplyScalar(0.62);
+  if (mdl.userData.r26 || mdl.userData.pro) mdl.scale.multiplyScalar(0.62);
   if (i !== m3d.idx) return;                             // cambió mientras cargaba
   m3d.car = mdl; m3d.scene.add(mdl);
   m3d.mirr = makeMirrorCar(mdl); m3d.scene.add(m3d.mirr); // reflejo en la plataforma
@@ -9494,7 +10600,7 @@ async function ciShow(i) {
   if (ci3d.car) { ci3d.scene.remove(ci3d.car); ci3d.car = null; }
   if (ci3d.mirr) { ci3d.scene.remove(ci3d.mirr); ci3d.mirr = null; }
   const wrap = c3dNorm(await c3dModel(def), 7.6);
-  if (wrap.userData.r26) wrap.scale.multiplyScalar(0.62);
+  if (wrap.userData.r26 || wrap.userData.pro) wrap.scale.multiplyScalar(0.62);
   placeSponsorDecals(wrap, wrap, addSponsorDecals(wrap, def.tint));
   if (i !== ci3d.idx) return;
   ci3d.rotY = -Math.PI / 2; ci3d.rotX = 0;                // perfil con el morro a la izquierda, como la foto
@@ -9959,6 +11065,35 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+// Focos que iluminan el escudo: dos proyectores pequeños en las esquinas
+// inferiores con carcasa, lente encendida y haz volumétrico tenue
+function addLogoSpots(lsc) {
+  const rig = new THREE.Group();
+  const houseMat = new THREE.MeshStandardMaterial({ color: 0x181b22, metalness: 0.8, roughness: 0.45 });
+  const lensMat = new THREE.MeshBasicMaterial({ color: 0xd8ecff });
+  const up = new THREE.Vector3(0, 1, 0);
+  for (const sx of [-1, 1]) {
+    const fx = sx * 0.86, fy = -0.95, fz = 0.95;             // bajo y delante, esquinas
+    const spot = new THREE.SpotLight(0xd8e8ff, 3.2, 0, 0.40, 0.7, 1.1);
+    spot.position.set(fx, fy, fz);
+    spot.target.position.set(0, 0.05, 0);
+    rig.add(spot, spot.target);
+    const dir = new THREE.Vector3(-fx, 0.05 - fy, -fz).normalize();   // del foco al escudo
+    const house = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.062, 0.13, 10), houseMat);
+    house.position.set(fx, fy, fz);
+    house.quaternion.setFromUnitVectors(up, dir.clone().negate());    // boca hacia el escudo
+    rig.add(house);
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.038, 12), lensMat);
+    lens.position.set(fx + dir.x * 0.07, fy + dir.y * 0.07, fz + dir.z * 0.07);
+    lens.lookAt(0, 0.05, 0);
+    rig.add(lens);
+    const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex3(makeGlowTex(190, 215, 255, 0.9)),
+      transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending }));
+    gl.scale.set(0.16, 0.16, 1); gl.position.copy(lens.position);
+    rig.add(gl);
+  }
+  lsc.add(rig);
+}
 // Escudo GP en 3D: silueta extruida con la imagen en las caras. Gira solo
 // y se puede arrastrar para rotarlo a mano
 (function () {
@@ -9999,6 +11134,33 @@ requestAnimationFrame(loop);
   const mesh = new THREE.Mesh(exg, [faceMat, edgeMat]);
   mesh.castShadow = true;
   grp.add(mesh);
+  addLogoSpots(lsc);                                     // focos que iluminan el escudo
+  // Tira de LEDs azules en el borde EXACTO del escudo: puntos luminosos
+  // repartidos a intervalos iguales a lo largo de la silueta
+  {
+    const bb2 = new THREE.Box3().setFromBufferAttribute(exg.attributes.position);
+    const cx = (bb2.min.x + bb2.max.x) / 2, cy = (bb2.min.y + bb2.max.y) / 2;
+    const lp = [], N = LOGO_SHAPE.length;
+    for (let i = 0; i < N; i++) {
+      const a = LOGO_SHAPE[i], b2 = LOGO_SHAPE[(i + 1) % N];
+      const ax = a[0] * sc - cx, ay = a[1] * sc - cy;
+      const bx = b2[0] * sc - cx, by = b2[1] * sc - cy;
+      const d = Math.hypot(bx - ax, by - ay), st = Math.max(1, Math.round(d / 0.015));
+      for (let k = 0; k < st; k++) {
+        const u = k / st;
+        const lx = ax + (bx - ax) * u, ly = ay + (by - ay) * u;
+        const rr = Math.hypot(lx, ly) || 1;                  // empuje radial al canto del bisel
+        lp.push(lx + lx / rr * 0.034, ly + ly / rr * 0.034, DEPTH / 2 + 0.026);
+      }
+    }
+    const lg = new THREE.BufferGeometry();
+    lg.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+    if (!window._ledTx) window._ledTx = tex3(makeGlowTex(160, 205, 255, 1));
+    const led = new THREE.Points(lg, new THREE.PointsMaterial({
+      map: window._ledTx, color: 0x3d9bff, size: 0.032, transparent: true,
+      opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+    grp.add(led);
+  }
   // Sombra-gemela 3D: copia oscura pegada detrás que replica el giro (hermana del grp)
   const shadowTwin = new THREE.Mesh(exg,
     new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.38,
@@ -10096,6 +11258,32 @@ requestAnimationFrame(loop);
   const shield = new THREE.Mesh(exg, [faceMat, edgeMat]);
   shield.castShadow = true;
   grp.add(shield);
+  addLogoSpots(lsc);                                     // focos que iluminan el escudo
+  // Tira de LEDs azules en el borde EXACTO del escudo (misma que en el menú)
+  {
+    const bb2 = new THREE.Box3().setFromBufferAttribute(exg.attributes.position);
+    const cx = (bb2.min.x + bb2.max.x) / 2, cy = (bb2.min.y + bb2.max.y) / 2;
+    const lp = [], N = LOGO_SHAPE.length;
+    for (let i = 0; i < N; i++) {
+      const a = LOGO_SHAPE[i], b2 = LOGO_SHAPE[(i + 1) % N];
+      const ax = a[0] * sc - cx, ay = a[1] * sc - cy;
+      const bx = b2[0] * sc - cx, by = b2[1] * sc - cy;
+      const d = Math.hypot(bx - ax, by - ay), st = Math.max(1, Math.round(d / 0.015));
+      for (let k = 0; k < st; k++) {
+        const u = k / st;
+        const lx = ax + (bx - ax) * u, ly = ay + (by - ay) * u;
+        const rr = Math.hypot(lx, ly) || 1;                  // empuje radial al canto del bisel
+        lp.push(lx + lx / rr * 0.034, ly + ly / rr * 0.034, 0.045 / 2 + 0.026);
+      }
+    }
+    const lg = new THREE.BufferGeometry();
+    lg.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+    if (!window._ledTx) window._ledTx = tex3(makeGlowTex(160, 205, 255, 1));
+    const led = new THREE.Points(lg, new THREE.PointsMaterial({
+      map: window._ledTx, color: 0x3d9bff, size: 0.032, transparent: true,
+      opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+    grp.add(led);
+  }
   // Sombra-gemela 3D: copia oscura del escudo justo detrás que replica el giro —
   // se deforma con la perspectiva al girar, como una sombra real proyectada.
   // Es hermana del grupo (no hija): gira sobre su eje pero se queda pegada atrás
