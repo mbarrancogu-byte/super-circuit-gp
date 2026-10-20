@@ -4542,7 +4542,7 @@ function buildWorld() {
           }
           const tm = new THREE.Mesh(new THREE.PlaneGeometry(hwE - 6, 9),
             new THREE.MeshBasicMaterial({ map: tex3(tc), transparent: true, depthWrite: false }));
-          tm.rotation.set(-Math.PI / 2, -Math.atan2(pe.tz, pe.tx), -Math.PI / 2);
+          tm.rotation.set(-Math.PI / 2, 0, Math.atan2(pe.tx, pe.tz));     // cara arriba, letras legibles al llegar
           tm.position.set(pe.x - pe.tx * 2, 0.14, pe.z - pe.tz * 2);
           tm.name = 'tunTxt';
           world.add(tm);
@@ -4832,8 +4832,9 @@ function buildWorld() {
       }
       const sa = new THREE.Mesh(new THREE.PlaneGeometry(hw0 - 6, 9),
         new THREE.MeshBasicMaterial({ map: tex3(sc2), transparent: true, depthWrite: false }));
-      sa.rotation.set(-Math.PI / 2, -Math.atan2(p.tz, p.tx), -Math.PI / 2);
+      sa.rotation.set(-Math.PI / 2, 0, Math.atan2(-p.tx, -p.tz));         // cara arriba, letras legibles al llegar
       sa.position.set(p.x - p.tx * 6.6, 0.14, p.z - p.tz * 6.6);
+      sa.name = 'salTxt';
       world.add(sa);
     }
     // Pórtico de META: dos pilares + cartel superior cruzando la pista
@@ -8841,7 +8842,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 649;
+const BUILD_NO = 650;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
