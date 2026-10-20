@@ -1,5 +1,14 @@
 # AGENTS — Super Circuit GP
 
+## Ubicación de trabajo
+- **Raíz de trabajo actual: `E:\PROYECTOS\ADVANCED F1`** (desde 2026-10-19).
+  Todos los proyectos viven en `E:\PROYECTOS\<NOMBRE>`; la copia antigua en
+  `C:\Users\mbarr\ADVANCED F1` queda solo como respaldo — no editar ahí.
+- Servidor local: `python _serve.py` desde esta carpeta (puerto 52793,
+  hilos + cola 256 — NO usar `python -m http.server`, da 502 por túnel).
+- Túnel público (amigos en Chrome): `cloudflared.exe tunnel --url http://127.0.0.1:52793`.
+  La URL trycloudflare es temporal: cambia en cada reinicio.
+
 ## Preferencias del usuario
 - **NO PREGUNTES — HAZLO SIEMPRE.** Implementa los cambios directamente sin pedir
   confirmación ni aclaraciones. Si algo es ambiguo, elige la opción más razonable
@@ -22,6 +31,7 @@
 
 ## Build APK + sincronización (hacer tras CADA cambio verificado)
 ```bash
+mkdir -p "/d/Super Circuit GP" "/e/GP SUPER CIRCUIT"
 cp index.html sw.js "/d/Super Circuit GP/" 2>/dev/null
 cp index.html sw.js "/e/GP SUPER CIRCUIT/" 2>/dev/null
 cp index.html "android/app/src/main/assets/index.html"
