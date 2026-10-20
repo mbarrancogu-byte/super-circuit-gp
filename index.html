@@ -1018,10 +1018,10 @@
   #lights i.on { background: radial-gradient(circle at 35% 32%, #ff7a60, #e02010 60%, #901508);
     border-color: #ff5040; box-shadow: 0 0 18px rgba(255,50,30,0.9); }
   /* GO: las 5 luces estroban en verde neón un instante — halo blanco en el centro */
-  #lights i.go { background: radial-gradient(circle at 50% 46%, #f0fff2 0 15%, #52ff74 40%, #0ed639 68%, #075018);
-    border-color: #62ff80; animation: goBlink .07s steps(2) infinite;
-    box-shadow: 0 0 20px rgba(70,255,110,1), 0 0 46px rgba(60,255,110,0.7); }
-  @keyframes goBlink { 50% { opacity: 0.2; } }
+  #lights i.go { background: radial-gradient(circle at 50% 46%, #ffffff 0 24%, #8bffa6 42%, #16ff58 66%, #0a8a2c);
+    border-color: #a2ffb8; animation: goBlink .042s steps(2) infinite;
+    box-shadow: 0 0 30px rgba(90,255,130,1), 0 0 70px rgba(70,255,110,0.95), 0 0 120px rgba(50,255,100,0.6); }
+  @keyframes goBlink { 50% { opacity: 0.05; } }
   /* FALSA SALIDA: letrero gigante parpadeante mientras el grupo da la vuelta extra */
   #fsBan { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); z-index: 42;
     display: none; align-items: center; gap: 22px; padding: 16px 34px; border-radius: 16px; pointer-events: none;
@@ -8864,7 +8864,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 654;
+const BUILD_NO = 655;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -9719,26 +9719,29 @@ function lt3Set(n) {
       cols[k].gl.material.map = lt3.redTx; cols[k].gl.material.needsUpdate = true;
     }
     cols[k].gl.material.opacity = on ? 0.85 : 0;
+    cols[k].gl.scale.set(1.7, 2.6, 1);
   }
 }
-// Destello verde del pórtico al apagarse los rojos: estrobo ~14 Hz con halo
-// verde durante ~0.8 s y luego apagado (se corta si arranca otra secuencia)
+// Destello verde del pórtico al apagarse los rojos: estrobo muy fuerte ~24 Hz
+// con halo verde agrandado durante ~0.8 s y luego apagado
 let lt3GoTm = null;
 function lt3Go(seq) {
   const lt3 = world && world.userData.lt3;
   clearInterval(lt3GoTm); lt3GoTm = null;
   if (!lt3) return;
-  if (!lt3.grnTx) lt3.grnTx = tex3(makeGlowTex(90, 255, 120, 0.95));
+  if (!lt3.grnTx) lt3.grnTx = tex3(makeGlowTex(120, 255, 140, 1));
   let ph = 0;
   lt3GoTm = setInterval(() => {
     const on = (ph++ % 2) === 0;
     for (const cols of lt3.sides) for (const c of cols) {
-      for (const ln of c.lns) ln.material.color.setHex(on ? 0x46ff74 : 0x0b3018);
+      for (const ln of c.lns) ln.material.color.setHex(on ? 0x7dff9a : 0x06240f);
       if (c.gl.material.map !== lt3.grnTx) { c.gl.material.map = lt3.grnTx; c.gl.material.needsUpdate = true; }
-      c.gl.material.opacity = on ? 1 : 0.12;
+      c.gl.material.opacity = on ? 1 : 0.04;
+      const gk = on ? 1.9 : 0.8;                                  // el halo se hincha en cada destello
+      c.gl.scale.set(1.7 * gk, 2.6 * gk, 1);
     }
-    if (ph >= 12 || seq !== lightsSeq) { clearInterval(lt3GoTm); lt3GoTm = null; lt3Set(0); }
-  }, 68);
+    if (ph >= 20 || seq !== lightsSeq) { clearInterval(lt3GoTm); lt3GoTm = null; lt3Set(0); }
+  }, 40);
 }
 function startLights() {
   const seq = ++lightsSeq;                                   // invalida timeouts de secuencias anteriores
