@@ -1024,12 +1024,14 @@
   @keyframes goBlink { 50% { opacity: 0.2; } }
   /* FALSA SALIDA: letrero gigante parpadeante mientras el grupo da la vuelta extra */
   #fsBan { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); z-index: 42;
-    display: none; padding: 16px 34px; border-radius: 16px; pointer-events: none;
+    display: none; align-items: center; gap: 22px; padding: 16px 34px; border-radius: 16px; pointer-events: none;
     font-weight: 900; font-style: italic; font-size: clamp(38px, 8vw, 84px); letter-spacing: 7px;
     color: #ffe14a; background: rgba(40,4,4,0.78); border: 3px solid #ff2a1a;
     box-shadow: 0 0 34px rgba(255,42,26,0.75), inset 0 0 26px rgba(255,42,26,0.35);
     text-shadow: 0 0 24px rgba(255,60,30,0.9), 0 4px 0 rgba(0,0,0,0.6);
     animation: fsFlash .34s steps(2) infinite; }
+  #fsCar { width: clamp(100px, 17vw, 190px); height: auto; display: none;
+    filter: drop-shadow(0 5px 12px rgba(0,0,0,0.75)) drop-shadow(0 0 14px rgba(255,60,30,0.4)); }
   @keyframes fsFlash { 50% { opacity: 0.3; } }
   #toast { position: fixed; top: 15%; left: 50%; transform: translateX(-50%); z-index: 45;
     background: rgba(8,14,30,0.85); border: 1px solid rgba(255,200,80,0.5); color: #ffe0a0;
@@ -2077,7 +2079,7 @@
   <div class="chip" id="slipChip">≋ REBUFO</div>
   <div class="chip" id="scChip">🚩 SAFETY CAR</div>
   <div class="chip" id="formChip"></div>
-  <div id="fsBan"></div>
+  <div id="fsBan"><img id="fsCar" alt=""><span id="fsTxt"></span></div>
   <div class="chip" id="boxexChip"><svg class="ic" style="width:13px;height:13px"><use href="#i-wrench"/></svg>Boxes</div>
   <div class="chip" id="reChip" style="display:none;top:76px;left:50%;transform:translateX(-50%);border-color:rgba(120,200,255,0.8);color:#9fd8ff">⏪ REPLAY</div>
   <div id="tuto"></div>
@@ -8862,7 +8864,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 653;
+const BUILD_NO = 654;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -9596,6 +9598,44 @@ function pipTick(dt) {
 // Alguien se adelanta al semáforo → letrero + alarma → el grupo da una vuelta
 // extra en fila (autopiloto para el jugador) → todos vuelven a su cajón →
 // semáforo otra vez, como el procedimiento real de salida abortada.
+// Miniatura 3D del culpable: render único de su propia malla sobre fondo
+// transparente con un renderer aparte — la misma carrocería que rueda en pista
+let _fsR = null;
+function carSnap(grp) {
+  try {
+    const W = 240, H = 150;
+    if (!_fsR) {
+      const r = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      r.setSize(W, H);
+      const sc = new THREE.Scene();
+      sc.add(new THREE.AmbientLight(0xffffff, 1.1));
+      const d = new THREE.DirectionalLight(0xffffff, 1.7); d.position.set(4, 8, 3); sc.add(d);
+      const d2 = new THREE.DirectionalLight(0x90b0ff, 0.7); d2.position.set(-5, 4, -6); sc.add(d2);
+      const cm = new THREE.PerspectiveCamera(36, W / H, 0.1, 60);
+      cm.position.set(5.6, 3.6, 6.2); cm.lookAt(0, 0.45, 0);
+      _fsR = { r, sc, cm };
+    }
+    const { r, sc, cm } = _fsR;
+    const par = grp.parent;
+    const px = grp.position.x, py = grp.position.y, pz = grp.position.z;
+    const rx = grp.rotation.x, ry = grp.rotation.y, rz = grp.rotation.z;
+    sc.add(grp);                                        // sale de escena3 solo durante este render
+    grp.position.set(0, 0, 0); grp.rotation.set(0, Math.PI / 6, 0);
+    r.render(sc, cm);
+    const url = r.domElement.toDataURL('image/png');
+    if (par) par.add(grp); else sc.remove(grp);
+    grp.position.set(px, py, pz); grp.rotation.set(rx, ry, rz);
+    return url;
+  } catch (e) { return null; }
+}
+function fsBanShow(txt, grp) {
+  const fb = el('fsBan');
+  el('fsTxt').textContent = txt;
+  const img = el('fsCar'), url = grp ? carSnap(grp) : null;
+  if (url) { img.src = url; img.style.display = 'block'; }
+  else img.style.display = 'none';
+  fb.style.display = 'flex';
+}
 function falseStart(who) {
   if (fsState || dragMode) return;
   if (who === 'p') {
@@ -9609,9 +9649,8 @@ function falseStart(who) {
   for (const i of lt.children) i.classList.remove('on', 'go');
   lt3Set(0);
   if (performance.now() < t0) t0 = performance.now();         // el grupo sale ya a la vuelta extra
-  const fb = el('fsBan');
-  fb.textContent = T('falseStart') + (who === 'p' ? ' · ' + fsCount + '/2' : '');
-  fb.style.display = 'block';
+  fsBanShow(T('falseStart') + (who === 'p' ? ' · ' + fsCount + '/2' : ''),
+            who === 'p' ? carGrp : (who && who.grp));
   const fc = el('formChip'); fc._t = -1; fc.textContent = '🚩 ' + T('fsLap'); fc.style.display = 'block';
   sfx.fs(); buzz([220, 160, 260]);
   // A la segunda tarjeta: el comisario te avisa — la próxima es bandera negra
@@ -9625,7 +9664,7 @@ function fsDSQ() {
   lt.style.display = 'none';
   for (const i of lt.children) i.classList.remove('on', 'go');
   lt3Set(0);
-  const fb = el('fsBan'); fb.textContent = '⚫ ' + T('dsq'); fb.style.display = 'block';
+  fsBanShow('⚫ ' + T('dsq'), carGrp);
   sfx.fs(); buzz([220, 160, 260]);
   dsq = true;
   setTimeout(() => { if (playing) finishStage(); }, 2800);   // fuera de la carrera
