@@ -8450,7 +8450,7 @@ function init3() {
   const smokeTex = smokeTexs[0];
   window._smokeTexs = smokeTexs;
   dustPool = [];
-  for (let i = 0; i < (LOW_POWER ? 24 : 60); i++) {     // menos partículas en modo rendimiento
+  for (let i = 0; i < (LOW_POWER ? 48 : 120); i++) {    // menos partículas en modo rendimiento
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, depthWrite: false, opacity: 0 }));
     s.visible = false; s.userData = { life: 0, vx: 0, vz: 0 };
     scene3.add(s); dustPool.push(s);
@@ -8862,7 +8862,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 652;
+const BUILD_NO = 653;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -9244,6 +9244,40 @@ function cpuDrive(c, dt) {
         skidMark(c.x + cf2 * 1.5 - sf2 * s * 0.85, c.z + sf2 * 1.5 + cf2 * s * 0.85,
                  -c.a + Math.PI / 2, 0.5 + Math.random() * 0.3, ci);
     }
+  }
+  // === El mismo humo que el jugador: quemada de goma al acelerar (salida
+  // lanzada incluida), spray trasero en mojado, polvo al irse largo y penacho
+  // negro del motor averiado — solo se gasta pool si está cerca de la cámara ===
+  if (Math.hypot(c.x - cam3.position.x, c.z - cam3.position.z) < 300) {
+    const cf3 = Math.cos(c.a), sf3 = Math.sin(c.a);
+    c._dustT = (c._dustT || 0) - dt;
+    if (c._dustT <= 0) {
+      if (rain > 0.25 && c.v > 14) {                        // estela de agua sobre mojado
+        dustPuff(c.x - cf3 * 1.8, c.z - sf3 * 1.8, -cf3 * c.v * 0.18, -sf3 * c.v * 0.18);
+        c._dustT = 0.05;
+      } else if (c.wideT > 0 && c.v > 10) {                 // se va largo: polvo del borde
+        c._dustT = 0.06;
+        for (const s of [-1, 1])
+          dustPuff(c.x - cf3 * 1.5 - sf3 * s * 0.9, c.z - sf3 * 1.5 + cf3 * s * 0.9,
+                   cf3 * c.v * 0.3, sf3 * c.v * 0.3,
+                   Math.random() < 0.7 ? 0xffffff : 0xe8e8e8, rnd(1.3, 1.9), rnd(4.4, 6.4), 0.7);
+      } else if (c.v > 0.5 && c.v < vMax - 1) {             // a fondo: humo de goma + escape
+        const launch = c.v < 20;                            // quemada solo al arrancar (~70 km/h)
+        if (launch || Math.random() < dt * 4) {
+          c._dustT = launch ? 0.07 : 0.16;
+          for (const s of [-1, 1])
+            dustPuff(c.x - cf3 * 1.4 - sf3 * s * 0.9, c.z - sf3 * 1.4 + cf3 * s * 0.9,
+                     -cf3 * c.v * 0.25, -sf3 * c.v * 0.25,
+                     Math.random() < 0.45 ? 0x18181b : 0xf4f4f4,
+                     rnd(1.5, 2.4), rnd(2.6, 4.2), launch ? 0.6 : 0.4);
+          if (Math.random() < 0.3)                          // bocanada negra del escape
+            dustPuff(c.x - cf3 * 2.8, c.z - sf3 * 2.8, -cf3 * c.v * 0.1, -sf3 * c.v * 0.1,
+                     0x121215, rnd(1.1, 1.6), rnd(2.6, 4.2), 0.5);
+        }
+      }
+    }
+    if (c.dmg > 65 && Math.random() < dt * (c.dmg > 85 ? 9 : 4))   // motor roto: humo negro
+      dustPuff(c.x, c.z, -cf3 * c.v * 0.2, -sf3 * c.v * 0.2, 0x242424, 1.4, rnd(3.6, 5.6));
   }
 }
 function cpuTick(dt) {
@@ -10343,7 +10377,11 @@ function update(dt) {
       for (const c of cpus) {
         if (!c.grp || Math.random() > dt * 2.5) continue;      // los CPU también acuaplanan algo
         const cx2 = c.x - m.position.x, cz2 = c.z - m.position.z;
-        if (cx2 * cx2 + cz2 * cz2 < rr * rr) c.latBias = clamp(c.latBias + rnd(-0.9, 0.9), -4, 4);
+        if (cx2 * cx2 + cz2 * cz2 < rr * rr) {
+          c.latBias = clamp(c.latBias + rnd(-0.9, 0.9), -4, 4);
+          const cf4 = Math.cos(c.a), sf4 = Math.sin(c.a);   // también levantan agua del charco
+          dustPuff(c.x, c.z, -cf4 * c.v * 0.2, -sf4 * c.v * 0.2, 0xbfd8ee, 0.6, rnd(3, 4.5), 0.4);
+        }
       }
     }
   }
