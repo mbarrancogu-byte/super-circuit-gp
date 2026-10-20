@@ -206,6 +206,13 @@
   #rainMsg span { color: #cfe8ff; font-size: 12px; letter-spacing: 0.4px; }
   @keyframes rainPulse { 50% { border-color: rgba(150,215,255,1);
     box-shadow: 0 0 38px rgba(80,170,255,0.65); } }
+  /* Variante seca: mismo aviso en ámbar cuando toca volver a gomas de seco */
+  #rainMsg.dry { border-color: rgba(255,190,80,0.8); box-shadow: 0 0 26px rgba(255,170,60,0.35); }
+  #rainMsg.dry b { color: #ffd890; }
+  #rainMsg.dry span { color: #ffe4b8; }
+  #rainMsg.dry.show { animation: dryPulse 1.1s ease-in-out infinite; }
+  @keyframes dryPulse { 50% { border-color: rgba(255,220,150,1);
+    box-shadow: 0 0 38px rgba(255,185,80,0.65); } }
   /* ===== VENTANA DE BOXES: panel 3D con opciones de servicio ===== */
   #pitMenu { position: absolute; z-index: 45; left: 50%; bottom: 150px;
     transform: translateX(-50%) translateY(18px); display: none; opacity: 0;
@@ -8855,7 +8862,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 651;
+const BUILD_NO = 652;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -9007,7 +9014,9 @@ function cpuDrive(c, dt) {
   // En curvas los mejores pilotos frenan más tarde: el castigo por curvatura
   // baja con la habilidad (k 1.0 → ×1.0 · k 1.3 → ×0.9)
   let vMax = Math.max(14, (102 - worst * 138 * (1.35 - 0.35 * clamp(c.k, 0.8, 1.3))) * (1 - c.dmg * 0.004) * 0.96 * c.k
-    * (1 - rain * (c.wet ? 0.06 : 0.24)) * (c.wetStop > 0 ? 0.5 : 1) * errMul * atk);   // slicks en lluvia: pierde mucho
+    * (1 - rain * (c.wet ? 0.06 : 0.24))                    // slicks en lluvia: pierde mucho
+    * (c.wet && rain < 0.25 ? 0.90 : 1)                     // wets en seco: más lento que los de slicks
+    * (c.wetStop > 0 || c.dryStop > 0 ? 0.5 : 1) * errMul * atk);
   if (scT > 0) vMax = Math.min(vMax, 32);            // safety car: todos a ritmo de grupo
   if (formT > 0) vMax = Math.min(vMax, 44);          // vuelta de formación: rodaje lento
   if (fsState === 1) { vMax = Math.min(vMax, 38); c.atkT = 0; }   // vuelta extra: fila india, sin ataques
@@ -9245,9 +9254,18 @@ function cpuTick(dt) {
       if (c.wetAt === undefined) c.wetAt = Math.random() < 0.75 ? raceT + rnd(8, 40) : 1e9;
       if (c.wetStop > 0) {
         c.wetStop -= dt;
-        if (c.wetStop <= 0) c.wet = true;
+        if (c.wetStop <= 0) c.wet = rain > 0.15;      // el equipo monta lo que toca según el asfalto
       } else if (raceT > c.wetAt) c.wetStop = rnd(2.8, 4.2);
       else if (Math.random() < dt * 0.3) c.lockT = Math.max(c.lockT || 0, rnd(0.4, 0.9));
+    }
+    // Al secar: los que montaron wets vuelven a boxes a por slicks;
+    // el que no para se queda lento con gomas de agua sobre asfalto seco
+    if (rain < 0.15 && c.wet) {
+      if (c.dryAt === undefined) c.dryAt = Math.random() < 0.85 ? raceT + rnd(6, 26) : 1e9;
+      if (c.dryStop > 0) {
+        c.dryStop -= dt;
+        if (c.dryStop <= 0) c.wet = false;
+      } else if (raceT > c.dryAt) c.dryStop = rnd(2.8, 4.2);
     }
     cpuDrive(c, dt);
     // Cronometraje de vueltas de la CPU: necesario para el bonus de vuelta rápida
@@ -9919,7 +9937,8 @@ function update(dt) {
   const boostMul = (nitroOn ? 1.24 : 1) * (boostT > 0 ? 1.16 : 1);
   // ENDURANCE: depósito vacío = motor racionado a ritmo lento hasta repostar
   const fuelMul = (endurMode && fuel <= 0) ? 0.3 : 1;
-  const topV = TOPV * st.top * dmgMul * boostMul * fuelMul;
+  const topV = TOPV * st.top * dmgMul * boostMul * fuelMul
+               * (wetTires && rain < 0.25 ? 0.90 : 1);     // wets en seco: pierde velocidad punta
   // Salida lanzada: si tienes GAS pisado justo al apagarse las luces → empuje extra 0.55s
   if (launchWin > 0) launchWin -= dt;
   const launchBoost = (launchWin > 0 && gas > 0) ? 1.55 : 1;
@@ -9971,7 +9990,7 @@ function update(dt) {
   const bkG = bankArr ? Math.abs(bankArr[pathIdx] || 0) : 0;
   const grip = (hb ? 1.4 : (offroad > 0.5 ? 4.5 : 8.5)) * st.grip * tireGrip
                * (1 - rain * (wetTires ? 0.10 : 0.44))   // slicks bajo la lluvia: el coche patina mucho
-               * (wetTires && rain < 0.2 ? 0.95 : 1)      // wets en seco: agarre algo peor
+               * (wetTires && rain < 0.2 ? 0.90 : 1)      // wets en seco: agarre peor
                * (1 + bkG * 0.08)              // el peralte empuja el coche hacia el vértice: más agarre
                * (oilT > 0 ? 0.20 : 1);         // sobre aceite: casi sin agarre lateral
   vl *= Math.exp(-grip * dt);
@@ -10147,7 +10166,7 @@ function update(dt) {
   // Desgaste de neumáticos: blandos gastan rápido, duros aguantan toda la carrera
   // (los de lluvia se comen el doble sobre asfalto seco)
   tireWear = Math.min(100, tireWear + dt * (0.55 + (slidingNow ? 2.6 : 0) + offroad * 1.4)
-    * (OPTS.tire ? 0.42 : 1) * (wetTires && rain < 0.2 ? 1.6 : 1));
+    * (OPTS.tire ? 0.42 : 1) * (wetTires && rain < 0.2 ? 2.0 : 1));
   const tc = el('tireChip'), twR = Math.round(100 - tireWear);
   // ---- Telemetría por rueda: delanteras gastan al girar, traseras al deslizar/acelerar ----
   const wk = (OPTS.tire ? 0.42 : 1), stA = Math.abs(car.steer || 0);
@@ -10216,9 +10235,10 @@ function update(dt) {
         const all = pitSel.tire && pitSel.body && pitSel.fuel;
         const done = [];
         if (pitSel.tire) {
+          const hadWet = wetTires;
           wetTires = rain > 0.25;                       // el equipo monta lo que toca: wets o slicks
           tireWear = 0; for (let i = 0; i < 4; i++) twW[i] = 0;
-          done.push(wetTires ? T('wetOn') : T('tire'));
+          done.push(wetTires ? T('wetOn') : (hadWet ? T('dryOn') : T('tire')));
         }
         if (pitSel.body) { dmg = 0; dmgBroken = false; done.push(T('pmBody')); }
         if (pitSel.fuel) { fuel = 100; done.push(T('pmFuel')); }
@@ -10266,13 +10286,17 @@ function update(dt) {
     if (rain + dt / 14 >= 1 - 1e-4 && rain < 1) {}            // transición silenciosa
     if (rain === 0) { rainEnd = -1; showToast('☀️ ' + T('rainEnd')); }
   }
-  // "LLUVIA EN ASFALTO": aviso persistente mientras corras con slicks bajo el agua
+  // "LLUVIA EN ASFALTO" / "ASFALTO SECO": aviso persistente mientras lleves
+  // las gomas equivocadas — slicks bajo el agua o wets con la pista ya seca
   {
-    const rmc = el('rainMsg'), showR = rain > 0.05 && !wetTires;
-    if (rmc && rmc._s !== showR) {
-      rmc._s = showR;
-      if (showR) { el('rainMsgT').textContent = '🌧 ' + T('rainWet'); el('rainMsgS').textContent = T('rainWetSub'); }
-      rmc.classList.toggle('show', showR);
+    const rmc = el('rainMsg');
+    const rMode = (rain > 0.05 && !wetTires) ? 1 : (wetTires && rain < 0.15 ? 2 : 0);
+    if (rmc && rmc._s !== rMode) {
+      rmc._s = rMode;
+      if (rMode === 1) { el('rainMsgT').textContent = '🌧 ' + T('rainWet'); el('rainMsgS').textContent = T('rainWetSub'); }
+      if (rMode === 2) { el('rainMsgT').textContent = '☀️ ' + T('rainDry'); el('rainMsgS').textContent = T('rainDrySub'); }
+      rmc.classList.toggle('dry', rMode === 2);
+      rmc.classList.toggle('show', rMode > 0);
     }
   }
 
@@ -12001,7 +12025,7 @@ function startStage(n, seed, mp, mode) {
     tt.style.display = 'block';
   } else { tutoT = 0; tt.style.display = 'none'; }
   tireWear = 0; wetTires = false; rain = 0; rainEnd = -1; pitT = 0; pitUsed = false; ghostT = 0; koTimer = KO_LIMIT;
-  { const rmc = el('rainMsg'); if (rmc) { rmc._s = false; rmc.classList.remove('show'); } }
+  { const rmc = el('rainMsg'); if (rmc) { rmc._s = 0; rmc.classList.remove('show'); rmc.classList.remove('dry'); } }
   scT = 0; formT = (champMode || mode === 'champ') ? 7 : 0;   // campeonato: vuelta de formación
   fwGo = -9; flares = []; flareT = rnd(4, 9);                 // pirotecnia/bengalas limpias por etapa
   for (const s of flareGlows) s.visible = false;
@@ -12636,6 +12660,8 @@ const I18N = {
     rain: '¡EMPIEZA A LLOVER! — el asfalto resbala',
     rainWet: 'LLUVIA EN ASFALTO', rainWetSub: 'Se recomienda montar neumáticos de lluvia — entra en boxes',
     wetOn: 'Neumáticos de lluvia',
+    rainDry: 'ASFALTO SECO', rainDrySub: 'Se recomienda montar neumáticos de seco — entra en boxes',
+    dryOn: 'Neumáticos de seco',
     koCpu: '¡RIVAL ELIMINADO!', koOut: 'ELIMINADO',
     koInfo: 'Ibas último en el corte — ¡pide revancha!',
     ach_drift: 'LOGRO · ¡Primer mini-turbo!', ach_boost: 'LOGRO · ¡Nitro a tope!',
@@ -12755,6 +12781,8 @@ const I18N = {
     rain: 'RAIN! — the track is slippery',
     rainWet: 'RAIN ON TRACK', rainWetSub: 'Wet tyres recommended — get into the pits',
     wetOn: 'Wet tyres',
+    rainDry: 'DRY TRACK', rainDrySub: 'Dry tyres recommended — get into the pits',
+    dryOn: 'Dry tyres',
     koCpu: 'RIVAL ELIMINATED!', koOut: 'ELIMINATED',
     koInfo: 'You were last at the cutoff — demand a rematch!',
     ach_drift: 'ACHIEVEMENT · First mini-turbo!', ach_boost: 'ACHIEVEMENT · Nitro engaged!',
