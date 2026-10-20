@@ -987,6 +987,11 @@
     background: #1c0f0f; border: 2px solid rgba(255,80,60,0.25); transition: background .12s; }
   #lights i.on { background: radial-gradient(circle at 35% 32%, #ff7a60, #e02010 60%, #901508);
     border-color: #ff5040; box-shadow: 0 0 18px rgba(255,50,30,0.9); }
+  /* GO: las 5 luces estroban en verde neón un instante — halo blanco en el centro */
+  #lights i.go { background: radial-gradient(circle at 50% 46%, #f0fff2 0 15%, #52ff74 40%, #0ed639 68%, #075018);
+    border-color: #62ff80; animation: goBlink .07s steps(2) infinite;
+    box-shadow: 0 0 20px rgba(70,255,110,1), 0 0 46px rgba(60,255,110,0.7); }
+  @keyframes goBlink { 50% { opacity: 0.2; } }
   /* FALSA SALIDA: letrero gigante parpadeante mientras el grupo da la vuelta extra */
   #fsBan { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); z-index: 42;
     display: none; padding: 16px 34px; border-radius: 16px; pointer-events: none;
@@ -4831,7 +4836,7 @@ function buildWorld() {
       const visGeo = new THREE.BoxGeometry(0.9, 0.09, 0.55);
       const lensGeo = new THREE.CircleGeometry(0.27, 16);
       const ltGlowTx = tex3(makeGlowTex(255, 70, 45, 0.95));
-      const lt3 = { sides: [] };
+      const lt3 = { sides: [], redTx: ltGlowTx };
       for (const s of [-1, 1]) {                               // visible por ambas caras
         const cols = [];
         for (let k = 0; k < 5; k++) {
@@ -8777,7 +8782,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 645;
+const BUILD_NO = 646;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -9461,7 +9466,7 @@ function falseStart(who) {
   launchWin = 0;
   const lt = document.getElementById('lights');               // semáforo abortado
   lt.style.display = 'none';
-  for (const i of lt.children) i.classList.remove('on');
+  for (const i of lt.children) i.classList.remove('on', 'go');
   lt3Set(0);
   if (performance.now() < t0) t0 = performance.now();         // el grupo sale ya a la vuelta extra
   const fb = el('fsBan');
@@ -9478,7 +9483,7 @@ function fsDSQ() {
   launchWin = 0;
   const lt = document.getElementById('lights');
   lt.style.display = 'none';
-  for (const i of lt.children) i.classList.remove('on');
+  for (const i of lt.children) i.classList.remove('on', 'go');
   lt3Set(0);
   const fb = el('fsBan'); fb.textContent = '⚫ ' + T('dsq'); fb.style.display = 'block';
   sfx.fs(); buzz([220, 160, 260]);
@@ -9531,14 +9536,36 @@ function lt3Set(n) {
   for (const cols of lt3.sides) for (let k = 0; k < cols.length; k++) {
     const on = k < n;
     for (const ln of cols[k].lns) ln.material.color.setHex(on ? 0xff3020 : 0x2a0c0c);
+    if (lt3.redTx && cols[k].gl.material.map !== lt3.redTx) {
+      cols[k].gl.material.map = lt3.redTx; cols[k].gl.material.needsUpdate = true;
+    }
     cols[k].gl.material.opacity = on ? 0.85 : 0;
   }
+}
+// Destello verde del pórtico al apagarse los rojos: estrobo ~14 Hz con halo
+// verde durante ~0.8 s y luego apagado (se corta si arranca otra secuencia)
+let lt3GoTm = null;
+function lt3Go(seq) {
+  const lt3 = world && world.userData.lt3;
+  clearInterval(lt3GoTm); lt3GoTm = null;
+  if (!lt3) return;
+  if (!lt3.grnTx) lt3.grnTx = tex3(makeGlowTex(90, 255, 120, 0.95));
+  let ph = 0;
+  lt3GoTm = setInterval(() => {
+    const on = (ph++ % 2) === 0;
+    for (const cols of lt3.sides) for (const c of cols) {
+      for (const ln of c.lns) ln.material.color.setHex(on ? 0x46ff74 : 0x0b3018);
+      if (c.gl.material.map !== lt3.grnTx) { c.gl.material.map = lt3.grnTx; c.gl.material.needsUpdate = true; }
+      c.gl.material.opacity = on ? 1 : 0.12;
+    }
+    if (ph >= 12 || seq !== lightsSeq) { clearInterval(lt3GoTm); lt3GoTm = null; lt3Set(0); }
+  }, 68);
 }
 function startLights() {
   const seq = ++lightsSeq;                                   // invalida timeouts de secuencias anteriores
   const lt = document.getElementById('lights');
   lt.style.display = 'flex';
-  for (const i of lt.children) i.classList.remove('on');
+  for (const i of lt.children) i.classList.remove('on', 'go');
   lt3Set(0);
   let lit = 0;
   const tick = () => {
@@ -9546,15 +9573,20 @@ function startLights() {
     if (lit < 5) { lt.children[lit].classList.add('on'); lt3Set(lit + 1); sfx.beep(); lit++; setTimeout(tick, 520); }
     else setTimeout(() => {                       // pausa aleatoria como en la F1 real
       if (fsState || seq !== lightsSeq) { if (seq === lightsSeq) { lt.style.display = 'none'; lt3Set(0); } return; }
-      for (const i of lt.children) i.classList.remove('on');
-      lt3Set(0);
-      lt.style.display = 'none';
+      for (const i of lt.children) i.classList.replace('on', 'go');
+      lt3Go(seq);                                 // el pórtico estroba en verde neón
       t0 = performance.now();
       launchWin = 0.55;                           // ventana de salida lanzada
       sfx.go();
       const cn = document.getElementById('countNum');
       cn.textContent = T('go'); cn.style.display = 'flex';
       setTimeout(() => cn.style.display = 'none', 700);
+      // las luces estroban en verde ~0.85 s y se apagan
+      setTimeout(() => {
+        if (seq !== lightsSeq) return;
+        for (const i of lt.children) i.classList.remove('go');
+        lt.style.display = 'none';
+      }, 850);
     }, 380 + Math.random() * 700);
   };
   t0 = performance.now() + 4000;                  // el reloj arranca cuando se apagan las luces
