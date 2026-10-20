@@ -4500,6 +4500,33 @@ function buildWorld() {
             if (window._archLed) window._archLed.pts.push({ x: p.x, z: p.z, y: R + 0.4 });
           }
         }
+        // "TÚNEL" pintado en el asfalto unos metros antes de la boca — letras
+        // alargadas en sentido de marcha, legibles para el piloto que llega
+        {
+          const iE = (i0 - 8 + pathLen) % pathLen;
+          const pe = path[iE], hwE = ((trackHW && trackHW[iE]) || RW / 2) * 2;
+          const tc = document.createElement('canvas'); tc.width = 512; tc.height = 256;
+          const tt = tc.getContext('2d');
+          tt.font = 'bold 150px Arial, sans-serif';
+          const wT = Math.max(1, tt.measureText('TÚNEL').width);
+          tt.translate(256, 128);
+          tt.scale(Math.min(1, 480 / wT), 1.9);                  // alargadas en sentido de marcha
+          tt.textAlign = 'center'; tt.textBaseline = 'middle';
+          tt.fillStyle = 'rgba(240,240,235,0.9)';
+          tt.fillText('TÚNEL', 0, 0);
+          tt.setTransform(1, 0, 0, 1, 0, 0);
+          tt.globalCompositeOperation = 'destination-out';       // desgaste de la pintura
+          for (let j = 0; j < 380; j++) {
+            tt.globalAlpha = rnd(0.2, 0.7);
+            tt.fillRect(rnd(10, 502), rnd(10, 246), rnd(1, 3), rnd(1, 2.5));
+          }
+          const tm = new THREE.Mesh(new THREE.PlaneGeometry(hwE - 6, 9),
+            new THREE.MeshBasicMaterial({ map: tex3(tc), transparent: true, depthWrite: false }));
+          tm.rotation.set(-Math.PI / 2, -Math.atan2(pe.tz, pe.tx), -Math.PI / 2);
+          tm.position.set(pe.x - pe.tx * 2, 0.14, pe.z - pe.tz * 2);
+          tm.name = 'tunTxt';
+          world.add(tm);
+        }
       }
       // Segundo túnel: una vía que pasa BAJO el circuito — bocas oscuras y carretera saliendo
       {
@@ -8782,7 +8809,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 646;
+const BUILD_NO = 647;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
