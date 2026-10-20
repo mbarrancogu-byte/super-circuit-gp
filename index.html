@@ -251,6 +251,15 @@
   .zbtn:active { background: rgba(80,180,255,0.35); transform: scale(0.92); }
   #zoomIn  { right: 60px; top: 108px; }
   #zoomOut { right: 12px; top: 108px; }
+  /* Zoom del radar: +/− pegados a su esquina inferior derecha */
+  .mmz { position: absolute; z-index: 20; width: 24px; height: 24px; border-radius: 7px;
+    background: rgba(10,16,28,0.72); border: 1.5px solid rgba(120,200,255,0.55);
+    color: #a0d8ff; font-size: 15px; font-weight: 900; display: none;
+    align-items: center; justify-content: center; pointer-events: auto;
+    touch-action: none; backdrop-filter: blur(2px); }
+  .mmz:active { background: rgba(80,180,255,0.35); transform: scale(0.92); }
+  #mmZoomIn  { left: 176px; top: 198px; }
+  #mmZoomOut { left: 176px; top: 224px; }
   /* Modo zurdo: pad de dirección a la derecha, columna de acción a la izquierda */
   body.lefty #stPad { left: auto; right: 14px; }
   body.lefty #gasBtn { right: auto; left: 14px; }
@@ -1251,6 +1260,7 @@
     .zbtn { width: 38px; height: 34px; font-size: 22px; }
     #zoomIn { right: 52px; top: 100px; }
     #zoomOut { right: 10px; top: 100px; }
+    #mmZoomIn { left: 128px; top: 186px; } #mmZoomOut { left: 128px; top: 212px; }
     #rstBtn { right: 52px; top: 142px; }
     #exitBtn { right: 10px; top: 142px; }
     #pauseBtn { right: 94px; top: 142px; }
@@ -2106,6 +2116,8 @@
 <div class="tbtn" id="nitroBtn" style="border-color:rgba(80,200,255,0.7);color:#80d8ff">⚡</div>
 <div class="zbtn" id="zoomIn">+</div>
 <div class="zbtn" id="zoomOut">−</div>
+<div class="mmz" id="mmZoomIn">+</div>
+<div class="mmz" id="mmZoomOut">−</div>
 <div id="fpsBox">-- FPS</div>
 
 <div id="splash"><img src="portada.jpg" alt="">
@@ -2980,6 +2992,7 @@ let reCamFix = false;                                  // replay: cámara TV fij
 let skidPool = [], dustPool = [], moonLight = null, pathPts = null;
 let puddlePool = [], ripplePool = [];                  // charcos de lluvia + ondas de las gotas
 let mmMinX = 0, mmMinZ = 0, mmScale = 1, mmSpanX = 1, mmSpanZ = 1; // encuadre justo del minimapa (cacheado por etapa)
+let mmZoom = 1;                                       // zoom del radar (botones +/−): >1 sigue al coche
 let mmBg = null;                                       // fondo del radar pre-renderizado (bisel + trazado + meta)
 let fastLapPt = null;                                   // punto donde se logró la vuelta rápida
 let ambLight = null, hemiLight = null, moonOX = 300, moonOZ = -400, moonPoolK = 0;
@@ -8498,6 +8511,12 @@ document.getElementById('zoomIn').addEventListener('pointerdown', e => {
 document.getElementById('zoomOut').addEventListener('pointerdown', e => {
   e.preventDefault(); camZoom = Math.min(1, camZoom + 0.12);
 });
+document.getElementById('mmZoomIn').addEventListener('pointerdown', e => {
+  e.preventDefault(); mmZoom = Math.min(4, mmZoom * 1.35);      // acercar el radar (sigue al coche)
+});
+document.getElementById('mmZoomOut').addEventListener('pointerdown', e => {
+  e.preventDefault(); mmZoom = Math.max(1, mmZoom / 1.35);      // alejar hasta ver todo el circuito
+});
 addEventListener('keyup', e => keys[e.code] = false);
 function bindBtn(id, on, off) {
   const el = document.getElementById(id);
@@ -8809,7 +8828,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 647;
+const BUILD_NO = 648;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -9254,6 +9273,7 @@ function koOut() {
   document.getElementById('hud').style.display = 'none';
   document.getElementById('speedBox').style.display = 'none';
   for (const id of TOUCH_IDS) document.getElementById(id).style.display = 'none';
+  el('mmZoomIn').style.display = 'none'; el('mmZoomOut').style.display = 'none';
 }
 /* ---- Coche fantasma: repite la mejor vuelta grabada ---- */
 const _ghostPr = { x: 0, z: 0, v: 0, grp: null };
@@ -9350,6 +9370,7 @@ function exitToMenu() {
   document.getElementById('hud').style.display = 'none';
   document.getElementById('speedBox').style.display = 'none';
   for (const id of TOUCH_IDS) document.getElementById(id).style.display = 'none';
+  el('mmZoomIn').style.display = 'none'; el('mmZoomOut').style.display = 'none';
   document.getElementById('menu').classList.add('show');
 }
 
@@ -10500,17 +10521,17 @@ function update(dt) {
   // algo menos de humo que con el pedal (factor gasK)
   const gasK = inGas > 0.6 ? 1 : 0.82;
   if (gas > 0.6 && dustT <= 0 && offroad < 0.4) {
-    const launch = spd < 42;                                    // quema de goma al salir
+    const launch = spd < 20;                                    // quema de goma solo al arrancar (~70 km/h)
     if (launch || gas > 0.8) {
-      dustT = launch ? 0.036 : 0.06;
+      dustT = launch ? 0.07 : 0.11;
       for (const s of [-1, 1])
         dustPuff(car.x - cf * 1.4 * rd - sf * s * 0.9, car.z - sf * 1.4 * rd + cf * s * 0.9,
                  -car.vx * 0.25, -car.vz * 0.25,
                  Math.random() < 0.45 ? 0x18181b : 0xf4f4f4,
-                 rnd(2.4, 3.6), rnd(4.4, 7.5), (launch ? 0.95 : 0.78) * gasK);
-      if (Math.random() < 0.7 * gasK)                           // bocanada negra del escape
+                 rnd(1.5, 2.4), rnd(2.6, 4.2), (launch ? 0.6 : 0.4) * gasK);
+      if (Math.random() < 0.3 * gasK)                           // bocanada negra del escape
         dustPuff(car.x - cf * 2.8 * rd, car.z - sf * 2.8 * rd, -car.vx * 0.1, -car.vz * 0.1,
-                 0x121215, rnd(1.3, 1.9), rnd(3.2, 5.6), 0.85 * gasK);
+                 0x121215, rnd(1.1, 1.6), rnd(2.6, 4.2), 0.5 * gasK);
     }
   }
   // Estela de nitro / mini-turbo: llamarada azul/naranja tras el coche
@@ -11422,10 +11443,14 @@ function draw(now) {
 
   // Minimapa (canvas 2D) — grande, pegado arriba a la izquierda bajo la fila de chips
   const mm = W < 540 ? 148 : 196, mx = 10, my = W < 540 ? 92 : 56;
-  const msc = mmScale * (mm - 14);                     // el circuito llena el radar hasta el borde
-  const mSpanX = mmSpanX * msc, mSpanZ = mmSpanZ * msc;
-  const mx2 = p => mx + (mm - mSpanX) / 2 + (p.x - mmMinX) * msc;
-  const my2 = p => my + (mm - mSpanZ) / 2 + (p.z - mmMinZ) * msc;
+  const msc0 = mmScale * (mm - 14);                    // el circuito llena el radar hasta el borde
+  const msc = msc0 * mmZoom;                           // zoom manual del radar (botones +/−)
+  const tCX = mmMinX + mmSpanX / 2, tCZ = mmMinZ + mmSpanZ / 2;
+  const mCX = mmZoom > 1.001 ? car.x : tCX;            // con zoom el encuadre sigue al coche
+  const mCZ = mmZoom > 1.001 ? car.z : tCZ;
+  const mSpanX0 = mmSpanX * msc0, mSpanZ0 = mmSpanZ * msc0;
+  const mx2 = p => mx + mm / 2 + (p.x - mCX) * msc;
+  const my2 = p => my + mm / 2 + (p.z - mCZ) * msc;
   // El fondo del radar (bisel + trazado por sectores + damero de meta) no
   // cambia en toda la etapa: se pre-renderiza una vez a un canvas aparte
   // (antes se trazaban los ~640 puntos ×4 pasadas en CADA frame)
@@ -11435,8 +11460,8 @@ function draw(now) {
     mmBg.width = mmBg.height = Math.round(mm * s);
     mmBg._mm = mm; mmBg._gates = gates; mmBg._pts = pathPts;
     const b = mmBg.getContext('2d'); b.setTransform(s, 0, 0, s, 0, 0);
-    const bx2 = p => (mm - mSpanX) / 2 + (p.x - mmMinX) * msc;
-    const by2 = p => (mm - mSpanZ) / 2 + (p.z - mmMinZ) * msc;
+    const bx2 = p => (mm - mSpanX0) / 2 + (p.x - mmMinX) * msc0;
+    const by2 = p => (mm - mSpanZ0) / 2 + (p.z - mmMinZ) * msc0;
     b.beginPath(); b.roundRect(0, 0, mm, mm, 14);      // radar oscuro
     b.fillStyle = 'rgba(10,12,16,0.92)'; b.fill();
     const rg = b.createRadialGradient(mm / 2, mm / 2, mm * 0.06, mm / 2, mm / 2, mm * 0.62);
@@ -11494,10 +11519,22 @@ function draw(now) {
       b.strokeRect(fx - 4, fy - 2, 8, 4);
     }
   }
-  g.save();                                            // sombra proyectada: el panel flota sobre el HUD
-  g.shadowColor = 'rgba(0,0,0,0.4)'; g.shadowBlur = 12; g.shadowOffsetY = 5;
-  g.drawImage(mmBg, mx, my, mm, mm);
-  g.restore();
+  if (mmZoom <= 1.001) {
+    g.save();                                          // sombra proyectada: el panel flota sobre el HUD
+    g.shadowColor = 'rgba(0,0,0,0.4)'; g.shadowBlur = 12; g.shadowOffsetY = 5;
+    g.drawImage(mmBg, mx, my, mm, mm);
+    g.restore();
+  } else {                                             // con zoom: el fondo cacheado se reencuadra sobre el coche
+    g.save();
+    g.beginPath(); g.roundRect(mx, my, mm, mm, 14); g.clip();
+    g.translate(mx + mm / 2 * (1 - mmZoom) + msc * (tCX - mCX),
+                my + mm / 2 * (1 - mmZoom) + msc * (tCZ - mCZ));
+    g.scale(mmZoom, mmZoom);
+    g.drawImage(mmBg, 0, 0, mm, mm);
+    g.restore();
+  }
+  g.save();                                            // nada del radar sale del panel redondeado
+  g.beginPath(); g.roundRect(mx, my, mm, mm, 14); g.clip();
   // Puertas S1/S2 con etiqueta
   gates.forEach((gi2, k) => {
     if (k === gates.length - 1) return;                       // la meta ya lleva damero
@@ -11540,12 +11577,9 @@ function draw(now) {
     }
     g.restore();
   };
-  g.save();                                             // los sprites no salen del panel
-  g.beginPath(); g.roundRect(mx, my, mm, mm, 14); g.clip();
   for (const r of board) if (!r.me) mmCar(r);           // rivales primero…
   const meE = board.find(r => r.me);
   if (meE) mmCar(meE);                                  // …y el jugador por encima
-  g.restore();
   // Líder: aro dorado que parpadea fuerte
   if (board.length > 1 && Math.floor(now / 140) % 2 === 0) {
     g.strokeStyle = '#e09800'; g.lineWidth = 2.5;
@@ -11563,6 +11597,7 @@ function draw(now) {
       g.fillText((i + 1) + '·' + r.n.toUpperCase(), lx, ly);
     }
   }
+  g.restore();                                          // fin del clip del radar
   // Barra de daño bajo el radar: sube con cada golpe, verde→ámbar→rojo
   {
     const bw = mm, bx = mx, by = my + mm + 4, bh = 12;
@@ -11631,23 +11666,26 @@ function draw(now) {
       const wc = wrc.getContext('2d'), ww = wrc.width, wh = wrc.height;
       wc.clearRect(0, 0, ww, wh);
       wc.fillStyle = '#060a10'; wc.fillRect(0, 0, ww, wh);          // cristal apagado
-      const ws = Math.min((ww - 6) / mmSpanX, (wh - 18) / mmSpanZ); // mapa deja la fila de datos abajo
+      const ws = Math.min((ww - 6) / mmSpanX, (wh - 18) / mmSpanZ) * mmZoom; // mapa deja la fila de datos abajo
+      const wCX = mmZoom > 1.001 ? car.x : mmMinX + mmSpanX / 2;    // con zoom también sigue al coche
+      const wCZ = mmZoom > 1.001 ? car.z : mmMinZ + mmSpanZ / 2;
       const wy0 = (wh - 14) / 2;
-      const wx = p => ww / 2 + (p.x - mmMinX - mmSpanX / 2) * ws;
-      const wy = p => wy0 + (p.z - mmMinZ - mmSpanZ / 2) * ws;
+      const wx = p => ww / 2 + (p.x - wCX) * ws;
+      const wy = p => wy0 + (p.z - wCZ) * ws;
       wc.save();
+      wc.beginPath(); wc.rect(0, 0, ww, wh - 14); wc.clip();       // el zoom no invade la fila de datos
       wc.shadowColor = '#50c8ff'; wc.shadowBlur = 3;               // trazado con glow
       wc.strokeStyle = '#7fd8ff'; wc.lineWidth = 1.6;
       wc.beginPath();
       pathPts.forEach((p, i2) => i2 ? wc.lineTo(wx(p), wy(p)) : wc.moveTo(wx(p), wy(p)));
       wc.closePath(); wc.stroke();
-      wc.restore();
       wc.fillStyle = '#ffa030';                                    // meta
       wc.beginPath(); wc.arc(wx(pathPts[0]), wy(pathPts[0]), 2.4, 0, 7); wc.fill();
       for (const r of board) {                                     // coches en el mapa
         wc.fillStyle = r.me ? '#ff4030' : '#60a0ff';
         wc.beginPath(); wc.arc(wx(r), wy(r), r.me ? 3 : 2.4, 0, 7); wc.fill();
       }
+      wc.restore();
       // Instrumentos de volante: marcha grande + velocidad, fila inferior
       wc.textBaseline = 'bottom';
       wc.font = '900 15px monospace'; wc.fillStyle = '#ffb020';
@@ -12009,6 +12047,7 @@ function startStage(n, seed, mp, mode) {
   }
   cam3.position.set(car.x, 62, car.z);
   camZoom = (OPTS.cam || demoMode) ? 1 : 0.12;   // la DEMO siempre arranca con ZOOM OUT (circuito entero)
+  mmZoom = 1;                                    // el radar arranca con el circuito entero
   demoSpot = demoMode ? { tgt: null, k: 0, phase: 'wait', t: 9, q: [] } : null;
   if (!demoMode) dsHide();
   pathIdx = dragMode ? 0 : sIdx; lastIdx = pathIdx; cpIdx = 0; lapsDone = 0; wrongWay = 0; wwBack = 0; offroad = 0; gear = 1; shiftT = 0; shiftCd = 0; launchWin = 0;
@@ -12044,6 +12083,7 @@ function startStage(n, seed, mp, mode) {
   for (const id of TOUCH_IDS)
     document.getElementById(id).style.display = (OPTS.touchUi && (id !== 'shiftBtn' || dragMode) &&
       ((id !== 'gas2Btn' && id !== 'shift2Btn') || p2Mode)) ? 'flex' : 'none';
+  el('mmZoomIn').style.display = 'flex'; el('mmZoomOut').style.display = 'flex';   // zoom del radar siempre disponible
   document.getElementById('stageChip').innerHTML = ic('flag') + (circAt(stage) ? circAt(stage).name : T('stage') + ' ' + stage);
   document.getElementById('cpChip').textContent = 'V1/' + LAPS + '  ◯ ◯ ◯';
   document.getElementById('vsChip').style.display = (mpMode || vsMode) ? 'block' : 'none';
@@ -12235,6 +12275,7 @@ function finishStage() {
   document.getElementById('hud').style.display = 'none';
   document.getElementById('speedBox').style.display = 'none';
   for (const id of TOUCH_IDS) document.getElementById(id).style.display = 'none';
+  el('mmZoomIn').style.display = 'none'; el('mmZoomOut').style.display = 'none';
 }
 function fmtT(s) {
   const mm = Math.floor(s / 60);
