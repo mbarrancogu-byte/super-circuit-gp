@@ -2682,19 +2682,23 @@ function initAudio() {
     whineOsc.connect(whineGain); whineGain.connect(master); whineOsc.start();
     // Motores de los rivales: un canal por coche — sierra lejana cuyo tono y
     // volumen siguen a cada CPU, con paneo estéreo por su lado y doppler
-    // al adelantar/pasar. 8 canales: hasta 6 CPUs + rival online + reserva
+    // al adelantar/pasar. 8 canales: hasta 6 CPUs + rival online + reserva.
+    // det = desafinado propio de cada canal para que un pelotón no suene a
+    // un solo motor amplificado; wet = envío propio al eco de túnel
     rivCh = [];
     for (let i = 0; i < 8; i++) {
       const g = AC.createGain(); g.gain.value = 0;
       const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 700;
       const o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 80;
       o.connect(f);
+      const wet = AC.createGain(); wet.gain.value = 0;
+      f.connect(wet); wet.connect(td);
       let pan = null;
       if (AC.createStereoPanner) {
         pan = AC.createStereoPanner(); f.connect(pan); pan.connect(g);
       } else f.connect(g);
       g.connect(master); o.start();
-      rivCh.push({ o, g, pan, rd: -1 });
+      rivCh.push({ o, g, pan, wet, det: 1 + (i - 3.5) * 0.006, rd: -1 });
     }
     rivGain = rivCh[0].g; rivOsc = rivCh[0].o; rivPan = rivCh[0].pan;   // compat con silencios
   } catch (e) {}
@@ -8753,7 +8757,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 640;
+const BUILD_NO = 641;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -10482,22 +10486,34 @@ function update(dt) {
     if (rivCh && rivCh.length) {
       const srcs = [];
       for (const c of cpus) if (c && !c.elim) srcs.push(c);
-      if (remote && remote.grp) srcs.push({ v: remote.spd, gear: 1, x: remote.x, z: remote.z });
+      if (remote && remote.grp) srcs.push({ v: remote.spd, gear: 1, x: remote.x, z: remote.z, s: remote.pi });
+      // DEMO: el oído es la cámara de TV; en carrera, el coche del jugador
+      const lx = demoMode && cam3 ? cam3.position.x : car.x;
+      const lz = demoMode && cam3 ? cam3.position.z : car.z;
+      const fx2 = demoMode && cam3 ? cam3.up.x : cf, fz2 = demoMode && cam3 ? cam3.up.z : sf;
       for (let i = 0; i < rivCh.length; i++) {
         const ch = rivCh[i], rv = srcs[i];
-        const rd = rv ? Math.hypot(rv.x - car.x, rv.z - car.z) : 1e9;
-        if (playing && rv && rd < 90 && (rv.v || 0) > 1) {
-          const rr = Math.max(0, (rv.v * 3.4 - ((rv.gear || 1) - 1) * GEAR_SPAN) / GEAR_SPAN);
+        const rd = rv ? Math.hypot(rv.x - lx, rv.z - lz) : 1e9;
+        const idle = rv && !go && (rv.v || 0) <= 1;            // parrilla: ralentí con tambaleo
+        if (playing && rv && rd < 90 && ((rv.v || 0) > 1 || idle)) {
+          const rr = idle ? 0.40 + Math.sin(performance.now() / 85 + i * 1.9) * 0.10
+                          : Math.max(0, (rv.v * 3.4 - ((rv.gear || 1) - 1) * GEAR_SPAN) / GEAR_SPAN);
           // Doppler: al acercarse sube el tono, al alejarse cae — como en la TV
-          const dApp = ch.rd >= 0 && dt > 0 ? clamp((ch.rd - rd) / dt * 3.4 / 300, -0.14, 0.16) : 0;
-          ch.o.frequency.value = (52 + rr * 170) * (1 + dApp);
+          const dApp = !idle && ch.rd >= 0 && dt > 0 ? clamp((ch.rd - rd) / dt * 3.4 / 300, -0.14, 0.16) : 0;
+          ch.o.frequency.value = (52 + rr * 170) * (1 + dApp) * ch.det;
           ch.rd = rd;
-          ch.g.gain.value = clamp(26 / rd - 0.12, 0, 1) * 0.045;     // baja con la distancia
+          ch.g.gain.value = clamp(26 / rd - 0.12, 0, 1) * 0.045 * (idle ? 0.75 : 1);  // baja con la distancia
           if (ch.pan) {                                             // pan por el lado en que va
-            const rdx = rv.x - car.x, rdz = rv.z - car.z;
-            ch.pan.pan.value = clamp((-rdx * sf + rdz * cf) / 22, -0.9, 0.9);
+            const rdx = rv.x - lx, rdz = rv.z - lz;
+            ch.pan.pan.value = clamp((-rdx * fz2 + rdz * fx2) / 22, -0.9, 0.9);
           }
-        } else { ch.g.gain.value = 0; ch.rd = -1; }
+          // Eco de túnel por coche: retumba si EL RIVAL está dentro
+          if (ch.wet) {
+            const ri2 = rv.s !== undefined ? (((Math.floor(rv.s) % pathLen) + pathLen) % pathLen) : -1;
+            ch.wet.gain.value += ((tunI0 >= 0 && ri2 >= tunI0 && ri2 <= tunI1 ? 0.5 : 0)
+                                  - ch.wet.gain.value) * Math.min(1, dt * 3);
+          }
+        } else { ch.g.gain.value = 0; ch.rd = -1; if (ch.wet) ch.wet.gain.value = 0; }
       }
     }
     // Piñonería: silbido de corte recto proporcional a la velocidad
