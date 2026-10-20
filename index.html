@@ -195,6 +195,17 @@
   #boxexBtn svg { width: 22px; height: 22px; margin: 0; }
   #boxexChip { top: 108px; left: 50%; transform: translateX(-50%); display: none;
     border-color: rgba(255,90,60,0.8); color: #ffb0a0; }
+  /* Aviso de lluvia: banner azul pulsante mientras sigas con slicks bajo el agua */
+  #rainMsg { position: absolute; z-index: 30; left: 50%; top: 148px; transform: translateX(-50%);
+    display: none; text-align: center; padding: 9px 26px; border-radius: 14px;
+    background: rgba(6,14,30,0.85); border: 2px solid rgba(90,170,255,0.7);
+    box-shadow: 0 0 26px rgba(60,150,255,0.35); pointer-events: none; }
+  #rainMsg.show { display: block; animation: rainPulse 1.1s ease-in-out infinite; }
+  #rainMsg b { display: block; color: #9fd4ff; font-size: 19px; letter-spacing: 2px;
+    font-style: italic; }
+  #rainMsg span { color: #cfe8ff; font-size: 12px; letter-spacing: 0.4px; }
+  @keyframes rainPulse { 50% { border-color: rgba(150,215,255,1);
+    box-shadow: 0 0 38px rgba(80,170,255,0.65); } }
   /* ===== VENTANA DE BOXES: panel 3D con opciones de servicio ===== */
   #pitMenu { position: absolute; z-index: 45; left: 50%; bottom: 150px;
     transform: translateX(-50%) translateY(18px); display: none; opacity: 0;
@@ -2046,6 +2057,7 @@
     <div class="chip" id="demoChip" style="display:none;border-color:rgba(140,255,220,0.6);color:#a0ffe0;pointer-events:auto;cursor:pointer"><svg class="ic"><use href="#i-tv"/></svg>DEMO · SALIR</div>
   </div>
   <div class="chip" id="radioChip"><svg class="ic"><use href="#i-radio"/></svg><div id="radioTxt"></div></div>
+  <div id="rainMsg"><b id="rainMsgT"></b><span id="rainMsgS"></span></div>
   <!-- REINICIAR / SALIR: columna fija en el borde derecho, bajo el zoom -->
   <div class="hudBtn" id="pauseBtn"><svg class="ic"><use href="#i-pause"/></svg></div>
   <div class="hudBtn" id="rstBtn"><svg class="ic"><use href="#i-restart"/></svg></div>
@@ -2823,6 +2835,7 @@ let nitro = 60, nitroOn = false, inNitro = false, slipT = 0, nitroHeat = 0, nitr
 let fuel = 100, endurMode = false;                  // ENDURANCE: combustible que obliga a repostar
 let driftT = 0, boostT = 0;
 let tireWear = 0;                       // 0-100 (solo blandos gastan rápido)
+let wetTires = false;                   // neumáticos de lluvia montados (se cambian en boxes)
 // Telemetría: desgaste por rueda [DI, DD, TI, TD], flex del chasis por zona
 // y muestreo de sensores a ~5 Hz para las pantallas del muro de boxes
 let twW = [0, 0, 0, 0], flexZ = [0, 0, 0, 0], tele = [], teleT = 0, lapTs = [], lapT0 = 0;
@@ -8682,7 +8695,7 @@ function crewOut() {
 let pitSel = { tire: true, body: true, fuel: true };
 function pitMenuVals() {
   const w = Math.round(tireWear), d = Math.round(dmg), f = Math.round(fuel);
-  el('pmTireV').textContent = T('pmWear') + ' ' + w + '%';
+  el('pmTireV').textContent = T('pmWear') + ' ' + w + '%' + (rain > 0.25 ? ' → 🌧' : '');
   el('pmBodyV').textContent = T('pmDmg') + ' ' + d + '%';
   el('pmFuelV').textContent = '⛽ ' + f + '%';
 }
@@ -8842,7 +8855,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 650;
+const BUILD_NO = 651;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -8993,7 +9006,8 @@ function cpuDrive(c, dt) {
   const errMul = (c.errT > 0 ? 0.7 : 1) * (c.lockT > 0 ? 1.16 : 1);   // al bloquear entra pasado
   // En curvas los mejores pilotos frenan más tarde: el castigo por curvatura
   // baja con la habilidad (k 1.0 → ×1.0 · k 1.3 → ×0.9)
-  let vMax = Math.max(14, (102 - worst * 138 * (1.35 - 0.35 * clamp(c.k, 0.8, 1.3))) * (1 - c.dmg * 0.004) * 0.96 * c.k * (1 - rain * 0.12) * errMul * atk);
+  let vMax = Math.max(14, (102 - worst * 138 * (1.35 - 0.35 * clamp(c.k, 0.8, 1.3))) * (1 - c.dmg * 0.004) * 0.96 * c.k
+    * (1 - rain * (c.wet ? 0.06 : 0.24)) * (c.wetStop > 0 ? 0.5 : 1) * errMul * atk);   // slicks en lluvia: pierde mucho
   if (scT > 0) vMax = Math.min(vMax, 32);            // safety car: todos a ritmo de grupo
   if (formT > 0) vMax = Math.min(vMax, 44);          // vuelta de formación: rodaje lento
   if (fsState === 1) { vMax = Math.min(vMax, 38); c.atkT = 0; }   // vuelta extra: fila india, sin ataques
@@ -9225,6 +9239,16 @@ function cpuDrive(c, dt) {
 }
 function cpuTick(dt) {
   for (const c of cpus) {
+    // Lluvia: la mayoría para a montar neumáticos de lluvia tras unos segundos;
+    // el que no para derrapa más y bloquea las delanteras en las frenadas
+    if (rain > 0.3 && !c.wet) {
+      if (c.wetAt === undefined) c.wetAt = Math.random() < 0.75 ? raceT + rnd(8, 40) : 1e9;
+      if (c.wetStop > 0) {
+        c.wetStop -= dt;
+        if (c.wetStop <= 0) c.wet = true;
+      } else if (raceT > c.wetAt) c.wetStop = rnd(2.8, 4.2);
+      else if (Math.random() < dt * 0.3) c.lockT = Math.max(c.lockT || 0, rnd(0.4, 0.9));
+    }
     cpuDrive(c, dt);
     // Cronometraje de vueltas de la CPU: necesario para el bonus de vuelta rápida
     if (pathLen > 0) {
@@ -9945,7 +9969,9 @@ function update(dt) {
   // Agarre lateral: coche × neumáticos × lluvia — el derrape es lateral que no se disipa
   const tireGrip = OPTS.tire ? 0.98 - tireWear * 0.001 : 1.10 - tireWear * 0.0032;
   const bkG = bankArr ? Math.abs(bankArr[pathIdx] || 0) : 0;
-  const grip = (hb ? 1.4 : (offroad > 0.5 ? 4.5 : 8.5)) * st.grip * tireGrip * (1 - rain * 0.26)
+  const grip = (hb ? 1.4 : (offroad > 0.5 ? 4.5 : 8.5)) * st.grip * tireGrip
+               * (1 - rain * (wetTires ? 0.10 : 0.44))   // slicks bajo la lluvia: el coche patina mucho
+               * (wetTires && rain < 0.2 ? 0.95 : 1)      // wets en seco: agarre algo peor
                * (1 + bkG * 0.08)              // el peralte empuja el coche hacia el vértice: más agarre
                * (oilT > 0 ? 0.20 : 1);         // sobre aceite: casi sin agarre lateral
   vl *= Math.exp(-grip * dt);
@@ -10119,7 +10145,9 @@ function update(dt) {
   if (bxc._on !== bxOn) { bxc._on = bxOn; bxc.style.display = bxOn ? 'inline-flex' : 'none'; }
 
   // Desgaste de neumáticos: blandos gastan rápido, duros aguantan toda la carrera
-  tireWear = Math.min(100, tireWear + dt * (0.55 + (slidingNow ? 2.6 : 0) + offroad * 1.4) * (OPTS.tire ? 0.42 : 1));
+  // (los de lluvia se comen el doble sobre asfalto seco)
+  tireWear = Math.min(100, tireWear + dt * (0.55 + (slidingNow ? 2.6 : 0) + offroad * 1.4)
+    * (OPTS.tire ? 0.42 : 1) * (wetTires && rain < 0.2 ? 1.6 : 1));
   const tc = el('tireChip'), twR = Math.round(100 - tireWear);
   // ---- Telemetría por rueda: delanteras gastan al girar, traseras al deslizar/acelerar ----
   const wk = (OPTS.tire ? 0.42 : 1), stA = Math.abs(car.steer || 0);
@@ -10158,17 +10186,19 @@ function update(dt) {
     reBuf.push({ t: raceT, x: car.x, z: car.z, a: car.a });
     while (reBuf.length && reBuf[0].t < raceT - 16) reBuf.shift();
   }
-  if (tc && tc._w !== twR) {
-    tc._w = twR;
-    tc.innerHTML = `${ic('tire')} ${OPTS.tire ? 'D' : 'S'} ${twR}%`;
-    tc.style.color = twR < 30 ? '#ff7060' : twR < 60 ? '#ffcf70' : '#a0e0ff';
+  const tcW = `${wetTires ? 'W' : (OPTS.tire ? 'D' : 'S')} ${twR}%`;
+  if (tc && tc._w !== tcW) {
+    tc._w = tcW;
+    tc.innerHTML = `${ic('tire')} ${tcW}`;
   }
+  if (tc) tc.style.color = (rain > 0.25 && !wetTires) ? '#9fd4ff' : (twR < 30 ? '#ff7060' : twR < 60 ? '#ffcf70' : '#a0e0ff');
 
   // Boxes: zona junto a meta — entrar lento repara daño y monta neumáticos nuevos.
   // Con el botón PIT pulsado el coche frena solo y para aunque entre algo más rápido
   if (pitZone) {
     const pd = Math.hypot(car.x - pitZone.x, car.z - pitZone.z);
-    const need = dmg > 3 || tireWear > 15 || dmgBroken || (endurMode && fuel < 60);
+    const need = dmg > 3 || tireWear > 15 || dmgBroken || (endurMode && fuel < 60) ||
+                 (rain > 0.25 && !wetTires) || (wetTires && rain < 0.15);   // montar wets / volver a slicks
     if (pitDur > 0) {
       // Parada cronometrada: inmovilizado hasta que acaban los mecánicos.
       // Duración aleatoria por parada — nunca más de 3.50 s
@@ -10185,7 +10215,11 @@ function update(dt) {
         // Solo lo marcado en la ventana de boxes: neumáticos / carrocería / gasolina
         const all = pitSel.tire && pitSel.body && pitSel.fuel;
         const done = [];
-        if (pitSel.tire) { tireWear = 0; for (let i = 0; i < 4; i++) twW[i] = 0; done.push(T('tire')); }
+        if (pitSel.tire) {
+          wetTires = rain > 0.25;                       // el equipo monta lo que toca: wets o slicks
+          tireWear = 0; for (let i = 0; i < 4; i++) twW[i] = 0;
+          done.push(wetTires ? T('wetOn') : T('tire'));
+        }
         if (pitSel.body) { dmg = 0; dmgBroken = false; done.push(T('pmBody')); }
         if (pitSel.fuel) { fuel = 100; done.push(T('pmFuel')); }
         pitStop = 0; pitDur = 0; pitT = 0; addDamage(0);
@@ -10231,6 +10265,15 @@ function update(dt) {
     rain = Math.max(0, rain - dt / 14);                       // la pista se seca despacio
     if (rain + dt / 14 >= 1 - 1e-4 && rain < 1) {}            // transición silenciosa
     if (rain === 0) { rainEnd = -1; showToast('☀️ ' + T('rainEnd')); }
+  }
+  // "LLUVIA EN ASFALTO": aviso persistente mientras corras con slicks bajo el agua
+  {
+    const rmc = el('rainMsg'), showR = rain > 0.05 && !wetTires;
+    if (rmc && rmc._s !== showR) {
+      rmc._s = showR;
+      if (showR) { el('rainMsgT').textContent = '🌧 ' + T('rainWet'); el('rainMsgS').textContent = T('rainWetSub'); }
+      rmc.classList.toggle('show', showR);
+    }
   }
 
   // Charcos de lluvia: las gotas forman manchas de agua sobre el asfalto.
@@ -11957,7 +12000,8 @@ function startStage(n, seed, mp, mode) {
     tt.innerHTML = T('tuto1') + '<br><span style="color:#8fb8ff">' + T('tuto2') + '</span>';
     tt.style.display = 'block';
   } else { tutoT = 0; tt.style.display = 'none'; }
-  tireWear = 0; rain = 0; rainEnd = -1; pitT = 0; pitUsed = false; ghostT = 0; koTimer = KO_LIMIT;
+  tireWear = 0; wetTires = false; rain = 0; rainEnd = -1; pitT = 0; pitUsed = false; ghostT = 0; koTimer = KO_LIMIT;
+  { const rmc = el('rainMsg'); if (rmc) { rmc._s = false; rmc.classList.remove('show'); } }
   scT = 0; formT = (champMode || mode === 'champ') ? 7 : 0;   // campeonato: vuelta de formación
   fwGo = -9; flares = []; flareT = rnd(4, 9);                 // pirotecnia/bengalas limpias por etapa
   for (const s of flareGlows) s.visible = false;
@@ -11972,7 +12016,7 @@ function startStage(n, seed, mp, mode) {
   ghostRec = (ttMode || (!mpMode && !demoMode)) ? [] : null;   // grabar para el fantasma
   // Lluvia: posible en etapas procedurales a partir de la 2ª; si llueve, puede
   // escampar de nuevo más tarde (la pista se va secando)
-  rainAt = (!circAt(n) && n >= 2 && Math.random() < 0.5) ? 18 + Math.random() * 30 : -1;
+  rainAt = (n >= 2 && Math.random() < 0.5) ? 18 + Math.random() * 30 : -1;   // lluvia en cualquier circuito
   rainEnd = rainAt > 0 && Math.random() < 0.45 ? rainAt + 22 + Math.random() * 28 : -1;
   genTrack(seed);
   const _c = circAt(stage);
@@ -12590,6 +12634,8 @@ const I18N = {
     mustPit: '¡MOTOR DESTROZADO! Entra en boxes',
     c3dHint: 'Arrastra gira · clic der. mueve · rueda o +/− zoom · flechas giran · R centra',
     rain: '¡EMPIEZA A LLOVER! — el asfalto resbala',
+    rainWet: 'LLUVIA EN ASFALTO', rainWetSub: 'Se recomienda montar neumáticos de lluvia — entra en boxes',
+    wetOn: 'Neumáticos de lluvia',
     koCpu: '¡RIVAL ELIMINADO!', koOut: 'ELIMINADO',
     koInfo: 'Ibas último en el corte — ¡pide revancha!',
     ach_drift: 'LOGRO · ¡Primer mini-turbo!', ach_boost: 'LOGRO · ¡Nitro a tope!',
@@ -12707,6 +12753,8 @@ const I18N = {
     mustPit: 'ENGINE WRECKED! Pit stop required',
     c3dHint: 'Drag rotates · right-drag moves · wheel or +/− zoom · arrows rotate · R resets',
     rain: 'RAIN! — the track is slippery',
+    rainWet: 'RAIN ON TRACK', rainWetSub: 'Wet tyres recommended — get into the pits',
+    wetOn: 'Wet tyres',
     koCpu: 'RIVAL ELIMINATED!', koOut: 'ELIMINATED',
     koInfo: 'You were last at the cutoff — demand a rematch!',
     ach_drift: 'ACHIEVEMENT · First mini-turbo!', ach_boost: 'ACHIEVEMENT · Nitro engaged!',
