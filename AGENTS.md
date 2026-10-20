@@ -31,9 +31,10 @@
 
 ## Build APK + sincronización (hacer tras CADA cambio verificado)
 ```bash
-mkdir -p "/d/Super Circuit GP" "/e/GP SUPER CIRCUIT"
+mkdir -p "/d/Super Circuit GP" "/e/GP SUPER CIRCUIT" "/g/GP SUPER CIRCUIT"
 cp index.html sw.js "/d/Super Circuit GP/" 2>/dev/null
 cp index.html sw.js "/e/GP SUPER CIRCUIT/" 2>/dev/null
+cp index.html sw.js "/g/GP SUPER CIRCUIT/" 2>/dev/null   # USB G: — carpeta por juego
 cp index.html "android/app/src/main/assets/index.html"
 cp sw.js "android/app/src/main/assets/sw.js"
 cd android && JAVA_HOME="C:\Program Files\Android\Android Studio\jbr" \
@@ -41,4 +42,5 @@ cd android && JAVA_HOME="C:\Program Files\Android\Android Studio\jbr" \
 cp "android/app/build/outputs/apk/debug/app-debug.apk" "SuperCircuitGP-1.0.apk"
 cp "SuperCircuitGP-1.0.apk" "/d/Super Circuit GP/"
 cp "SuperCircuitGP-1.0.apk" "/e/GP SUPER CIRCUIT/"
+cp "SuperCircuitGP-1.0.apk" "/g/GP SUPER CIRCUIT/" 2>/dev/null
 ```
