@@ -4432,7 +4432,7 @@ function buildWorld() {
         tg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
         tg.setIndex(idx); tg.computeVertexNormals();
         world.add(new THREE.Mesh(tg, new THREE.MeshStandardMaterial({
-          color: 0xcfe2f8, transparent: true, opacity: 0.32, roughness: 0.12,
+          color: 0xcfe2f8, transparent: true, opacity: 0.18, roughness: 0.12,
           metalness: 0.4, side: THREE.DoubleSide, depthWrite: false })));
         // Arcos estructurales opacos cada pocos metros — el coche parpadea entre ellos
         const nRib = Math.max(2, Math.floor((i1 - i0) / 7));
@@ -8757,7 +8757,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 641;
+const BUILD_NO = 642;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
