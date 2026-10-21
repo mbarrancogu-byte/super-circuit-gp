@@ -9890,7 +9890,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 701;
+const BUILD_NO = 702;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -12641,14 +12641,14 @@ function draw(now) {
       used.add(n.i);
       const L = AL.lights[li++];
       L.position.set(n.a.x, Math.max(4, n.a.y * 0.62), n.a.z);
-      L.intensity = (1 - n.d / 58) * 60;
+      L.intensity = (1 - n.d / 58) * 60 * (todMode === 0 ? 0 : 1);
     }
     for (; li < AL.lights.length; li++) AL.lights[li].intensity = 0;
     // Aros LED por proximidad: cada arco solo se enciende cuando un coche se
     // acerca — encendido rápido al aproximar (~90u), apagado suave al alejar
     for (const a of AL.pts) {
       if (a.i === undefined && !a.band && !a.spine) continue;
-      const tgt = 1;                                        // arcos siempre encendidos
+      const tgt = todMode === 0 ? 0 : 1;                    // de día apagados; tarde/noche encendidos
       a.v = tgt > a.v ? Math.min(tgt, a.v + dt * 5) : Math.max(tgt, a.v - dt * 1.8);
       if (a.i !== undefined) {
         AL.tmpC.copy(AL.off).lerp(AL.on, a.v); (a.ledM || AL.led).setColorAt(a.i, AL.tmpC);
