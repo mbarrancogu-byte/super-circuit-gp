@@ -2707,6 +2707,7 @@
 <div id="toast"></div>
 
 <script src="three.min.js"></script>
+<script src="postprocessing.min.js"></script>
 <script src="logo_shape.js"></script>
 <script src="peerjs.min.js"></script>
 <script>
@@ -2726,7 +2727,8 @@ function resize() {
   cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px';
   g.canvas.width = W * DPR; g.canvas.height = H * DPR; g.canvas.style.width = W + 'px'; g.canvas.style.height = H + 'px';
   g.setTransform(DPR, 0, 0, DPR, 0, 0);
-  if (renderer3) { renderer3.setSize(W, H, false); cam3.aspect = W / H; cam3.updateProjectionMatrix(); }
+  if (renderer3) { renderer3.setSize(W, H, false); cam3.aspect = W / H; cam3.updateProjectionMatrix();
+    if (window._ppComp) window._ppComp.setSize(W, H); }
 }
 addEventListener('resize', resize); resize();
 
@@ -8996,7 +8998,39 @@ function init3() {
       return true;
     } catch (e) { aoRT = null; return false; }
   }
+  // ===== postprocessing v6.22 (vendorizado): EffectComposer profesional =====
+  // RenderPass + NormalPass → EffectPass(SSAO + Bloom + SMAA). El ACES filmic ya
+  // lo aplican los materiales (renderer3.toneMapping): meter ToneMappingEffect
+  // encima curvaría dos veces la imagen, así que el composite de la librería
+  // solo añade AO, bloom y antialiasing. Fallback: cadena propia AO+bloom+FXAA.
+  let ppComp = null, ppFail = false, ppSSAO = null, ppBloom = null;
+  function ppBuild() {
+    if (ppComp || ppFail) return !!ppComp;
+    const PP = window.POSTPROCESSING;
+    if (!PP || !cam3) { ppFail = true; return false; }
+    try {
+      ppComp = new PP.EffectComposer(renderer3);
+      ppComp.addPass(new PP.RenderPass(scene3, cam3));
+      const np = new PP.NormalPass(scene3, cam3);
+      ppComp.addPass(np);
+      ppSSAO = new PP.SSAOEffect(cam3, np, { samples: 9, rings: 3,
+        radius: 0.3, intensity: 1.4, luminanceInfluence: 0.55,
+        distanceThreshold: 0.6, distanceFalloff: 0.1,
+        rangeThreshold: 0.9, rangeFalloff: 0.3 });
+      ppBloom = new PP.BloomEffect({ intensity: 0.55, luminanceThreshold: 0.62,
+        luminanceSmoothing: 0.34, mipmapBlur: true });
+      ppComp.addPass(new PP.EffectPass(cam3, ppSSAO, ppBloom, new PP.SMAAEffect()));
+      window._ppComp = ppComp;
+      return true;
+    } catch (e) { ppComp = null; ppFail = true; return false; }
+  }
   window._renderScene3 = (scene, cam) => {
+    if (!LOW_POWER && cam === cam3 && (OPTS.ao || OPTS.bloom) && ppBuild()) {
+      ppSSAO.blendMode.opacity.value = OPTS.ao ? 1 : 0;
+      ppBloom.intensity = OPTS.bloom ? 0.55 : 0;
+      ppComp.render();
+      return;
+    }
     if (window._aoOK && (OPTS.ao || OPTS.bloom)) {
       if (!aoBuild()) window._aoOK = false;
       else {
@@ -9521,7 +9555,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 684;
+const BUILD_NO = 685;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
