@@ -4699,11 +4699,11 @@ function buildWorld() {
         const ledR = RW / 2 + 1.82;
         const ledArcs = new THREE.InstancedMesh(
           new THREE.TorusGeometry(ledR, 0.17, 6, 30, Math.PI),
-          new THREE.MeshBasicMaterial({ color: 0xe070ff }), nGates);
+          new THREE.MeshBasicMaterial({ color: 0xe070ff, toneMapped: false }), nGates);
         const haloArcs = new THREE.InstancedMesh(
           new THREE.TorusGeometry(ledR, 0.55, 6, 30, Math.PI),
           new THREE.MeshBasicMaterial({ color: 0xa038ff, transparent: true, opacity: 0.42,
-            blending: THREE.AdditiveBlending, depthWrite: false }), nGates);
+            blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }), nGates);
         // Charco de luz morada sobre el asfalto bajo cada arco
         const poolTex = (() => {
           const c = document.createElement('canvas'); c.width = 128; c.height = 64;
@@ -4717,7 +4717,7 @@ function buildWorld() {
         })();
         const poolGeo = new THREE.PlaneGeometry(RW * 1.05, 11);
         const poolMat = new THREE.MeshBasicMaterial({ map: poolTex, transparent: true,
-          blending: THREE.AdditiveBlending, depthWrite: false });
+          blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
         const archPts = window._archLed = { pts: [], lights: [] };
         const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), eu = new THREE.Euler(),
               vv = new THREE.Vector3(), sc = new THREE.Vector3(), cc = new THREE.Color();
@@ -4829,11 +4829,11 @@ function buildWorld() {
         // LED morada pegada a la cara interior de cada nervio + halo aditivo
         const ledRib = new THREE.InstancedMesh(
           new THREE.TorusGeometry(R - 0.3, 0.15, 6, 24, Math.PI),
-          new THREE.MeshBasicMaterial({ color: 0xe070ff }), nRib);
+          new THREE.MeshBasicMaterial({ color: 0xe070ff, toneMapped: false }), nRib);
         const haloRib = new THREE.InstancedMesh(
           new THREE.TorusGeometry(R - 0.3, 0.5, 6, 24, Math.PI),
           new THREE.MeshBasicMaterial({ color: 0xa038ff, transparent: true, opacity: 0.42,
-            blending: THREE.AdditiveBlending, depthWrite: false }), nRib);
+            blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }), nRib);
         const AL0 = window._archLed, _wht = new THREE.Color(1, 1, 1);
         for (let k = 0; k < nRib; k++) {
           const p = path[(i0 + k * 7) % pathLen];
@@ -4865,7 +4865,7 @@ function buildWorld() {
             new THREE.MeshStandardMaterial({ color: 0x2b3038, roughness: 0.55, metalness: 0.5 }));
           const spineLed = new THREE.Mesh(
             new THREE.TubeGeometry(sCurve, (i1 - i0) * 2, 0.09, 6, false),
-            new THREE.MeshBasicMaterial({ color: 0xe070ff }));
+            new THREE.MeshBasicMaterial({ color: 0xe070ff, toneMapped: false }));
           spineLed.position.y = -0.42;                  // cuelga bajo la viga
           world.add(spine, spineLed);
           // La tira del lomo responde a proximidad: el loop toma el `v` máximo
@@ -4878,7 +4878,7 @@ function buildWorld() {
           const mouthGeo = new THREE.TorusGeometry(R + 0.35, 0.75, 10, 26, Math.PI);
           const concM = new THREE.MeshStandardMaterial({ map: makeConcreteTex(), roughness: 0.85 });
           const bandGeo = new THREE.TorusGeometry(R + 0.75, 0.16, 8, 26, Math.PI);
-          const bandM = new THREE.MeshStandardMaterial({ color: 0xc860ff, emissive: 0xa030ff, emissiveIntensity: 1.1, roughness: 0.4 });
+          const bandM = new THREE.MeshStandardMaterial({ color: 0xc860ff, emissive: 0xa030ff, emissiveIntensity: 1.1, roughness: 0.4, toneMapped: false });
           for (const ii of [i0, i1]) {
             const p = path[ii % pathLen];
             wE.set(0, Math.atan2(-p.tx, -p.tz), 0); wQ.setFromEuler(wE);
@@ -9890,7 +9890,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 700;
+const BUILD_NO = 701;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
