@@ -7382,6 +7382,85 @@ function buildWorld() {
       if (m.instanceColor) m.instanceColor.needsUpdate = true;
     }
     world.add(bushes, ferns, flors);
+
+    // ===== SETO PERIMETRAL: vegetación 3D siguiendo los bordes del circuito =====
+    // Cortasetos alineados con la trazada justo fuera del asfalto, con arbustos
+    // redondos intercalados al pie — la franja verde continua que bordea la
+    // pista en los circuitos reales en lugar de solo el plano de césped.
+    {
+      const okHedge = (x, z) => {                          // como okSpot pero pegado al borde
+        if (nearRoad(x, z, 2.5)) return false;             // nunca sobre el asfalto/arcén
+        const pe = window._pitExcl;
+        if (pe) {
+          const dx = x - pe.x, dz = z - pe.z;
+          if (Math.abs(dx * pe.tx + dz * pe.tz) < pe.hx &&
+              Math.abs(-dx * pe.tz + dz * pe.tx) < pe.hz) return false;
+        }
+        for (const o of obstacles) if (o.r > 5 && Math.hypot(o.x - x, o.z - z) < o.r + 2) return false;
+        if (window._standPts)
+          for (const sp of window._standPts)
+            if (Math.hypot(sp.x - x, sp.z - z) < sp.r) return false;
+        const lk = window._lakeExcl;
+        if (lk && Math.hypot((lk.x - x) / lk.rx, (lk.z - z) / lk.rz) < 1) return false;
+        const se2 = window._shieldExcl;
+        if (se2 && Math.hypot(se2.x - x, se2.z - z) < se2.r + 3) return false;
+        return true;
+      };
+      // Geometría del cortasetos: bloque alargado ~5.5×1.5×1.8u con lomos
+      // irregulares arriba — recortado pero natural, orientado con la trazada
+      const hedgeGeo = mergeGeos([
+        { geo: new THREE.SphereGeometry(1, 10, 7), m: _mm(0, 0.75, 0, 2.6, 0.75, 0.85) },
+        { geo: new THREE.SphereGeometry(1, 8, 6),  m: _mm(-1.5, 1.05, 0.15, 1.0, 0.55, 0.7) },
+        { geo: new THREE.SphereGeometry(1, 8, 6),  m: _mm(0.4, 1.15, -0.1, 0.9, 0.5, 0.65) },
+        { geo: new THREE.SphereGeometry(1, 8, 6),  m: _mm(1.8, 0.95, 0.1, 0.8, 0.5, 0.7) },
+      ]);
+      const NH = LOW_POWER ? 300 : 900;
+      const hedges = new THREE.InstancedMesh(hedgeGeo, bushMat, NH);
+      hedges.frustumCulled = false;
+      // Arbustos redondos al pie del seto: rompen la línea continua
+      const NHB = LOW_POWER ? 180 : 550;
+      const hedgeBushes = new THREE.InstancedMesh(bushGeo, bushMat, NHB);
+      hedgeBushes.frustumCulled = false;
+      let nh = 0, nhb = 0;
+      for (let i = 0; i < pathLen && (nh < NH || nhb < NHB); i += 3) {
+        const p = path[i];
+        const nx = -p.tz, nz = p.tx;                        // normal lateral del trazado
+        const hw = (trackHW && trackHW[i]) || RW / 2;
+        for (const sd of [1, -1]) {
+          if (rnd(0, 1) < 0.22) continue;                   // huecos naturales del seto
+          const lat = hw + 4.2 + rnd(0, 4.0);
+          const jx = rnd(-2.2, 2.2), jz = rnd(-2.2, 2.2);
+          const x = p.x + nx * sd * lat + p.tx * jx + nx * jz * 0.4;
+          const z = p.z + nz * sd * lat + p.tz * jx + nz * jz * 0.4;
+          if (!okHedge(x, z)) continue;
+          const y = hAt(x, z);
+          if (rnd(0, 1) < 0.80 && nh < NH) {                // cortasetos alineado
+            const tall = rnd(0, 1) < 0.14;                  // 14% columnas altas: seto joven
+            tq.setFromAxisAngle(tv.set(0, 1, 0), Math.atan2(-p.tz, p.tx) + rnd(-0.13, 0.13));
+            tm.compose(tv.set(x, y - 0.2, z), tq,
+                       ts.set(rnd(0.85, 1.15), tall ? rnd(1.6, 2.3) : rnd(0.75, 1.15), rnd(0.85, 1.1)));
+            hedges.setMatrixAt(nh, tm);
+            hedges.setColorAt(nh, tc.setHSL(0.27 + rnd(-0.04, 0.05), rnd(0.38, 0.55), rnd(0.45, 0.68)));
+            nh++;
+          } else if (nhb < NHB) {                           // arbusto redondo al pie
+            const s = rnd(0.45, 1.0);
+            tq.setFromAxisAngle(tv.set(0, 1, 0), rnd(0, Math.PI * 2));
+            tm.compose(tv.set(x + nx * sd * rnd(-1, 1), y - 0.12, z + nz * sd * rnd(-1, 1)), tq,
+                       ts.set(s * rnd(0.8, 1.2), s, s * rnd(0.8, 1.2)));
+            hedgeBushes.setMatrixAt(nhb, tm);
+            hedgeBushes.setColorAt(nhb, tc.setHSL(0.26 + rnd(-0.04, 0.06), rnd(0.4, 0.6), rnd(0.5, 0.75)));
+            nhb++;
+          }
+        }
+      }
+      hedges.count = nh; hedgeBushes.count = nhb;
+      for (const m of [hedges, hedgeBushes]) {
+        m.instanceMatrix.needsUpdate = true;
+        if (m.instanceColor) m.instanceColor.needsUpdate = true;
+        m.castShadow = true;                               // el seto sombrea el borde de pista
+      }
+      world.add(hedges, hedgeBushes);
+    }
   }
 
   // --- Montañas lejanas + cielo estrellado + luna (solo de noche) ---
@@ -9124,7 +9203,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 674;
+const BUILD_NO = 675;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
