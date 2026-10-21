@@ -2582,6 +2582,9 @@
       <div class="optRow"><div class="lbl" id="lbSteer">ASIST. DIRECCIÓN</div><button class="optT sw" id="optSteer">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbTire">NEUMÁTICOS</div><div class="segC" id="optTire"><button class="segB on" data-v="0">BLANDOS</button><button class="segB" data-v="1">DUROS</button></div></div>
       <div class="optRow"><div class="lbl" id="lbRline">TRAZADA IDEAL</div><button class="optT sw" id="optRline">OFF</button></div>
+      <div class="optSec" id="secAI">🤖 IA</div>
+      <div class="optRow"><div class="lbl" id="lbAI">INGENIERO IA</div><button class="optT sw" id="optAI">OFF</button></div>
+      <div class="optRow"><div class="lbl" id="lbAIKey">API KEY GEMINI</div><button class="optT val" id="optAIKey">✎ KEY</button></div>
     </div>
     <div class="optGrp">
       <div class="optSec" id="secCtl">🎮 CONTROLES</div>
@@ -9599,6 +9602,61 @@ function showToast(msg) {
   t.classList.toggle('low', !!(rm && rm.classList.contains('show')));   // apilado bajo el aviso de clima
   t.classList.add('show');
   clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2200);
+  if (typeof aiSay === 'function' && msg[0] !== '📻')
+    aiSay(String(msg).replace(/<[^>]+>/g, '').slice(0, 90));            // los avisos alimentan al ingeniero IA
+}
+// ===== INGENIERO DE CARRERA IA (Gemini): escucha los eventos de carrera y
+// comenta por radio cada ~18 s. Necesita una API key en OPCIONES → 🤖 IA.
+// Si no hay red o la key falla, se apaga en silencio tras 4 errores. =====
+const aiKeyGet = () => { try { return localStorage.getItem('af1_gemkey') || ''; } catch (e) { return ''; } };
+let aiEv = [], aiBusy = 0, aiT = -1e9, aiFails = 0;
+function aiSay(ev) {
+  if (!OPTS.aiEng || !aiKeyGet()) return;
+  aiEv.push(ev); if (aiEv.length > 8) aiEv.shift();
+}
+async function aiCall() {
+  const key = aiKeyGet();
+  if (!key || aiBusy || aiFails >= 4) return;
+  aiBusy = 1; aiT = performance.now();
+  const evs = aiEv.splice(0);
+  let pos = 1, nR = 1;
+  try {
+    const mine = lapsDone * pathLen + pathIdx;
+    nR = 1 + cpus.filter(c => c && !c.elim).length;
+    pos = 1 + cpus.filter(c => c && !c.elim && !c.fin && c.s > mine).length;
+  } catch (e) {}
+  const es = LANG !== 'en';
+  const p = (es ? 'Eres el ingeniero de pista de un piloto en un arcade de F1. Responde SOLO con una frase de radio corta (máx. 12 palabras), con garra, en español, sin emojis. '
+               : 'You are the race engineer in an F1 arcade game. Reply with ONE short radio line (max 12 words), punchy, in English, no emojis. ')
+    + (es ? 'Estado' : 'State') + ': P' + pos + '/' + nR
+    + ', ' + (es ? 'vuelta' : 'lap') + ' ' + Math.min(LAPS, lapsDone + 1) + '/' + LAPS
+    + (rain > 0.05 ? (es ? ', llueve' : ', rain') + (wetTires ? '' : (es ? ' y lleva slicks!' : ' on slicks!')) : '')
+    + ', ' + (es ? 'daño' : 'damage') + ' ' + Math.round(dmg) + '%'
+    + ', ' + (es ? 'desgaste' : 'tyre wear') + ' ' + Math.round(tireWear) + '%'
+    + (endurMode ? ', ' + (es ? 'combustible' : 'fuel') + ' ' + Math.round(fuel) + '%' : '')
+    + (evs.length ? (es ? '. Eventos recientes: ' : '. Recent events: ') + evs.join('; ') : '')
+    + (es ? '. Si no hay novedad, anima o aconseja.' : '. If nothing new, motivate or advise.');
+  try {
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' + encodeURIComponent(key), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: p }] }],
+        generationConfig: { maxOutputTokens: 48, temperature: 0.95 } })
+    });
+    const j = await r.json();
+    const pt = j && j.candidates && j.candidates[0] && j.candidates[0].content
+      && j.candidates[0].content.parts && j.candidates[0].content.parts[0];
+    const txt = pt ? String(pt.text).replace(/\s+/g, ' ').trim() : '';
+    if (txt) showToast('📻 ' + txt.slice(0, 120)); else aiFails++;
+  } catch (e) { aiFails++; }
+  aiBusy = 0;
+}
+function aiTick() {                                     // llamada cada ~18 s de carrera
+  if (!playing || paused || !OPTS.aiEng) return;
+  if (!aiKeyGet()) {                                    // activado sin key: avisar una vez
+    if (!aiTick._w) { aiTick._w = 1; showToast('📻 ' + T('aiNoKey')); }
+    return;
+  }
+  if (performance.now() - aiT > 18000) aiCall();
 }
 function dustPuff(x, z, vx, vz, col, life, sc, op) {
   if (!OPTS.dust) return;
@@ -9738,7 +9796,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 691;
+const BUILD_NO = 692;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -13459,7 +13517,7 @@ function fmtT(s) {
 }
 /* ================== OPCIONES ================== */
 const OPTS = { sound: 1, shadow: 1, skid: 1, dust: 1, ao: 1, bloom: 1, cam: 0, brakeAid: 1, steerAid: 1, car: 0,
-               lefty: 0, vib: 1, fps: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0, tod: 'dusk', rline: 0 };   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
+               lefty: 0, vib: 1, fps: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0, tod: 'dusk', rline: 0, aiEng: 0 };   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
 try { Object.assign(OPTS, JSON.parse(localStorage.getItem('af1_opts') || '{}')); } catch (e) {}
 if (!OPTS.todV) { OPTS.tod = 'dusk'; OPTS.todV = 1; saveOpts(); }   // migración única: atardecer por defecto (el usuario puede cambiarlo en el selector)
 function saveOpts() { try { localStorage.setItem('af1_opts', JSON.stringify(OPTS)); } catch (e) {} }
@@ -13529,6 +13587,18 @@ wireOpt('optBloom', 'bloom', 'ON', 'OFF');
 wireOpt('optAbs', 'brakeAid', 'ON', 'OFF');
 wireOpt('optSteer', 'steerAid', 'ON', 'OFF');
 wireOpt('optRline', 'rline', 'ON', 'OFF');
+wireOpt('optAI', 'aiEng', 'ON', 'OFF');
+el('optAI').addEventListener('click', () => {          // al activarlo sin key: pedirla
+  if (OPTS.aiEng && !aiKeyGet()) setTimeout(() => el('optAIKey').click(), 80);
+});
+function paintAiKey() {
+  const k = aiKeyGet();
+  el('optAIKey').textContent = k ? '…' + k.slice(-4) : '✎ KEY';
+}
+el('optAIKey').addEventListener('click', () => {
+  const k = prompt(T('aiKeyMsg'), aiKeyGet());
+  if (k !== null) { try { localStorage.setItem('af1_gemkey', k.trim()); } catch (e) {} paintAiKey(); }
+});
 wireOpt('optTouch', 'touchUi', 'ON', 'OFF');
 wireOpt('optLefty', 'lefty', 'ON', 'OFF');
 wireOpt('optVib', 'vib', 'ON', 'OFF');
@@ -13666,6 +13736,9 @@ const I18N = {
     sound: 'SONIDO', shadows: 'SOMBRAS', skid: 'MARCAS DE DERRAPE', dust: 'POLVO', ao: 'OCLUSIÓN AMBIENTAL', bloom: 'BLOOM SUAVE',
     brakeAid: 'FRENO ASISTIDO', steerAid: 'ASIST. DIRECCIÓN', initView: 'VISTA INICIAL',
     rline: 'TRAZADA IDEAL',
+    aiEng: 'INGENIERO IA', aiKey: 'API KEY GEMINI',
+    aiKeyMsg: 'Pega tu API key de Gemini (Google AI Studio — gratis en aistudio.google.com):',
+    aiNoKey: 'Falta la API key de Gemini — pégala en OPCIONES',
     touchUi: 'CONTROLES TÁCTILES', lefty: 'MODO ZURDO', vib: 'VIBRACIÓN', fps: 'CONTADOR FPS', sens: 'SENSIBILIDAD GIRO',
     sensLow: 'BAJA', sensMid: 'NORMAL', sensHigh: 'ALTA',
     lang: 'IDIOMA', records: 'RÉCORDS', erase: 'BORRAR', back: 'VOLVER',
@@ -13790,6 +13863,9 @@ const I18N = {
     sound: 'SOUND', shadows: 'SHADOWS', skid: 'SKID MARKS', dust: 'DUST', ao: 'AMBIENT OCCLUSION', bloom: 'SOFT BLOOM',
     brakeAid: 'BRAKE ASSIST', steerAid: 'STEER ASSIST', initView: 'START VIEW',
     rline: 'RACING LINE',
+    aiEng: 'AI ENGINEER', aiKey: 'GEMINI API KEY',
+    aiKeyMsg: 'Paste your Gemini API key (Google AI Studio — free at aistudio.google.com):',
+    aiNoKey: 'Missing Gemini API key — paste it in SETTINGS',
     touchUi: 'TOUCH CONTROLS', lefty: 'LEFT-HANDED', vib: 'HAPTICS', fps: 'FPS COUNTER', sens: 'STEER SENSITIVITY',
     sensLow: 'LOW', sensMid: 'NORMAL', sensHigh: 'HIGH',
     lang: 'LANGUAGE', records: 'RECORDS', erase: 'ERASE', back: 'BACK',
@@ -13934,6 +14010,7 @@ function applyLang() {
   set('lbSound', T('sound')); set('lbShadow', T('shadows')); set('lbSkid', T('skid')); set('lbDust', T('dust')); set('lbAO', T('ao')); set('lbBloom', T('bloom'));
   set('lbAbs', T('brakeAid')); set('lbSteer', T('steerAid')); set('lbCam', T('initView'));
   set('lbTire', T('tire')); set('lbRline', T('rline')); paintTire();
+  set('lbAI', T('aiEng')); set('lbAIKey', T('aiKey')); paintAiKey();
   set('lbTouch', T('touchUi')); set('lbLefty', T('lefty')); set('lbVib', T('vib')); set('lbFps', T('fps')); set('lbSens', T('sens'));
   paintSens();
   set('lbRec', T('records')); set('lbEndur', T('endur')); set('lbAch', T('achs'));
@@ -15612,6 +15689,7 @@ function loop(now) {
   padPoll();
   if (pad._startT) { pad._startT = false; if (playing) setPaused(!paused); }
   if (playing && !paused && (performance.now() >= t0 - 3600 || fsState)) update(dt);   // inputs vivos desde ya, motor corre tras GO
+  aiTick();                                                       // ingeniero IA por radio
   if (replaying) {
     // Replay post-carrera: interpola el buffer de posiciones grabado en meta
     reClk += dt;
