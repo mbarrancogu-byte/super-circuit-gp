@@ -8358,17 +8358,20 @@ function buildCar(paintHex, withLight) {
 // con entradas y ranuras, suelo con cercas, alerón trasero con DRS y pilones
 // de cuello de cisne, difusor con estrías, escapes, antenas, bargeboards,
 // suspensión de tirantes y ruedas que giran y direccionan de verdad.
-function buildF1Pro(tint) {
+function buildF1Pro(tint, liv) {
+  liv = liv === 'nexus' ? { accent: 0xffd828, helm: 0xd82818, suit: 0xc8201a } : null;
   const grp = new THREE.Group();
   const paint = new THREE.MeshPhysicalMaterial({ color: tint, roughness: 0.26, metalness: 0.6,
     clearcoat: 1, clearcoatRoughness: 0.12 });
+  const accM = liv ? new THREE.MeshPhysicalMaterial({ color: liv.accent, roughness: 0.3,
+    metalness: 0.55, clearcoat: 1, clearcoatRoughness: 0.14 }) : null;
   const carbon = new THREE.MeshStandardMaterial({ color: 0x15181e, roughness: 0.55, metalness: 0.5 });
   const darkM = new THREE.MeshStandardMaterial({ color: 0x272c34, roughness: 0.4, metalness: 0.75 });
   const tireM = new THREE.MeshStandardMaterial({ color: 0x0b0c0f, roughness: 0.92 });
   const rimM = new THREE.MeshStandardMaterial({ color: 0xb4b9c2, roughness: 0.28, metalness: 0.9 });
   const brkM = new THREE.MeshStandardMaterial({ color: 0x4c443a, roughness: 0.5, metalness: 0.55 });
   const seatM = new THREE.MeshStandardMaterial({ color: 0x101318, roughness: 0.9 });
-  const helmM = new THREE.MeshStandardMaterial({ color: 0xf4f6fa, roughness: 0.32, metalness: 0.25 });
+  const helmM = new THREE.MeshStandardMaterial({ color: liv ? liv.helm : 0xf4f6fa, roughness: 0.32, metalness: 0.25 });
   const redLM = new THREE.MeshBasicMaterial({ color: 0xff2020 });
   const B = (geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) => {
     const m = new THREE.Mesh(geo, mat);
@@ -8383,11 +8386,11 @@ function buildF1Pro(tint) {
     grp.add(m); return m;
   };
   // ---- Alerón delantero: plano + 2 flaps + placas laterales + cascadas ----
-  B(new THREE.BoxGeometry(4.35, 0.06, 0.55), carbon, 0, 0.30, 5.05);
-  B(new THREE.BoxGeometry(4.15, 0.05, 0.30), carbon, 0, 0.41, 5.30, -0.16);
-  B(new THREE.BoxGeometry(3.9, 0.05, 0.26), carbon, 0, 0.53, 5.52, -0.27);
+  B(new THREE.BoxGeometry(4.35, 0.06, 0.55), liv ? accM : carbon, 0, 0.30, 5.05);
+  B(new THREE.BoxGeometry(4.15, 0.05, 0.30), liv ? accM : carbon, 0, 0.41, 5.30, -0.16);
+  B(new THREE.BoxGeometry(3.9, 0.05, 0.26), liv ? accM : carbon, 0, 0.53, 5.52, -0.27);
   for (const s of [-1, 1]) {
-    B(new THREE.BoxGeometry(0.05, 0.6, 0.95), carbon, s * 2.17, 0.52, 5.2, 0, s * 0.05);
+    B(new THREE.BoxGeometry(0.05, 0.6, 0.95), liv ? paint : carbon, s * 2.17, 0.52, 5.2, 0, s * 0.05);
     B(new THREE.BoxGeometry(0.5, 0.04, 0.22), paint, s * 1.3, 0.66, 5.0, -0.35);   // cascada
     B(new THREE.BoxGeometry(0.4, 0.24, 0.35), carbon, s * 1.55, 0.78, 4.1);        // conducto de freno
     B(new THREE.BoxGeometry(0.05, 0.5, 0.85), carbon, s * 0.9, 0.62, 2.55, 0, s * 0.5); // bargeboard
@@ -8405,6 +8408,12 @@ function buildF1Pro(tint) {
   B(new THREE.BoxGeometry(0.55, 0.16, 0.12), seatM, 0, 1.75, 1.42);
   B(new THREE.BoxGeometry(0.14, 0.3, 0.4), seatM, -0.45, 1.6, 1.0);
   B(new THREE.BoxGeometry(0.14, 0.3, 0.4), seatM, 0.45, 1.6, 1.0);
+  if (liv) {                                                    // mono rojo del piloto
+    const suitM = new THREE.MeshStandardMaterial({ color: liv.suit, roughness: 0.65 });
+    B(new THREE.BoxGeometry(0.5, 0.26, 0.75), suitM, 0, 1.5, 1.2);
+    B(new THREE.BoxGeometry(0.2, 0.28, 0.55), suitM, -0.33, 1.48, 1.15);
+    B(new THREE.BoxGeometry(0.2, 0.28, 0.55), suitM, 0.33, 1.48, 1.15);
+  }
   // Halo: anillo + pilar frontal
   B(new THREE.TorusGeometry(0.66, 0.09, 10, 24), darkM, 0, 1.8, 1.12, Math.PI / 2);
   rod(0, 1.42, 1.78, 0, 1.8, 1.75, 0.07);
@@ -8429,6 +8438,8 @@ function buildF1Pro(tint) {
       B(new THREE.BoxGeometry(0.03, 0.05, 0.5), carbon, s * 1.43, 0.72 + i * 0.15, -1.0, 0, s * 0.12);
     B(new THREE.BoxGeometry(0.04, 0.28, 0.9), carbon, s * 1.18, 0.45, -1.6, 0, s * 0.12); // cerca del suelo
   }
+  if (liv) for (const s of [-1, 1])                             // franja amarilla bajo el pontón
+    B(new THREE.BoxGeometry(1.13, 0.15, 2.2), accM, s * 0.9, 0.44, -0.7);
   // ---- Suelo ----
   B(new THREE.BoxGeometry(2.4, 0.1, 5.2), carbon, 0, 0.3, -1.5);
   // ---- Alerón trasero: placas + plano + flap + pilones cisne + DRS ----
@@ -8476,7 +8487,7 @@ function buildF1Pro(tint) {
     const nc = ncv.getContext('2d');
     nc.fillStyle = '#f4f6fa'; nc.beginPath(); nc.arc(32, 32, 29, 0, 7); nc.fill();
     nc.fillStyle = '#14171c'; nc.font = 'bold 34px Arial';
-    nc.textAlign = 'center'; nc.textBaseline = 'middle'; nc.fillText('7', 32, 34);
+    nc.textAlign = 'center'; nc.textBaseline = 'middle'; nc.fillText(liv ? '01' : '7', 32, 34);
   }
   const numM = new THREE.MeshBasicMaterial({ map: tex3(ncv), transparent: true });
   const nf = new THREE.Mesh(new THREE.PlaneGeometry(0.66, 0.66), numM);
@@ -8484,6 +8495,82 @@ function buildF1Pro(tint) {
   const nf2 = nf.clone(); nf2.position.x = -0.06; nf2.rotation.y = -Math.PI / 2; grp.add(nf2);
   const nn = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.55), numM);
   nn.rotation.x = -Math.PI / 2; nn.position.set(0, 1.0, 3.45); grp.add(nn);
+  // ---- Librea NEXUS: calavera en el morro, NEXUS en pontones, llamas en el
+  // alerón trasero y textos de patrocinador como en la imagen de referencia ----
+  if (liv) {
+    const mkT = (w2, h2, draw) => {
+      const c = document.createElement('canvas'); c.width = w2; c.height = h2;
+      draw(c.getContext('2d'));
+      const t = tex3(c); t.encoding = THREE.sRGBEncoding; return t;
+    };
+    const dec = (t, w2, h2, x, y, z, rx, ry, rz) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w2, h2),
+        new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false,
+          polygonOffset: true, polygonOffsetFactor: -2 }));
+      m.position.set(x, y, z); m.rotation.set(rx || 0, ry || 0, rz || 0); grp.add(m);
+    };
+    // Calavera blanca sobre el morro
+    dec(mkT(128, 128, x => {
+      x.fillStyle = '#e9ecf2';
+      x.beginPath(); x.arc(64, 56, 40, Math.PI, 0); x.fill();
+      x.fillRect(24, 56, 80, 26);
+      x.beginPath(); x.ellipse(64, 84, 30, 18, 0, 0, Math.PI * 2); x.fill();
+      x.fillStyle = '#12151b';
+      x.beginPath(); x.ellipse(47, 56, 12, 14, 0.3, 0, 7); x.fill();
+      x.beginPath(); x.ellipse(81, 56, 12, 14, -0.3, 0, 7); x.fill();
+      x.beginPath(); x.moveTo(64, 66); x.lineTo(57, 82); x.lineTo(71, 82); x.fill();
+      x.strokeStyle = '#12151b'; x.lineWidth = 3;
+      for (let i = -2; i <= 2; i++) { x.beginPath(); x.moveTo(64 + i * 9, 90); x.lineTo(64 + i * 9, 100); x.stroke(); }
+    }), 0.5, 0.62, 0, 0.985, 3.5, -Math.PI / 2, 0, Math.PI);
+    // NEXUS DYNAMICS a cada lado del pontón
+    const nxT = mkT(512, 96, x => {
+      x.textAlign = 'center'; x.shadowColor = 'rgba(8,16,48,0.9)'; x.shadowBlur = 7;
+      x.fillStyle = '#f4f7ff'; x.font = 'italic 900 56px Arial'; x.fillText('NEXUS', 256, 42);
+      x.font = 'italic 700 26px Arial'; x.fillText('D Y N A M I C S', 256, 76);
+    });
+    for (const s of [-1, 1]) dec(nxT, 2.3, 0.43, s * 1.452, 0.85, -0.7, 0, s * Math.PI / 2);
+    // Llamas sobre el alerón trasero (cenital) y las placas laterales
+    const flT = mkT(512, 96, x => {
+      for (let i = 0; i < 9; i++) {
+        const bx = 26 + i * 55, w2 = 40, h = 42 + (i % 3) * 12;
+        x.fillStyle = i % 2 ? '#ff7a18' : '#ff9c1a';
+        x.beginPath(); x.moveTo(bx - w2 / 2, 96);
+        x.quadraticCurveTo(bx - w2 / 2, 96 - h * 0.55, bx - w2 * 0.12, 96 - h * 0.62);
+        x.quadraticCurveTo(bx - w2 * 0.1, 96 - h * 0.95, bx + w2 * 0.08, 96 - h);
+        x.quadraticCurveTo(bx + w2 * 0.16, 96 - h * 0.74, bx + w2 / 2, 96 - h * 0.5);
+        x.quadraticCurveTo(bx + w2 / 2, 96 - h * 0.2, bx + w2 / 2, 96); x.fill();
+        x.fillStyle = '#ffd83a';
+        x.beginPath(); x.moveTo(bx - 10, 96); x.quadraticCurveTo(bx, 96 - h * 0.62, bx + 10, 96); x.fill();
+      }
+    });
+    dec(flT, 3.9, 0.72, 0, 1.845, -4.5, -Math.PI / 2 - 0.1);
+    for (const s of [-1, 1]) dec(flT, 1.1, 0.95, s * 1.985, 1.95, -4.55, 0, s * Math.PI / 2);
+    // AERO-FORGE vertical en las placas del ala delantera + texto en los planos
+    const afT = mkT(64, 256, x => {
+      x.translate(32, 128); x.rotate(-Math.PI / 2);
+      x.fillStyle = '#ffd828'; x.font = '900 34px Arial'; x.textAlign = 'center';
+      x.fillText('AERO-FORGE', 0, 12);
+    });
+    for (const s of [-1, 1]) dec(afT, 0.5, 0.85, s * 2.202, 0.52, 5.2, 0, s * Math.PI / 2);
+    const afT2 = mkT(256, 48, x => {
+      x.fillStyle = '#14181f'; x.font = '900 34px Arial'; x.textAlign = 'center';
+      x.fillText('AERO-FORGE', 128, 36);
+    });
+    for (const s of [-1, 1]) dec(afT2, 1.1, 0.2, s * 1.5, 0.345, 5.02, -Math.PI / 2);
+    // 01 en la cubierta motor + mini sponsors sobre la toma de aire
+    const n01 = mkT(96, 96, x => {
+      x.fillStyle = '#f4f7ff'; x.font = 'italic 900 62px Arial'; x.textAlign = 'center';
+      x.fillText('01', 48, 72);
+    });
+    for (const s of [-1, 1]) dec(n01, 0.55, 0.55, s * 0.49, 1.35, -1.5, 0, s * Math.PI / 2);
+    const spT = mkT(256, 48, x => {
+      x.fillStyle = '#dfe6f2'; x.font = '700 20px Arial'; x.textAlign = 'center';
+      x.fillText('CHRONOS · ZERO-G FLUIDS · QUANTUM', 128, 30);
+    });
+    dec(spT, 1.5, 0.28, 0, 1.72, 1.0, -Math.PI / 2);
+    // Piloto: guantes/visera roja ya por material; detalle de tira amarilla en el halo
+    B(new THREE.BoxGeometry(0.9, 0.05, 0.1), accM, 0, 2.0, 1.55);
+  }
   grp.userData = { wF, wR, tails: [] };
   return grp;
 }
@@ -8497,6 +8584,8 @@ const CARS = [
   { name: 'ROSA',     tint: 0xff58c8, img: 'f1_rosa.png', st: { top: 0.98, acc: 1.02, grip: 1.06, res: 0.98 } },
   { name: 'ROJO',     tint: 0xff4538, img: 'f1_scarlet.png', st: { top: 1.02, acc: 1.04, grip: 0.97, res: 0.96 } },
   { name: 'AZUL',     tint: 0x2a66e0, st: { top: 1.01, acc: 1.03, grip: 1.05, res: 1.02 } },
+  { name: 'NEXUS',    tint: 0x2a63d8, pro: true, liv: 'nexus',
+    st: { top: 1.06, acc: 1.02, grip: 1.03, res: 1.00 } },
   { name: 'R26',      tint: 0xf2f2f2, img: 'f1_r26.png', shx: 64,
     sh: [[48, 29], [80, 29], [48, 93], [80, 93]],
     st: { top: 1.04, acc: 1.06, grip: 1.04, res: 0.97 } },
@@ -8596,6 +8685,7 @@ const SPONSOR_SETS = {
   ROSA:     ['VORTEK', 'LUMEN', 'TAKRA', 'PYLON', 'KIRAL', 'NEXON', 'ZEFIRO', 'OMNIA', 'VELOX'],
   ROJO:     ['MAGNOX', 'PYRA', 'BRASA', 'VULKA', 'REXON', 'TIGRA', 'FEROX', 'RUBRA', 'ESKAR'],
   R26:      ['AZURAX', 'MIRALT', 'NORDIK', 'STELAR', 'COSMEX', 'LUNAX', 'VELTRA', 'KAVOR', 'TRIZON'],
+  NEXUS:    ['QUANTUM', 'AERO-FORGE', 'VELOCITAS', 'CHRONOS', 'ZERO-G', 'FLUX-RIDER', 'STELLAR', 'THERMO-CORE', 'NEXUS'],
 };
 const SPONSOR_KEYS = Object.keys(SPONSOR_SETS);
 // Set por tinte: los coches del selector usan el suyo; rivales CPU/online
@@ -8693,12 +8783,12 @@ function buildF1(tint) {
   // (contrarreloj) monta el mismo chasis con materiales translúcidos espectrales.
   // El SCGP-X en cambio monta el F1 procedural de alta definición al instante.
   const proDef = CARS.find(c => c.tint === tint && c.pro);
-  let proW = null;
+  let proW = null, proWrap = null;
   if (proDef) {
-    const pm = buildF1Pro(tint);
+    const pm = buildF1Pro(tint, proDef.liv);
     const w = c3dNorm(pm, 10.2);
     w.scale.setScalar(2.52);                        // el GLB r26 sale ~2.5× sobre su huella → igualar al resto
-    grp.add(w); spr.visible = false; grp.userData.r26 = w;
+    grp.add(w); spr.visible = false; grp.userData.r26 = w; proWrap = w;
     proW = pm.userData;                             // ruedas reales (giro+dirección)
     carSelfGlow(grp);
   }
@@ -8780,6 +8870,7 @@ function buildF1(tint) {
   // las minúsculas (LEDs, antenas, tornillos) no se aprecian y mantienen el
   // pase de sombras barato. El radio es en unidades LOCALES (escala ×0.324)
   castIfBig(grp);
+  if (proWrap && decMeshes.length) placeSponsorDecals(grp, proWrap, decMeshes);
   return grp;
 }
 // Parpadeo de las llamas de escape de un coche (encendido + jitter)
@@ -9568,7 +9659,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 688;
+const BUILD_NO = 689;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -14467,7 +14558,7 @@ function c3dTintR26(base, tint) {
 async function c3dModel(def) {
   let mdl;
   if (def.pro) {                                  // SCGP-X: F1 procedural de alta definición
-    mdl = buildF1Pro(def.tint);
+    mdl = buildF1Pro(def.tint, def.liv);
     mdl.userData.pro = true;
   } else {
     // De momento TODOS montan el chasis real r26.glb; cada nombre va
