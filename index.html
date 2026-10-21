@@ -2504,6 +2504,7 @@
       <div class="optRow"><div class="lbl" id="lbShadow">SOMBRAS</div><button class="optT" id="optShadow">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbSkid">MARCAS DE DERRAPE</div><button class="optT" id="optSkid">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbDust">POLVO</div><button class="optT" id="optDust">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbAO">OCLUSIÓN AMBIENTAL</div><button class="optT" id="optAO">ON</button></div>
       <div class="optSec" id="secAid">🛠️ ASISTENCIA</div>
       <div class="optRow"><div class="lbl" id="lbAbs">FRENO ASISTIDO</div><button class="optT" id="optAbs">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbSteer">ASIST. DIRECCIÓN</div><button class="optT" id="optSteer">ON</button></div>
@@ -8426,6 +8427,87 @@ function init3() {
   moonLight.position.set(300, 500, -400);
   moonLight.castShadow = true;
   moonLight.shadow.mapSize.set(LOW_POWER ? 1024 : 4096, LOW_POWER ? 1024 : 4096);
+  // ===== SSAO-LITE: ambient occlusion por profundidad de pantalla =====
+  // La escena se dibuja en un render target supersampleado (x1.25) con depth
+  // texture; un pase fullscreen oscurece donde hay geometría cercana tapando —
+  // sombras de contacto alrededor de coches, muros y árboles.
+  let aoRT = null, aoScene = null, aoCam = null, aoMat = null;
+  window._aoOK = !LOW_POWER && typeof THREE.DepthTexture === 'function';
+  function aoBuild() {
+    const sz = renderer3.getDrawingBufferSize(new THREE.Vector2());
+    const rw = Math.round(sz.x * 1.25), rh = Math.round(sz.y * 1.25);
+    try {
+      if (!aoRT || aoRT.width !== rw || aoRT.height !== rh) {
+        if (aoRT) aoRT.dispose();
+        aoRT = new THREE.WebGLRenderTarget(rw, rh, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+        aoRT.depthTexture = new THREE.DepthTexture(rw, rh);
+        if (aoMat) { aoMat.uniforms.tCol.value = aoRT.texture; aoMat.uniforms.tDepth.value = aoRT.depthTexture; }
+      }
+      if (!aoMat) {
+        aoCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        aoScene = new THREE.Scene();
+        aoMat = new THREE.ShaderMaterial({
+          depthTest: false, depthWrite: false,
+          uniforms: {
+            tCol: { value: aoRT.texture }, tDepth: { value: aoRT.depthTexture },
+            uNear: { value: 1 }, uFar: { value: 2400 }, uFocal: { value: 800 },
+            uRes: { value: new THREE.Vector2(rw, rh) }, uStr: { value: 1.1 }
+          },
+          vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+          fragmentShader: `precision highp float;
+            varying vec2 vUv;
+            uniform sampler2D tCol, tDepth;
+            uniform float uNear, uFar, uFocal, uStr;
+            uniform vec2 uRes;
+            float viewDist(vec2 uv) {
+              float z = texture2D(tDepth, uv).x;
+              if (z >= 0.99999) return uFar;                    // cielo: no ocluye nada
+              return uNear * uFar / (uFar - z * (uFar - uNear));
+            }
+            void main() {
+              vec3 col = texture2D(tCol, vUv).rgb;
+              float d = viewDist(vUv);
+              float ao = 1.0;
+              if (d < uFar * 0.95) {
+                float R = 1.7;                                 // radio de oclusión en metros
+                float rp = clamp(R * uFocal / d, 3.0, 26.0);   // metros → píxeles a esa distancia
+                float j = fract(sin(dot(vUv * uRes, vec2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
+                float occ = 0.0;
+                for (int i = 0; i < 8; i++) {                  // anillo exterior: contacto amplio
+                  float a = j + 6.2831853 * float(i) / 8.0;
+                  float df = d - viewDist(vUv + vec2(cos(a), sin(a)) * rp / uRes);
+                  occ += smoothstep(0.10, R * 0.85, df) * (1.0 - clamp((df - R * 2.5) / (R * 5.0), 0.0, 1.0));
+                }
+                for (int i = 0; i < 4; i++) {                  // anillo interior: pliegue fino
+                  float a = j * 1.7 + 6.2831853 * float(i) / 4.0;
+                  float df = d - viewDist(vUv + vec2(cos(a), sin(a)) * rp * 0.45 / uRes);
+                  occ += smoothstep(0.06, R * 0.4, df) * 0.6 * (1.0 - clamp((df - R * 1.5) / (R * 4.0), 0.0, 1.0));
+                }
+                ao = 1.0 - min(1.0, occ / 10.4) * uStr;
+              }
+              gl_FragColor = vec4(col * ao, 1.0);
+            }`
+        });
+        const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), aoMat);
+        quad.frustumCulled = false; aoScene.add(quad);
+      } else aoMat.uniforms.uRes.value.set(rw, rh);
+      return true;
+    } catch (e) { aoRT = null; return false; }
+  }
+  window._renderScene3 = (scene, cam) => {
+    if (window._aoOK && OPTS.ao) {
+      if (!aoBuild()) window._aoOK = false;
+      else {
+        aoMat.uniforms.uNear.value = cam.near;
+        aoMat.uniforms.uFar.value = cam.far;
+        aoMat.uniforms.uFocal.value = cam.projectionMatrix.elements[5] * aoRT.height * 0.5;
+        renderer3.setRenderTarget(aoRT); renderer3.render(scene, cam);
+        renderer3.setRenderTarget(null); renderer3.render(aoScene, aoCam);
+        return;
+      }
+    }
+    renderer3.render(scene, cam);
+  };
   moonLight.shadow.bias = -0.0002;
   moonLight.shadow.radius = 6;                     // penumbra suave: la sombra de la grada no corta en seco
   moonLight.shadow.normalBias = 1.6;               // sin acné: el borde del mapa de sombras no se ve
@@ -8918,7 +9000,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 672;
+const BUILD_NO = 673;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -11595,7 +11677,7 @@ function draw(now) {
     if (cam3.fov !== 52) { cam3.fov = 52; cam3.updateProjectionMatrix(); }
   }
 
-  renderer3.render(scene3, cam3);
+  window._renderScene3(scene3, cam3);
   // PHOTO FINISH cenital: render limpio desde arriba con el coche en la línea —
   // la cámara se planta 58u sobre el coche mirando al suelo, morro hacia arriba
   if (pfShotT > 0) {
@@ -11610,7 +11692,7 @@ function draw(now) {
       pfTopCam.updateProjectionMatrix();
       renderer3.render(scene3, pfTopCam);
       pfTopURL = glc.toDataURL('image/jpeg', 0.92);
-      renderer3.render(scene3, cam3);                   // repinta la vista normal (sin parpadeo)
+      window._renderScene3(scene3, cam3);               // repinta la vista normal (sin parpadeo)
     }
   }
 
@@ -12532,7 +12614,7 @@ function fmtT(s) {
   return `${mm}:${String(Math.floor(s % 60)).padStart(2, '0')}.${Math.floor((s % 1) * 10)}`;
 }
 /* ================== OPCIONES ================== */
-const OPTS = { sound: 1, shadow: 1, skid: 1, dust: 1, cam: 0, brakeAid: 1, steerAid: 1, car: 0,
+const OPTS = { sound: 1, shadow: 1, skid: 1, dust: 1, ao: 1, cam: 0, brakeAid: 1, steerAid: 1, car: 0,
                lefty: 0, vib: 1, fps: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0, tod: 'dusk', rline: 0 };   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
 try { Object.assign(OPTS, JSON.parse(localStorage.getItem('af1_opts') || '{}')); } catch (e) {}
 if (!OPTS.todV) { OPTS.tod = 'dusk'; OPTS.todV = 1; saveOpts(); }   // migración única: atardecer por defecto (el usuario puede cambiarlo en el selector)
@@ -12588,6 +12670,7 @@ wireOpt('optSound', 'sound', 'ON', 'OFF');
 wireOpt('optShadow', 'shadow', 'ON', 'OFF');
 wireOpt('optSkid', 'skid', 'ON', 'OFF');
 wireOpt('optDust', 'dust', 'ON', 'OFF');
+wireOpt('optAO', 'ao', 'ON', 'OFF');
 wireOpt('optAbs', 'brakeAid', 'ON', 'OFF');
 wireOpt('optSteer', 'steerAid', 'ON', 'OFF');
 wireOpt('optRline', 'rline', 'ON', 'OFF');
@@ -12725,7 +12808,7 @@ const I18N = {
     online: 'CARRERA ONLINE', bt: 'DUELO BLUETOOTH', subtitle: 'RALLY NOCTURNO · CONTRARRELOJ',
     hint: '◀ ▶ dirige · GAS/FRENO pedales · HB derrape · ⚡ nitro · teclado WASD + Shift',
     secSnd: 'SONIDO', secGfx: 'GRÁFICOS', secAid: 'ASISTENCIA', secCtl: 'CONTROLES', secCam: 'VISTAS', secLang: 'IDIOMA', secRec: 'RÉCORDS',
-    sound: 'SONIDO', shadows: 'SOMBRAS', skid: 'MARCAS DE DERRAPE', dust: 'POLVO',
+    sound: 'SONIDO', shadows: 'SOMBRAS', skid: 'MARCAS DE DERRAPE', dust: 'POLVO', ao: 'OCLUSIÓN AMBIENTAL',
     brakeAid: 'FRENO ASISTIDO', steerAid: 'ASIST. DIRECCIÓN', initView: 'VISTA INICIAL',
     rline: 'TRAZADA IDEAL',
     touchUi: 'CONTROLES TÁCTILES', lefty: 'MODO ZURDO', vib: 'VIBRACIÓN', fps: 'CONTADOR FPS', sens: 'SENSIBILIDAD GIRO',
@@ -12846,7 +12929,7 @@ const I18N = {
     online: 'ONLINE RACE', bt: 'BLUETOOTH DUEL', subtitle: 'NIGHT RALLY · TIME TRIAL',
     hint: '◀ ▶ steer · GAS/BRAKE pedals · HB drift · ⚡ nitro · WASD + Shift',
     secSnd: 'SOUND', secGfx: 'GRAPHICS', secAid: 'DRIVER AIDS', secCtl: 'CONTROLS', secCam: 'CAMERA', secLang: 'LANGUAGE', secRec: 'RECORDS',
-    sound: 'SOUND', shadows: 'SHADOWS', skid: 'SKID MARKS', dust: 'DUST',
+    sound: 'SOUND', shadows: 'SHADOWS', skid: 'SKID MARKS', dust: 'DUST', ao: 'AMBIENT OCCLUSION',
     brakeAid: 'BRAKE ASSIST', steerAid: 'STEER ASSIST', initView: 'START VIEW',
     rline: 'RACING LINE',
     touchUi: 'TOUCH CONTROLS', lefty: 'LEFT-HANDED', vib: 'HAPTICS', fps: 'FPS COUNTER', sens: 'STEER SENSITIVITY',
@@ -12987,7 +13070,7 @@ function applyLang() {
   const ci = (id, n) => { const e = document.getElementById(id); if (e) e.innerHTML = ic(n); };
   ci('ciSteer', 'wheel'); ci('ciGas', 'bolt'); ci('ciBrake', 'warn'); ci('ciHb', 'tire');
   ci('ciNitro', 'burst'); ci('ciPit', 'pit'); ci('ciZoom', 'cam');
-  set('lbSound', T('sound')); set('lbShadow', T('shadows')); set('lbSkid', T('skid')); set('lbDust', T('dust'));
+  set('lbSound', T('sound')); set('lbShadow', T('shadows')); set('lbSkid', T('skid')); set('lbDust', T('dust')); set('lbAO', T('ao'));
   set('lbAbs', T('brakeAid')); set('lbSteer', T('steerAid')); set('lbCam', T('initView'));
   set('lbTire', T('tire')); set('lbRline', T('rline')); paintTire();
   set('lbTouch', T('touchUi')); set('lbLefty', T('lefty')); set('lbVib', T('vib')); set('lbFps', T('fps')); set('lbSens', T('sens'));
