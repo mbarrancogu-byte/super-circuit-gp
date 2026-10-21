@@ -3070,7 +3070,7 @@ let mmZoom = 1;                                       // zoom del radar (botones
 let mmGrow = 1;                                       // tamaño del panel del radar (botones ⤢/⤡)
 let mmBg = null;                                       // fondo del radar pre-renderizado (bisel + trazado + meta)
 let fastLapPt = null;                                   // punto donde se logró la vuelta rápida
-let ambLight = null, hemiLight = null, moonOX = 300, moonOZ = -400, moonPoolK = 0;
+let ambLight = null, hemiLight = null, moonOX = 300, moonOZ = -400, moonY = 500, moonPoolK = 0;
 let gateMeshes = [];
 
 /* --- Texturas canvas --- */
@@ -7028,7 +7028,9 @@ function buildWorld() {
     for (const m of [pines, pines2, oaks, oaks2, cyps, trunksP, trunksO, trunksC, shades]) {
       m.instanceMatrix.needsUpdate = true;
       m.frustumCulled = false;    // instancias repartidas por todo el mapa: sin culling parcial
+      m.castShadow = true;        // masas de sombra bajo los árboles, como en la foto real
     }
+    shades.castShadow = false;    // las sombras "decal" no proyectan (son el suelo)
     world.add(pines, pines2, oaks, oaks2, cyps);
     world.add(trunksP, trunksO, trunksC);
     // Reparto: cantos pequeños y rocas medias cerca de la pista, peñascos en el entorno
@@ -7246,6 +7248,7 @@ function buildWorld() {
       }
     }
     bushes.count = nb; ferns.count = nf; flors.count = nfl;
+    bushes.castShadow = true;                            // arbustos también sombrean el césped
     for (const m of [bushes, ferns, flors]) {
       m.instanceMatrix.needsUpdate = true;
       if (m.instanceColor) m.instanceColor.needsUpdate = true;
@@ -7668,10 +7671,10 @@ function setDayMode(day) {
   if (!scene3) return;
   if (day) {
     scene3.background.setHex(0x7fb4dc); scene3.fog.color.setHex(0x7fb4dc);
-    ambLight.color.setHex(0xcfe0f0); ambLight.intensity = 1.15;
-    hemiLight.color.setHex(0xd8e8f8); hemiLight.groundColor.setHex(0x3d5a30); hemiLight.intensity = 0.95;
+    ambLight.color.setHex(0xcfe0f0); ambLight.intensity = 0.95;
+    hemiLight.color.setHex(0xd8e8f8); hemiLight.groundColor.setHex(0x3d5a30); hemiLight.intensity = 0.8;
     moonLight.color.setHex(0xffefd0); moonLight.intensity = 1.05;
-    moonOX = 200; moonOZ = 120;
+    moonOX = 380; moonOZ = 240; moonY = 430;                // sol a ~44°: sombras largas y dramáticas
   } else {
     const neon = !!(circAt(stage) && !circAt(stage).img);     // circuito dibujado = ambiente neón
     scene3.background.setHex(neon ? 0x3a4d72 : 0x060a16);
@@ -7683,7 +7686,7 @@ function setDayMode(day) {
     hemiLight.groundColor.setHex(neon ? 0x4a4a52 : 0x0e121c); hemiLight.intensity = neon ? 0.75 : 0.55;
     // Luz solar blanca: fuente principal del NEÓN — blanca cálida e intensa
     moonLight.color.setHex(neon ? 0xfff0d0 : 0x9fb2dd); moonLight.intensity = neon ? 3.7 : 0.45;
-    moonOX = 300; moonOZ = -400;
+    moonOX = 300; moonOZ = -400; moonY = 500;
   }
 }
 // Hora del día elegida en el menú: AUTO / DÍA / TARDE / NOCHE.
@@ -7704,22 +7707,22 @@ function applyTOD() {
     noFog = neon;                                         // el neón nunca lleva niebla
     if (todMode === 0) {                                  // DÍA — sol alto, cielo azul
       scene3.background.setHex(0x7fb4dc); scene3.fog.color.setHex(0x7fb4dc);
-      ambLight.color.setHex(0xcfe0f0); ambLight.intensity = 1.15;
-      hemiLight.color.setHex(0xd8e8f8); hemiLight.groundColor.setHex(0x3d5a30); hemiLight.intensity = 0.95;
-      moonLight.color.setHex(0xffefd0); moonOX = 200; moonOZ = 120;
+      ambLight.color.setHex(0xcfe0f0); ambLight.intensity = 0.95;
+      hemiLight.color.setHex(0xd8e8f8); hemiLight.groundColor.setHex(0x3d5a30); hemiLight.intensity = 0.8;
+      moonLight.color.setHex(0xffefd0); moonOX = 380; moonOZ = 240; moonY = 430;
       sunInt = neon ? 1.85 : 0.52;
     } else if (todMode === 1) {                           // TARDE — hora dorada, sol bajo y naranja
       scene3.background.setHex(0xcf8f68); scene3.fog.color.setHex(0xcf8f68);
       ambLight.color.setHex(0xe8c0a0); ambLight.intensity = 0.9;
       hemiLight.color.setHex(0xe8b088); hemiLight.groundColor.setHex(0x38301f); hemiLight.intensity = 0.7;
-      moonLight.color.setHex(0xffb268); moonOX = 560; moonOZ = -340;   // sol bajo → sombras largas
+      moonLight.color.setHex(0xffb268); moonOX = 560; moonOZ = -340; moonY = 300;   // sol bajo → sombras muy largas
       sunInt = neon ? 1.3 : 0.42;
     } else {                                              // NOCHE — luna fría, estrellas y faros
       scene3.background.setHex(neon ? 0x10182e : 0x060a16);
       scene3.fog.color.setHex(neon ? 0x10182e : 0x060a16);
       ambLight.color.setHex(0x36466a); ambLight.intensity = 0.15;
       hemiLight.color.setHex(0x2a3d68); hemiLight.groundColor.setHex(0x0e121c); hemiLight.intensity = 0.08;
-      moonLight.color.setHex(0x9fb2dd); moonOX = 300; moonOZ = -400;
+      moonLight.color.setHex(0x9fb2dd); moonOX = 300; moonOZ = -400; moonY = 500;
       sunInt = 0.11;
     }
     moonLight.intensity = sunInt;
@@ -8912,7 +8915,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 670;
+const BUILD_NO = 671;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -11552,7 +11555,7 @@ function draw(now) {
     for (; li < AL.lights.length; li++) AL.lights[li].intensity = 0;
   }
   // La sombra de la luna sigue al coche
-  moonLight.position.set(car.x + moonOX, 500, car.z + moonOZ);
+  moonLight.position.set(car.x + moonOX, moonY, car.z + moonOZ);
   moonLight.target.position.set(car.x, 0, car.z);
   // El domo de cielo sigue a la cámara: el horizonte nunca se acerca
   if (skyDome) { skyDome.position.x = cam3.position.x; skyDome.position.z = cam3.position.z; }
