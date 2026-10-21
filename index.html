@@ -4635,16 +4635,25 @@ function buildWorld() {
           m4.compose(vv.set(p.x, 0, p.z), q, sc.set(1, 1, 1));
           arcs.setMatrixAt(g, m4); arcs.setColorAt(g, cc.setHex(colHex));
           ledArcs.setMatrixAt(g, m4); haloArcs.setMatrixAt(g, m4);
-          archPts.pts.push({ x: p.x, z: p.z, y: RW / 2 + 2.6 });
-          const pool = new THREE.Mesh(poolGeo, poolMat);
+          const pool = new THREE.Mesh(poolGeo, poolMat.clone());   // material propio: opacidad por arco
+          pool.material.opacity = 0;
           pool.quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, Math.atan2(-p.tx, -p.tz), 0, 'YXZ'));
           pool.position.set(p.x, bankYAt(i, 0) + 0.16, p.z); pool.renderOrder = 2;
-          world.add(pool); g++;
+          world.add(pool);
+          archPts.pts.push({ x: p.x, z: p.z, y: RW / 2 + 2.6, i: g, pool, v: 0 }); g++;
         }
         arcs.count = g; ledArcs.count = g; haloArcs.count = g;
         arcs.instanceMatrix.needsUpdate = true;
         ledArcs.instanceMatrix.needsUpdate = true; haloArcs.instanceMatrix.needsUpdate = true;
         if (arcs.instanceColor) arcs.instanceColor.needsUpdate = true;
+        // Estado "apagado" inicial: tira LED en morado muy oscuro, halo y
+        // charco invisibles — se encienden por proximidad en el loop de cámara
+        archPts.led = ledArcs; archPts.halo = haloArcs;
+        archPts.on = new THREE.Color(0xe070ff); archPts.onH = new THREE.Color(0xa038ff);
+        archPts.off = new THREE.Color(0x1c0f26); archPts.offH = new THREE.Color(0x000000);
+        archPts.tmpC = new THREE.Color();
+        for (let k = 0; k < g; k++) { ledArcs.setColorAt(k, archPts.off); haloArcs.setColorAt(k, archPts.offH); }
+        ledArcs.instanceColor.needsUpdate = true; haloArcs.instanceColor.needsUpdate = true;
         world.add(arcs, ledArcs, haloArcs);
         // Focos LED itinerantes: se enganchan al arco más cercano de cada coche
         // y bañan asfalto y carrocerías de morada al pasar bajo él
@@ -9377,7 +9386,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 678;
+const BUILD_NO = 679;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -12115,6 +12124,20 @@ function draw(now) {
       L.intensity = (1 - n.d / 58) * 60;
     }
     for (; li < AL.lights.length; li++) AL.lights[li].intensity = 0;
+    // Aros LED por proximidad: cada arco solo se enciende cuando un coche se
+    // acerca — encendido rápido al aproximar (~90u), apagado suave al alejar
+    for (const a of AL.pts) {
+      if (a.i === undefined) continue;
+      let dm = 1e9;
+      for (const s of srcs) { const d = (a.x - s.x) * (a.x - s.x) + (a.z - s.z) * (a.z - s.z); if (d < dm) dm = d; }
+      dm = Math.sqrt(dm);
+      const tgt = dm < 42 ? 1 : dm < 95 ? 1 - (dm - 42) / 53 : 0;
+      a.v = tgt > a.v ? Math.min(tgt, a.v + dt * 5) : Math.max(tgt, a.v - dt * 1.8);
+      AL.tmpC.copy(AL.off).lerp(AL.on, a.v); AL.led.setColorAt(a.i, AL.tmpC);
+      AL.tmpC.copy(AL.offH).lerp(AL.onH, a.v); AL.halo.setColorAt(a.i, AL.tmpC);
+      if (a.pool) a.pool.material.opacity = a.v * 0.9;
+    }
+    AL.led.instanceColor.needsUpdate = true; AL.halo.instanceColor.needsUpdate = true;
   }
   // La sombra de la luna sigue al coche
   moonLight.position.set(car.x + moonOX, moonY, car.z + moonOZ);
