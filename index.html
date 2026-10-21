@@ -4235,7 +4235,7 @@ function buildWorld() {
       // Muros de protección reales a ambos lados: hormigón oscuro con canto
       // luminoso en la parte superior (cian izquierda / magenta derecha)
       const wallGeo = new THREE.BoxGeometry(1, 1.15, 0.55);
-      const wallMat = new THREE.MeshStandardMaterial({ color: 0x272b33, roughness: 0.9, metalness: 0.15 });
+      const wallMat = new THREE.MeshStandardMaterial({ color: 0x1e3322, roughness: 0.9, metalness: 0.15 });   // verde oscuro tipo barrera
       const walls = new THREE.InstancedMesh(wallGeo, wallMat, (pathLen + 1) * 2);
       const wM = new THREE.Matrix4(), wQ = new THREE.Quaternion(), wE = new THREE.Euler(),
             wV = new THREE.Vector3(), wS = new THREE.Vector3();
@@ -5968,8 +5968,10 @@ function buildWorld() {
         apg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
         apg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
         apg.setIndex(idx);
+        apg.computeVertexNormals();                          // sin normales el Standard lo pinta NEGRO
         const apron = new THREE.Mesh(apg, new THREE.MeshStandardMaterial({
-          map: window._apronTex, roughness: 0.96, envMapIntensity: 0.4, side: THREE.DoubleSide }));
+          map: window._apronTex, roughness: 0.96, envMapIntensity: 0.4, side: THREE.DoubleSide,
+          color: 0x6e8f52 }));                               // verde oscuro: franja de césped junto a la grada
         world.add(apron);
       }
       // Valla de patrocinadores en la franja entre pista y grada: paneles
@@ -9890,7 +9892,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 704;
+const BUILD_NO = 703;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
