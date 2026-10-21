@@ -7091,6 +7091,8 @@ function buildWorld() {
           if (Math.hypot(sp.x - x, sp.z - z) < sp.r) return false;
       const lk = window._lakeExcl;                          // la hierba no nace dentro del lago
       if (lk && Math.hypot((lk.x - x) / lk.rx, (lk.z - z) / lk.rz) < 1) return false;
+      const se2 = window._shieldExcl;                       // ni arbustos ni matas sobre el emblema
+      if (se2 && Math.hypot(se2.x - x, se2.z - z) < se2.r + 3) return false;
       return true;
     };
     // 70% en la banda que bordea la pista (24-95u), 30% por el entorno lejano
@@ -8873,7 +8875,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 664;
+const BUILD_NO = 665;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
