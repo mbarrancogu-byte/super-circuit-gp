@@ -8272,7 +8272,7 @@ function applyTOD() {
   // Farolas: luz blanco-anaranjada fuerte de noche, media a la tarde, casi apagadas de día
   const lm = world && world.userData.lamps;
   if (lm) {
-    const k = todMode === 2 ? 0.7 : todMode === 1 ? 0.6 : 0.45;
+    const k = todMode === 2 ? 0.7 : todMode === 1 ? 0.6 : 0;
     lm.k = k;                                            // las rotas lo usan de base al parpadear
     lm.poolMat.opacity = 0.55 * k;
     for (const g of lm.glows) g.opacity = 0.9 * k;
@@ -8281,7 +8281,7 @@ function applyTOD() {
   // Downlights de la marquesina de boxes: mismo escalado que las farolas
   const pl = world && world.userData.pitLamps;
   if (pl) {
-    const k = todMode === 2 ? 0.7 : todMode === 1 ? 0.6 : 0.45;
+    const k = todMode === 2 ? 0.7 : todMode === 1 ? 0.6 : 0;
     pl.poolMat.opacity = 0.5 * k;
     for (const g of pl.glows) g.opacity = 0.8 * k;
     pl.faceMat.color.setHex(k > 0.7 ? 0xffffff : k > 0.3 ? 0xcfd8e8 : 0x9aa4b4);
@@ -8290,7 +8290,7 @@ function applyTOD() {
   // Focos del techo de las gradas: encendidos de noche, atenuados al atardecer
   const sl = world && world.userData.standLamps;
   if (sl) {
-    const k = todMode === 2 ? 0.7 : todMode === 1 ? 0.6 : 0.45;
+    const k = todMode === 2 ? 0.7 : todMode === 1 ? 0.6 : 0;
     sl.glowMat.opacity = 0.85 * k;
     sl.faceMat.color.setHex(k > 0.7 ? 0xffffff : k > 0.3 ? 0xcfd8e8 : 0x9aa4b4);
   }
@@ -8298,7 +8298,7 @@ function applyTOD() {
   // haz visible, lentes calientes y luz real bañando el emblema
   const sh = world && world.userData.shieldLamps;
   if (sh) {
-    const k = night ? 1 : dusk ? 0.35 : 0.3;
+    const k = night ? 1 : dusk ? 0.35 : 0;
     for (const s of sh.spots) s.intensity = 6.5 * k;
     for (const g of sh.glows) g.material.opacity = 0.9 * k;
     for (const c of sh.cones) c.material.opacity = 0.05 * k;
@@ -9890,7 +9890,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 702;
+const BUILD_NO = 703;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
