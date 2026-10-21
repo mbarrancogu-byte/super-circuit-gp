@@ -748,14 +748,15 @@
       0 6px 0 #3a240a, 0 12px 22px rgba(0,0,0,0.6); }
   /* ===== TELEMETRÍA: muro de boxes con paneles de datos reales ===== */
   #telemetry { background:
-      radial-gradient(circle at 50% 0%, rgba(30,60,110,0.5), transparent 60%),
-      linear-gradient(180deg, #060b16 0%, #03060c 100%); }
+      radial-gradient(circle at 50% -10%, rgba(255,255,255,0.6), transparent 55%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 2px, transparent 2px 5px),
+      linear-gradient(180deg, #ccd2da 0%, #b0b8c2 52%, #9aa2ad 100%); }  /* metal claro cepillado */
   #teleTitle { font-size: clamp(18px, 3.4vw, 30px); font-weight: 900; letter-spacing: 4px;
-    color: #bfe0ff;
-    text-shadow: 0 1px 0 #2a4a76, 0 2px 0 #1d3355, 0 3px 0 #14263f, 0 5px 8px #000,
-      0 0 22px rgba(80,170,255,0.6);  /* título extruido 3D */
+    color: #2c3848;
+    text-shadow: 0 1px 0 #7f8b9c, 0 2px 0 #626d7e, 0 3px 0 #49525f, 0 5px 8px rgba(0,0,0,0.35),
+      0 0 22px rgba(80,170,255,0.35);  /* título extruido 3D */
     margin: 4px 0 10px; }
-  #teleTitle small { display: block; font-size: .42em; letter-spacing: 6px; color: #5f7fa8; }
+  #teleTitle small { display: block; font-size: .42em; letter-spacing: 6px; color: #4a5a70; }
   #telemetry { padding: 6px 10px 46px; justify-content: flex-start; overflow: hidden; }
   #panTop { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
     width: min(1180px, 94vw); margin: 0 auto 8px; flex: 0 0 auto; }
