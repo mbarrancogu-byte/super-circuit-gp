@@ -3155,6 +3155,12 @@ function makeAsphaltPBR() {
   const t = c.getContext('2d');
   const rc = document.createElement('canvas'); rc.width = rc.height = S;
   const r = rc.getContext('2d');
+  const hc = document.createElement('canvas'); hc.width = hc.height = S;   // heightfield → normalMap
+  const h = hc.getContext('2d');
+  const ac = document.createElement('canvas'); ac.width = ac.height = S;   // aoMap: oclusión horneada
+  const aoC = ac.getContext('2d');
+  h.fillStyle = '#808080'; h.fillRect(0, 0, S, S);                         // altura base neutra
+  aoC.fillStyle = '#ffffff'; aoC.fillRect(0, 0, S, S);                     // AO base: sin oclusión
   const wrap = (x, y, rad, fn) => {
     for (let dx = -S; dx <= S; dx += S) for (let dy = -S; dy <= S; dy += S) {
       if (x + dx + rad < 0 || x + dx - rad > S || y + dy + rad < 0 || y + dy - rad > S) continue;
@@ -3182,14 +3188,19 @@ function makeAsphaltPBR() {
     });
   }
   for (let i = 0; i < 52000; i++) {                      // árido fino: grano de piedra
-    const v = ri(34, 108), s = 1 + Math.random() * 2;
+    const v = ri(34, 108), s = 1 + Math.random() * 2, px = Math.random() * S, py = Math.random() * S;
     t.fillStyle = `rgba(${v},${v},${v + ri(0, 9)},${rnd(0.18, 0.55)})`;
-    t.fillRect(Math.random() * S, Math.random() * S, s, s);
+    t.fillRect(px, py, s, s);
+    const hv = ri(96, 180);                              // relieve: las piedras sobresalen poco
+    h.fillStyle = `rgba(${hv},${hv},${hv},0.5)`;
+    h.fillRect(px, py, s, s);
   }
   for (let i = 0; i < 900; i++) {                        // piedritas claras sueltas
-    const v = ri(120, 165);
+    const v = ri(120, 165), px = Math.random() * S, py = Math.random() * S;
     t.fillStyle = `rgba(${v},${v - ri(0, 10)},${v - ri(4, 20)},${rnd(0.35, 0.7)})`;
-    t.fillRect(Math.random() * S, Math.random() * S, 1 + Math.random() * 2, 1 + Math.random() * 2);
+    t.fillRect(px, py, 1 + Math.random() * 2, 1 + Math.random() * 2);
+    h.fillStyle = 'rgba(200,200,200,0.6)';
+    h.fillRect(px, py, 1.5, 1.5);
   }
   // Placas repavimentadas: rectángulos más oscuros de borde irregular — en la
   // rugosidad quedan algo más pulidas (asfalto nuevo absorbe peor el agua)
@@ -3204,13 +3215,15 @@ function makeAsphaltPBR() {
       cv.closePath(); cv.fill();
     }
   }
-  // Grietas selladas (chapopote): líneas negras sinuosas — pulidas en rugosidad
+  // Grietas selladas (chapopote): líneas negras sinuosas — pulidas en rugosidad,
+  // hundidas en el heightfield y oscurecidas en AO (la junta retiene suciedad)
   for (let i = 0; i < 7; i++) {
     let x = Math.random() * S, y = Math.random() * S;
     const pts = [[x, y]];
     for (let k = 0; k < 6; k++) { x += ri(-0.12 * S, 0.12 * S); y += ri(-0.08 * S, 0.11 * S); pts.push([x, y]); }
-    for (const cv of [t, r]) {
-      cv.strokeStyle = cv === t ? 'rgba(8,9,12,0.34)' : 'rgba(120,120,120,0.5)';
+    for (const cv of [t, r, h, aoC]) {
+      cv.strokeStyle = cv === t ? 'rgba(8,9,12,0.34)' : cv === r ? 'rgba(120,120,120,0.5)'
+                       : cv === h ? 'rgba(70,70,70,0.8)' : 'rgba(150,150,150,0.55)';
       cv.lineWidth = cv === t ? S * 0.0035 : S * 0.005;
       cv.lineCap = 'round'; cv.lineJoin = 'round';
       cv.beginPath(); cv.moveTo(pts[0][0], pts[0][1]);
@@ -3249,6 +3262,15 @@ function makeAsphaltPBR() {
         gr.addColorStop(0.5, `rgba(118,118,118,${ra})`);
         gr.addColorStop(1, 'rgba(140,140,140,0)');
         r.fillStyle = gr; r.fillRect(X - bw * 1.5, Y - (y1 - y0) / 2, bw * 3.0, y1 - y0 + 2);
+        // heightfield: la goma depositada sobresale un pelín del firme
+        const gh = h.createLinearGradient(X - bw * 1.4, Y, X + bw * 1.4, Y);
+        gh.addColorStop(0, 'rgba(128,128,128,0)'); gh.addColorStop(0.5, `rgba(150,150,150,${a * 0.7})`); gh.addColorStop(1, 'rgba(128,128,128,0)');
+        h.fillStyle = gh; h.fillRect(X - bw * 1.4, Y - (y1 - y0) / 2, bw * 2.8, y1 - y0 + 2);
+        // AO horneado: los bordes de la huella acumulan suciedad
+        const ga = aoC.createLinearGradient(X - bw * 2.2, Y, X + bw * 2.2, Y);
+        const aa = 0.22 * a;
+        ga.addColorStop(0, 'rgba(120,120,120,0)'); ga.addColorStop(0.5, `rgba(150,150,150,${aa})`); ga.addColorStop(1, 'rgba(120,120,120,0)');
+        aoC.fillStyle = ga; aoC.fillRect(X - bw * 2.2, Y - (y1 - y0) / 2, bw * 4.4, y1 - y0 + 2);
       });
     }
   }
@@ -3261,9 +3283,32 @@ function makeAsphaltPBR() {
     g2.addColorStop(0, 'rgba(255,255,255,0.30)'); g2.addColorStop(1, 'rgba(255,255,255,0)');
     r.fillStyle = g2; r.fillRect(bx === 0 ? 0 : S * 0.91, 0, S * 0.09, S);   // bordes más rugosos (polvo)
   }
+  // — NORMAL MAP: Sobel sobre el heightfield → normales tangentes RGB —
+  // el grano del árido, las grietas hundidas y la goma acumulada ganan relieve
+  // real bajo la luz rasante (el sol bajo del build 671 lo hace cantar)
+  const nc = document.createElement('canvas'); nc.width = nc.height = S;
+  const n = nc.getContext('2d');
+  {
+    const hd = h.getImageData(0, 0, S, S).data;
+    const nd = n.createImageData(S, S);
+    const H = (x, y) => hd[((((y + S) % S) * S + ((x + S) % S)) * 4)];
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const dx = (H(x + 1, y) - H(x - 1, y)) / 255 * 2.4;    // fuerza del relieve
+      const dy = (H(x, y + 1) - H(x, y - 1)) / 255 * 2.4;
+      const inv = 1 / Math.sqrt(dx * dx + dy * dy + 1);
+      const i = (y * S + x) * 4;
+      nd.data[i] = (-dx * inv * 0.5 + 0.5) * 255;
+      nd.data[i + 1] = (dy * inv * 0.5 + 0.5) * 255;
+      nd.data[i + 2] = inv * 255;
+      nd.data[i + 3] = 255;
+    }
+    n.putImageData(nd, 0, 0);
+  }
   const map = tex3(c); map.wrapS = map.wrapT = THREE.RepeatWrapping;
   const rough = tex3(rc); rough.wrapS = rough.wrapT = THREE.RepeatWrapping;
-  return { map, rough };
+  const normal = tex3(nc); normal.wrapS = normal.wrapT = THREE.RepeatWrapping;
+  const ao = tex3(ac); ao.wrapS = ao.wrapT = THREE.RepeatWrapping;
+  return { map, rough, normal, ao };
 }
 // Hormigón del puente: paneles de encofrado, escurrimientos y manchas — enlosable
 function makeConcreteTex() {
@@ -4032,6 +4077,8 @@ function buildWorld() {
   const pbr = neon ? makeAsphaltPBR() : null;               // NEÓN = asfalto PBR; rally = tierra
   const roadTex = pbr ? pbr.map : makeRoadTex();
   const roadRough = pbr ? pbr.rough : null;
+  const roadNormal = pbr ? pbr.normal : null;
+  const roadAO = pbr ? pbr.ao : null;
   roadTex.wrapS = roadTex.wrapT = THREE.RepeatWrapping;
 
   // --- Cinta de asfalto/tierra: solo en etapas procedurales —
@@ -4057,7 +4104,10 @@ function buildWorld() {
     rg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     rg.setIndex(idx);
     rg.computeVertexNormals();
-    const road = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({ map: roadTex, roughnessMap: roadRough, roughness: 1, side: THREE.DoubleSide,
+    if (roadAO) rg.setAttribute('uv2', rg.attributes.uv);    // aoMap lee el 2º set de UVs
+    const road = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({ map: roadTex, roughnessMap: roadRough,
+      normalMap: roadNormal, normalScale: new THREE.Vector2(0.9, 0.9),
+      aoMap: roadAO, aoMapIntensity: 0.85, roughness: 1, side: THREE.DoubleSide,
       color: neon ? 0x8f949c : 0xffffff }));            // NEÓN: el asfalto responde menos a la luz — gris oscuro
     road.position.y = 0.06; road.receiveShadow = true;
     road.material.userData.baseCol = road.material.color.getHex();   // para el look mojado
@@ -8007,6 +8057,40 @@ function applyTOD() {
   // Exposición por franja: de noche se comprime bastante — farolas y faros
   // destacan sobre la oscuridad en vez de lavar toda la escena
   if (renderer3) renderer3.toneMappingExposure = night ? 0.50 : dusk ? 0.86 : 0.92;
+  envApply(night ? 'night' : dusk ? 'dusk' : 'day');
+}
+// ===== ENVIRONMENT MAP (IBL): skybox equirectangular procedural → PMREM =====
+// Reflejos de ambiente coherentes con la hora del día en pista, coches y todo
+// material PBR de la escena — el cielo se refleja en la carrocería de verdad.
+let _pmrem = null;
+const _envCache = {};
+function envApply(kind) {
+  if (!renderer3 || scene3.userData._env === kind) return;
+  scene3.userData._env = kind;
+  if (!_envCache[kind]) {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+    const g = c.getContext('2d');
+    const pal = {
+      day:   { top: '#6ba4d4', hor: '#cfe2ee', sun: [190, 30, 13, '#fff4d8'], gnd: '#3d4f30' },
+      dusk:  { top: '#3c4068', hor: '#e08a55', sun: [190, 60, 17, '#ffbd78'], gnd: '#2c261a' },
+      night: { top: '#05080f', hor: '#12203a', sun: [190, 30, 9, '#b9ccec'], gnd: '#05070a' },
+    }[kind];
+    const gr = g.createLinearGradient(0, 0, 0, 128);
+    gr.addColorStop(0, pal.top); gr.addColorStop(0.52, pal.hor);
+    gr.addColorStop(0.56, pal.gnd); gr.addColorStop(1, pal.gnd);
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 128);
+    const [sx, sy, sr, scol] = pal.sun;                        // sol/luna + halo
+    const halo = g.createRadialGradient(sx, sy, sr * 0.4, sx, sy, sr * 3.4);
+    halo.addColorStop(0, scol + ''); halo.addColorStop(0.35, 'rgba(255,236,190,0.4)');
+    halo.addColorStop(1, 'rgba(255,236,190,0)');
+    g.fillStyle = halo; g.beginPath(); g.arc(sx, sy, sr * 3.4, 0, 7); g.fill();
+    g.fillStyle = scol; g.beginPath(); g.arc(sx, sy, sr, 0, 7); g.fill();
+    const et = tex3(c); et.mapping = THREE.EquirectangularReflectionMapping;
+    if (!_pmrem) { _pmrem = new THREE.PMREMGenerator(renderer3); _pmrem.compileEquirectangularShader(); }
+    _envCache[kind] = _pmrem.fromEquirectangular(et);
+    et.dispose();
+  }
+  scene3.environment = _envCache[kind].texture;
 }
 // Línea de salida/meta a cuadros sobre la pista
 // ¿Distancia a la pista? (usado por edificios, carteles, árboles…)
@@ -8636,7 +8720,7 @@ function init3() {
   // altas luces a media res → blur gaussiano separable x2 → composite final
   // con AO por profundidad, mezcla de bloom y curva neutra de highlights.
   let aoRT = null, aoScene = null, aoCam = null, aoMat = null, aoQuad = null;
-  let bA = null, bB = null, brightMat = null, blurMat = null;
+  let bA = null, bB = null, brightMat = null, blurMat = null, fRT = null, fxaaMat = null;
   const FS_VERT = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
   window._aoOK = !LOW_POWER && typeof THREE.DepthTexture === 'function';
   function aoBuild() {
@@ -8650,6 +8734,9 @@ function init3() {
         aoRT.depthTexture = new THREE.DepthTexture(rw, rh);
         const bf = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false };
         bA = new THREE.WebGLRenderTarget(bw, bh, bf); bB = new THREE.WebGLRenderTarget(bw, bh, bf);
+        if (fRT) fRT.dispose();
+        fRT = new THREE.WebGLRenderTarget(sz.x, sz.y, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false });
+        if (fxaaMat) fxaaMat.uniforms.uRes.value.set(1 / sz.x, 1 / sz.y);
         if (aoMat) {
           aoMat.uniforms.tCol.value = aoRT.texture; aoMat.uniforms.tDepth.value = aoRT.depthTexture;
           aoMat.uniforms.uRes.value.set(rw, rh);
@@ -8732,6 +8819,33 @@ function init3() {
               col = min(col, vec3(1.0)) + over / (1.0 + over * 0.6);
               gl_FragColor = vec4(col, 1.0);
             }` });
+        // FXAA: suavizado de bordes por luminancia (aliasing de vallas y líneas)
+        fxaaMat = new THREE.ShaderMaterial({ depthTest: false, depthWrite: false,
+          uniforms: { tCol: { value: null }, uRes: { value: new THREE.Vector2(1 / sz.x, 1 / sz.y) } },
+          vertexShader: FS_VERT,
+          fragmentShader: `precision highp float;
+            varying vec2 vUv; uniform sampler2D tCol; uniform vec2 uRes;
+            void main() {
+              vec3 rgbNW = texture2D(tCol, vUv + vec2(-1.0, -1.0) * uRes).rgb;
+              vec3 rgbNE = texture2D(tCol, vUv + vec2( 1.0, -1.0) * uRes).rgb;
+              vec3 rgbSW = texture2D(tCol, vUv + vec2(-1.0,  1.0) * uRes).rgb;
+              vec3 rgbSE = texture2D(tCol, vUv + vec2( 1.0,  1.0) * uRes).rgb;
+              vec3 rgbM  = texture2D(tCol, vUv).rgb;
+              vec3 luma = vec3(0.299, 0.587, 0.114);
+              float lNW = dot(rgbNW, luma), lNE = dot(rgbNE, luma);
+              float lSW = dot(rgbSW, luma), lSE = dot(rgbSE, luma), lM = dot(rgbM, luma);
+              float lMin = min(lM, min(min(lNW, lNE), min(lSW, lSE)));
+              float lMax = max(lM, max(max(lNW, lNE), max(lSW, lSE)));
+              vec2 dir = vec2(-((lNW + lNE) - (lSW + lSE)), ((lNW + lSW) - (lNE + lSE)));
+              float dirReduce = max((lNW + lNE + lSW + lSE) * 0.03125, 0.0078125);
+              dir = clamp(dir / (min(abs(dir.x), abs(dir.y)) + dirReduce), -8.0, 8.0) * uRes;
+              vec3 rgbA = 0.5 * (texture2D(tCol, vUv + dir * (1.0 / 3.0 - 0.5)).rgb
+                               + texture2D(tCol, vUv + dir * (2.0 / 3.0 - 0.5)).rgb);
+              vec3 rgbB = rgbA * 0.5 + 0.25 * (texture2D(tCol, vUv - dir * 0.5).rgb
+                                             + texture2D(tCol, vUv + dir * 0.5).rgb);
+              float lB = dot(rgbB, luma);
+              gl_FragColor = vec4((lB < lMin || lB > lMax) ? rgbA : rgbB, 1.0);
+            }` });
         aoQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), aoMat);
         aoQuad.frustumCulled = false; aoScene.add(aoQuad);
       }
@@ -8762,6 +8876,9 @@ function init3() {
         aoMat.uniforms.uFar.value = cam.far;
         aoMat.uniforms.uFocal.value = cam.projectionMatrix.elements[5] * aoRT.height * 0.5;
         aoMat.uniforms.uStr.value = OPTS.ao ? 1.1 : 0;
+        renderer3.setRenderTarget(fRT); renderer3.render(aoScene, aoCam);   // composite → fRT
+        aoQuad.material = fxaaMat;                                         // FXAA → pantalla
+        fxaaMat.uniforms.tCol.value = fRT.texture;
         renderer3.setRenderTarget(null); renderer3.render(aoScene, aoCam);
         return;
       }
@@ -9260,7 +9377,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 676;
+const BUILD_NO = 678;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -9335,6 +9452,85 @@ function aiDrive(x, z, vx, vz, a, pi) {
   if (spd > vMax + 7) { gas = 0; brake = 1; }
   else if (spd > vMax + 2) gas = 0;
   return { steer: clamp(da * 2.4, -1, 1), gas: gas, brake: brake, hb: 0 };
+}
+
+// ===== SAFETY CAR FÍSICO: pace car que abre la carrera desde la parrilla =====
+// Máquina de estados: COUNTDOWN (en parrilla, balizas, controles bloqueados por
+// el propio semáforo del juego) → LEAD (acelera y lidera sobre la trazada) →
+// PULL-IN (se desvía al lado de boxes y frena) → DESPAWN (dispose libre).
+let scCar = null;
+function scSpawn() {
+  scDispose();
+  if (dragMode) return;
+  const grp = buildF1(0xff9c1a);                      // naranja safety
+  // Balizas ámbar alternas sobre el techo (rotativa de safety car)
+  const tex = tex3(makeGlowTex(255, 190, 60, 1));
+  const bc = [];
+  for (const s of [-1, 1]) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0.9 }));
+    sp.scale.set(1.7, 1.7, 1); sp.position.set(s * 0.85, 3.1, 0.15);
+    grp.add(sp); bc.push(sp);
+  }
+  const i0 = 1 % pathLen;                              // ~10m delante del cajón P1 (sIdx+5 ≈ línea)
+  const p = path[i0];
+  grp.position.set(p.x, 0, p.z);
+  grp.rotation.y = Math.PI / 2 - Math.atan2(p.tz, p.tx);
+  scene3.add(grp);
+  // Lado de boxes: hacia donde apunta la boca del pit lane si existe
+  let pitSide = 1;
+  const rt = window._pitRoute;
+  if (rt && rt.pts && rt.pts[0]) {
+    const p0 = path[0];
+    pitSide = Math.sign((rt.pts[0].x - p0.x) * (-p0.tz) + (rt.pts[0].z - p0.z) * p0.tx) || 1;
+  }
+  scCar = { grp, bc, s: i0, s0: i0, v: 0, ph: 1, lat: 0, stopT: 0, blink: 0, pitSide };
+}
+function scDispose() {
+  if (!scCar) return;
+  scene3.remove(scCar.grp);
+  scCar.grp.traverse(o => {                      // libera geometría/materiales (las texturas son compartidas)
+    if (o.geometry) o.geometry.dispose();
+    if (o.material) for (const m of (Array.isArray(o.material) ? o.material : [o.material])) m.dispose();
+  });
+  scCar = null;
+}
+function scReset() {                                   // falsa salida: vuelve a su sitio delante de P1
+  if (!scCar) return;
+  const i0 = scCar.s0, p = path[i0];
+  scCar.s = i0; scCar.v = 0; scCar.ph = 1; scCar.lat = 0; scCar.stopT = 0;
+  scCar.grp.position.set(p.x, 0, p.z);
+  scCar.grp.rotation.y = Math.PI / 2 - Math.atan2(p.tz, p.tx);
+}
+function scTick(dt, go) {
+  const sc = scCar; if (!sc) return;
+  sc.blink += dt;                                       // rotativas alternas ~3 Hz
+  const ph = (sc.blink * 3) % 2 < 1;
+  sc.bc[0].material.opacity = ph ? 0.95 : 0.15;
+  sc.bc[1].material.opacity = ph ? 0.15 : 0.95;
+  if (sc.ph === 1) {                                    // COUNTDOWN: quieto en parrilla
+    if (go && !fsState) sc.ph = 2;                      // GO (luz verde) → LEAD/RACING
+    return;
+  }
+  const tgt = sc.ph === 2 ? 26 : 0;                     // ritmo pace car / frena al quitarse
+  sc.v += clamp(tgt - sc.v, -30 * dt, 14 * dt);
+  const i0 = ((Math.floor(sc.s) % pathLen) + pathLen) % pathLen;
+  const p0 = path[i0], pN = path[(i0 + 1) % pathLen];
+  sc.s += sc.v * dt / Math.max(0.3, Math.hypot(pN.x - p0.x, pN.z - p0.z));
+  const i = ((Math.floor(sc.s) % pathLen) + pathLen) % pathLen, iN = (i + 1) % pathLen;
+  const f = sc.s - Math.floor(sc.s), pa = path[i], pb = path[iN];
+  // Lidera ~1/3 de vuelta (máx ~440m) y luego entra en PULL-IN hacia boxes
+  if (sc.ph === 2 && sc.s - sc.s0 > Math.min(pathLen * 0.35, 220)) sc.ph = 3;
+  const hw = trackHW ? trackHW[i] : RW / 2;
+  const latT = sc.ph === 3 ? sc.pitSide * hw * 0.95 : 0;
+  sc.lat += (latT - sc.lat) * Math.min(1, dt * 1.4);
+  const x = pa.x + (pb.x - pa.x) * f + (-pa.tz) * sc.lat;
+  const z = pa.z + (pb.z - pa.z) * f + (pa.tx) * sc.lat;
+  sc.grp.position.set(x, 0, z);
+  sc.grp.rotation.y = Math.PI / 2 - Math.atan2(pb.tz, pb.tx);
+  if (sc.ph === 3 && sc.v < 0.5) {                      // ya apartado: se retira al alejarse el jugador 50m
+    sc.stopT += dt;
+    if (sc.stopT > 4 || Math.hypot(car.x - x, car.z - z) > 50) scDispose();
+  }
 }
 
 // El rival CPU avanza sobre la spline con perfil de velocidad (no es kinematic jugable, es "slot car")
@@ -10088,6 +10284,7 @@ function fsRestart() {
   launchWin = 0; launchDone = false;
   wrongWay = 0; wwBack = 0; lastIdx = pathIdx;
   for (const c of cpus) if (c) { c.s = -8 - (c.slot || 0) * 4; c.v = 0; c.fin = false; c.tm = 0; }
+  scReset();                                              // el pace car también vuelve a su sitio
   el('formChip').style.display = 'none';
   el('fsBan').style.display = 'none';
   // El heli de TV vuelve a su puesto sobre la parrilla para la salida relanzada
@@ -10851,8 +11048,10 @@ function update(dt) {
     if (vAbs > 30) { const k = 30 / vAbs; car.vx *= k; car.vz *= k; }
     if (scT <= 0) showToast('🟢 ' + T('scIn'));
   }
+  scTick(dt, go);                                         // pace car: parrilla → lidera → se aparta
   const sc = el('scChip');
-  if (sc._on !== (scT > 0)) { sc._on = scT > 0; sc.style.display = scT > 0 ? 'block' : 'none'; }
+  const scShow = scT > 0 || !!scCar;                      // bandera amarilla o pace car físico en pista
+  if (sc._on !== scShow) { sc._on = scShow; sc.style.display = scShow ? 'block' : 'none'; }
 
   // VUELTA DE FORMACIÓN (campeonato): los primeros segundos se rueda lento en
   // fila antes de que el semáforo libere la carrera de verdad
@@ -12521,6 +12720,7 @@ function startStage(n, seed, mp, mode) {
   tireWear = 0; wetTires = false; rain = 0; rainEnd = -1; wetK = 0; wetAp = -1; pitT = 0; pitUsed = false; ghostT = 0; koTimer = KO_LIMIT;
   { const rmc = el('rainMsg'); if (rmc) { rmc._s = 0; rmc.classList.remove('show'); rmc.classList.remove('dry'); } }
   scT = 0; formT = (champMode || mode === 'champ') ? 7 : 0;   // campeonato: vuelta de formación
+  scDispose();                                            // limpia un pace car de la etapa anterior
   fwGo = -9; flares = []; flareT = rnd(4, 9);                 // pirotecnia/bengalas limpias por etapa
   for (const s of flareGlows) s.visible = false;
   if (fwRk) for (const s of fwRk.concat(fwSp)) s.visible = false;
@@ -12561,6 +12761,7 @@ function startStage(n, seed, mp, mode) {
             a: Math.atan2(ps.tz, ps.tx), vx: 0, vz: 0, steer: 0 };
   }
   carGrp.position.set(car.x, 0, car.z);
+  scSpawn();   // el pace car ocupa su puesto ~10m delante del cajón P1
   // El heli de TV SIEMPRE cubre la salida: ya en el aire al arrancar, a poca
   // distancia del primer cajón de la parrilla (la pole), y su órbita empieza
   // justo sobre la parrilla para que no se marche de inmediato
