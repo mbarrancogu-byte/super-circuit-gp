@@ -4819,8 +4819,8 @@ function buildWorld() {
         tg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
         tg.setIndex(idx); tg.computeVertexNormals();
         world.add(new THREE.Mesh(tg, new THREE.MeshStandardMaterial({
-          color: 0xcfe2f8, transparent: true, opacity: 0.55, roughness: 0.12,
-          metalness: 0.4, side: THREE.DoubleSide, depthWrite: false })));
+          color: 0xcfe2f8, transparent: true, opacity: 0.32, roughness: 0.12,
+          metalness: 0.35, side: THREE.DoubleSide, depthWrite: false })));
         // Arcos estructurales opacos cada pocos metros — el coche parpadea entre ellos
         const nRib = Math.max(2, Math.floor((i1 - i0) / 7));
         const ribs = new THREE.InstancedMesh(
