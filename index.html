@@ -1379,11 +1379,13 @@
     box-shadow: 0 4px 18px rgba(0,0,0,0.65), 0 0 18px rgba(255,190,80,0.4),
       inset 0 1px 2px rgba(255,255,255,0.25);
     transition: transform .18s, box-shadow .18s; }
-  #splashOpts svg { width: 28px; height: 28px;
+  #splashOpts svg { width: 33px; height: 33px; margin: 0; vertical-align: 0;
+    transform: translateY(0.5px);                       /* el trazado del engranaje va 0.4px alto */
+    filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.75)) drop-shadow(0 0 5px rgba(255,220,140,0.4));
     transition: transform .45s cubic-bezier(.3,1.4,.5,1); }
+  #splashOpts:hover svg { transform: translateY(0.5px) rotate(100deg); }
   #splashOpts:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.65), 0 0 30px rgba(255,200,90,0.7),
     inset 0 1px 2px rgba(255,255,255,0.35); }
-  #splashOpts:hover svg { transform: rotate(100deg); }
   #splashOpts:active { transform: scale(0.9); }
   /* GP naranja metálico 3D sobre el póster — sin fondo, extrusión en elemento hermano
      (con ::before + z-index se pinta delante de la cara en Chromium) */
@@ -8871,7 +8873,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 660;
+const BUILD_NO = 661;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
