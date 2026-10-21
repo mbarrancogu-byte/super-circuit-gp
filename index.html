@@ -377,8 +377,8 @@
   #pauseBtn { position: absolute; right: 108px; top: 156px; z-index: 20;
     border-color: rgba(255,210,90,0.55); color: #ffe9a0; }
 
-  /* Contador FPS: chip verde pequeño bajo los botones de la esquina derecha */
-  #fpsBox { position: fixed; top: 218px; right: 12px; z-index: 96; padding: 4px 11px;
+  /* Contador FPS: chip verde pequeño en la esquina superior derecha */
+  #fpsBox { position: fixed; top: 10px; right: 12px; z-index: 96; padding: 4px 11px;
     font: 800 14px/1 'Consolas', monospace; color: #8effb0; text-align: center;
     background: rgba(8,14,26,0.62); border: 1px solid rgba(120,255,170,0.3);
     border-radius: 9px; pointer-events: none; display: none; }
@@ -8863,7 +8863,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 657;
+const BUILD_NO = 658;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
