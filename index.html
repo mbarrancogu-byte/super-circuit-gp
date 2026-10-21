@@ -7435,16 +7435,30 @@ function buildWorld() {
       const mkImp = round => {
         const c = document.createElement('canvas'); c.width = 64; c.height = 96;
         const x = c.getContext('2d');
-        x.fillStyle = '#6b5236'; x.fillRect(30, 64, 5, 32);            // tronco
+        x.fillStyle = '#5d4529'; x.fillRect(30, 66, 5, 30);            // tronco
         if (round) {
-          x.fillStyle = '#3d6631'; x.beginPath(); x.ellipse(32, 36, 25, 28, 0, 0, 7); x.fill();
-          x.fillStyle = '#527c44'; x.beginPath(); x.ellipse(23, 26, 12, 13, 0, 0, 7); x.fill();
+          // Roble: masa irregular de grumos, no una elipse limpia
+          const blobs = [[32, 34, 24], [20, 42, 15], [44, 42, 14], [32, 20, 16], [15, 30, 10], [49, 30, 10]];
+          x.fillStyle = '#2e5224';
+          for (const [bx, by, br] of blobs) { x.beginPath(); x.arc(bx + rnd(-2, 2), by + rnd(-2, 2), br, 0, 7); x.fill(); }
+          x.fillStyle = '#4c7a3a';
+          for (const [bx, by, br] of blobs) { x.beginPath(); x.arc(bx - 3, by - 4, br * 0.55, 0, 7); x.fill(); }
         } else {
-          x.fillStyle = '#2f5b2c';
-          for (let k = 0; k < 3; k++) {
-            x.beginPath();
-            x.moveTo(7 + k * 4, 70 - k * 18); x.lineTo(57 - k * 4, 70 - k * 18);
-            x.lineTo(32, 6 + k * 7); x.fill();
+          // Pino: capas de ramas con borde dentado + sombra bajo cada capa
+          for (let k = 0; k < 4; k++) {
+            const y0 = 6 + k * 15, w = 9 + k * 7, h = 22 + k * 3;
+            x.fillStyle = '#1f4020';
+            for (let t = 0; t < w; t += 4) {                     // dentado inferior
+              x.beginPath(); x.moveTo(32 - w + t, y0 + h - 8); x.lineTo(32 - w + t + 5, y0 + h); x.lineTo(32 - w + t + 7, y0 + h - 8); x.fill();
+              x.beginPath(); x.moveTo(32 + w - t, y0 + h - 8); x.lineTo(32 + w - t - 5, y0 + h); x.lineTo(32 + w - t - 7, y0 + h - 8); x.fill();
+            }
+            x.fillStyle = k < 2 ? '#2f5b2c' : '#25481f';
+            x.beginPath(); x.moveTo(32 - w, y0 + h); x.lineTo(32 + w, y0 + h); x.lineTo(32, y0); x.fill();
+          }
+          x.fillStyle = 'rgba(120,160,90,0.5)';                  // luz en la cara izquierda
+          for (let k = 0; k < 4; k++) {
+            const y0 = 6 + k * 15, w = 9 + k * 7, h = 22 + k * 3;
+            x.beginPath(); x.moveTo(32, y0); x.lineTo(32 - w * 0.55, y0 + h * 0.8); x.lineTo(32, y0 + h); x.fill();
           }
         }
         return tex3(c);
@@ -7480,14 +7494,14 @@ function buildWorld() {
         const p = path[i], nx = -p.tz, nz = p.tx;
         for (const sd of [1, -1]) {
           if (rnd(0, 1) < 0.35) continue;
-          const lat = 115 + rnd(0, 185);
+          const lat = 135 + rnd(0, 185);
           putImp(p.x + nx * sd * lat + rnd(-9, 9), p.z + nz * sd * lat + rnd(-9, 9));
         }
       }
       // Manchas de arbolado lejano por todo el mapa (fondo del horizonte)
       while (nip + nio < NIP + NIO && guard++ < 26000) {
         const x = rnd(-1050, 1050), z = rnd(-1050, 1050);
-        if (nearRoad(x, z, 110)) continue;
+        if (nearRoad(x, z, 170)) continue;
         putImp(x, z);
       }
       imPine.count = nip; imOak.count = nio;
