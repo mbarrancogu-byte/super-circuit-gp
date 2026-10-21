@@ -2577,6 +2577,7 @@
       <div class="optRow"><div class="lbl" id="lbDust">POLVO</div><button class="optT sw" id="optDust">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbAO">OCLUSIÓN AMBIENTAL</div><button class="optT sw" id="optAO">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbBloom">BLOOM</div><button class="optT sw" id="optBloom">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbRes">RESOLUCIÓN</div><div class="segC" id="optRes"><button class="segB on" data-v="0">AUTO</button><button class="segB" data-v="1">ALTA</button><button class="segB" data-v="2">ULTRA</button></div></div>
       <div class="optSec" id="secAid">🛠️ ASISTENCIA</div>
       <div class="optRow"><div class="lbl" id="lbAbs">FRENO ASISTIDO</div><button class="optT sw" id="optAbs">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbSteer">ASIST. DIRECCIÓN</div><button class="optT sw" id="optSteer">ON</button></div>
@@ -9107,7 +9108,7 @@ function init3() {
   // MSAA solo cuando aporta: a DPR≥2 la densidad de píxeles ya suaviza los bordes
   // y el antialiasing multisample es coste de fragmentos casi invisible
   renderer3 = new THREE.WebGLRenderer({ canvas: cv, antialias: !LOW_POWER && DPR < 2, powerPreference: 'high-performance' });
-  renderer3.setPixelRatio(LOW_POWER ? Math.min(DPR, 1.5) : Math.min(DPR, 2)); renderer3.setSize(W, H, false);
+  renderer3.setPixelRatio(LOW_POWER ? Math.min(DPR, 1.5) : Math.min(DPR * (RES_MULT[OPTS.res || 0] || 1), 3)); renderer3.setSize(W, H, false);
   renderer3.shadowMap.enabled = !!OPTS.shadow && !LOW_POWER;
   renderer3.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer3.outputEncoding = THREE.sRGBEncoding;                 // las texturas ya venían en sRGB: sin esto salían apagadas
@@ -9888,7 +9889,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 696;
+const BUILD_NO = 697;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -13624,7 +13625,7 @@ function fmtT(s) {
 }
 /* ================== OPCIONES ================== */
 const OPTS = { sound: 1, shadow: 1, skid: 1, dust: 1, ao: 1, bloom: 1, cam: 0, brakeAid: 1, steerAid: 1, car: 0,
-               lefty: 0, vib: 1, fps: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0, tod: 'dusk', rline: 0, aiEng: 0 };   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
+               lefty: 0, vib: 1, fps: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0, tod: 'dusk', rline: 0, aiEng: 0, res: 0 };   // res: 0=AUTO 1=ALTA 2=ULTRA   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
 try { Object.assign(OPTS, JSON.parse(localStorage.getItem('af1_opts') || '{}')); } catch (e) {}
 if (!OPTS.todV) { OPTS.tod = 'dusk'; OPTS.todV = 1; saveOpts(); }   // migración única: atardecer por defecto (el usuario puede cambiarlo en el selector)
 function saveOpts() { try { localStorage.setItem('af1_opts', JSON.stringify(OPTS)); } catch (e) {} }
@@ -13653,6 +13654,23 @@ function paintCam() {
   });
 }
 function buzz(p) { if (OPTS.vib && navigator.vibrate) navigator.vibrate(p); }
+// Resolución interna del render 3D: AUTO = DPR nativo (máx 2×); ALTA y ULTRA
+// supersamplean sobre el DPR — más nitidez en bordillos, vallas y coches.
+const RES_MULT = [1, 1.35, 1.75];
+function applyRes() {
+  if (!renderer3) return;
+  const base = LOW_POWER ? Math.min(DPR, 1.2) : DPR;
+  renderer3.setPixelRatio(Math.min(base * (RES_MULT[OPTS.res || 0] || 1), 3));
+  renderer3.setSize(W, H, false);
+  if (window._ppComp) window._ppComp.setSize(W, H);
+}
+function paintRes() {
+  const c = document.getElementById('optRes'); if (!c) return;
+  [...c.children].forEach((b, i) => b.classList.toggle('on', i === (OPTS.res || 0)));
+}
+for (const b of document.querySelectorAll('#optRes .segB'))
+  b.addEventListener('click', () => { OPTS.res = +b.dataset.v; saveOpts(); applyRes(); paintRes(); buzz(12); });
+paintRes();
 // Selector de hora del día del menú: AUTO / DÍA / TARDE / NOCHE
 function paintTOD() {
   const t = OPTS.tod || 'auto';
@@ -13840,7 +13858,7 @@ const I18N = {
     online: 'CARRERA ONLINE', bt: 'DUELO BLUETOOTH', subtitle: 'RALLY NOCTURNO · CONTRARRELOJ',
     hint: '◀ ▶ dirige · GAS/FRENO pedales · HB derrape · ⚡ nitro · teclado WASD + Shift',
     secSnd: 'SONIDO', secGfx: 'GRÁFICOS', secAid: 'ASISTENCIA', secCtl: 'CONTROLES', secCam: 'VISTAS', secLang: 'IDIOMA', secRec: 'RÉCORDS',
-    sound: 'SONIDO', shadows: 'SOMBRAS', skid: 'MARCAS DE DERRAPE', dust: 'POLVO', ao: 'OCLUSIÓN AMBIENTAL', bloom: 'BLOOM SUAVE',
+    sound: 'SONIDO', shadows: 'SOMBRAS', skid: 'MARCAS DE DERRAPE', dust: 'POLVO', ao: 'OCLUSIÓN AMBIENTAL', bloom: 'BLOOM SUAVE', res: 'RESOLUCIÓN',
     brakeAid: 'FRENO ASISTIDO', steerAid: 'ASIST. DIRECCIÓN', initView: 'VISTA INICIAL',
     rline: 'TRAZADA IDEAL',
     aiEng: 'INGENIERO IA', aiKey: 'API KEY GEMINI',
@@ -13967,7 +13985,7 @@ const I18N = {
     online: 'ONLINE RACE', bt: 'BLUETOOTH DUEL', subtitle: 'NIGHT RALLY · TIME TRIAL',
     hint: '◀ ▶ steer · GAS/BRAKE pedals · HB drift · ⚡ nitro · WASD + Shift',
     secSnd: 'SOUND', secGfx: 'GRAPHICS', secAid: 'DRIVER AIDS', secCtl: 'CONTROLS', secCam: 'CAMERA', secLang: 'LANGUAGE', secRec: 'RECORDS',
-    sound: 'SOUND', shadows: 'SHADOWS', skid: 'SKID MARKS', dust: 'DUST', ao: 'AMBIENT OCCLUSION', bloom: 'SOFT BLOOM',
+    sound: 'SOUND', shadows: 'SHADOWS', skid: 'SKID MARKS', dust: 'DUST', ao: 'AMBIENT OCCLUSION', bloom: 'SOFT BLOOM', res: 'RESOLUTION',
     brakeAid: 'BRAKE ASSIST', steerAid: 'STEER ASSIST', initView: 'START VIEW',
     rline: 'RACING LINE',
     aiEng: 'AI ENGINEER', aiKey: 'GEMINI API KEY',
@@ -14114,12 +14132,12 @@ function applyLang() {
   const ci = (id, n) => { const e = document.getElementById(id); if (e) e.innerHTML = ic(n); };
   ci('ciSteer', 'wheel'); ci('ciGas', 'bolt'); ci('ciBrake', 'warn'); ci('ciHb', 'tire');
   ci('ciNitro', 'burst'); ci('ciPit', 'pit'); ci('ciZoom', 'cam');
-  set('lbSound', T('sound')); set('lbShadow', T('shadows')); set('lbSkid', T('skid')); set('lbDust', T('dust')); set('lbAO', T('ao')); set('lbBloom', T('bloom'));
+  set('lbSound', T('sound')); set('lbShadow', T('shadows')); set('lbSkid', T('skid')); set('lbDust', T('dust')); set('lbAO', T('ao')); set('lbBloom', T('bloom')); set('lbRes', T('res'));
   set('lbAbs', T('brakeAid')); set('lbSteer', T('steerAid')); set('lbCam', T('initView'));
   set('lbTire', T('tire')); set('lbRline', T('rline')); paintTire();
   set('lbAI', T('aiEng')); set('lbAIKey', T('aiKey')); paintAiKey();
   set('lbTouch', T('touchUi')); set('lbLefty', T('lefty')); set('lbVib', T('vib')); set('lbFps', T('fps')); set('lbSens', T('sens'));
-  paintSens();
+  paintSens(); paintRes();
   set('lbRec', T('records')); set('lbEndur', T('endur')); set('lbAch', T('achs'));
   set('recTit', '🏁 ' + T('records')); set('achTit', '🏆 ' + T('achs'));
   const oe = document.getElementById('optEndur');
