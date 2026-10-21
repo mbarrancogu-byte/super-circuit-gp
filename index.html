@@ -9796,7 +9796,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 693;
+const BUILD_NO = 694;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -12210,9 +12210,11 @@ function draw(now) {
       const hCar = (H.phase === 'lead' && H.leadCar) ? H.leadCar : car;
       const wy = hv2 > 6
                ? Math.atan2(-H.vz, H.vx) + Math.PI
-               : (hCar && hCar.a !== undefined
-                  ? Math.atan2(-Math.sin(hCar.a), Math.cos(hCar.a)) + Math.PI
-                  : H.yaw);
+               : (H.bnx !== undefined && hCar                     // lookAt al MORRO del objetivo
+                  ? Math.atan2(-(H.bnz - hz), H.bnx - hx) + Math.PI
+                  : (hCar && hCar.a !== undefined
+                     ? Math.atan2(-Math.sin(hCar.a), Math.cos(hCar.a)) + Math.PI
+                     : H.yaw));
       let dyaw = wy - H.yaw;
       while (dyaw > Math.PI) dyaw -= Math.PI * 2;
       while (dyaw < -Math.PI) dyaw += Math.PI * 2;
@@ -12251,16 +12253,29 @@ function draw(now) {
     const beamOn = !!(beamCar && H.grp.visible);
     heliObj.beam.intensity = beamOn ? 2.6 + 0.8 * nk : 0;      // suave de día, algo más de noche
     if (beamOn) {
-      heliObj.beamTgt.position.set(beamCar.x, 0, beamCar.z);
-      // cono visible del haz: del fuselaje al coche, radio = apertura del foco
-      const dd = Math.hypot(beamCar.x - hx, hy - 0, beamCar.z - hz);
-      _helV.set((hx - beamCar.x) / dd, hy / dd, (hz - beamCar.z) / dd);  // base→vértice
+      // El foco NO apunta al centro: apunta al MORRO del coche
+      // (target = posición + vector frontal × noseOffset), con lerp suave
+      const nOff = 1.7;
+      let nx = beamCar.x, nz = beamCar.z;
+      if (beamCar.a !== undefined) {
+        nx += Math.cos(beamCar.a) * nOff; nz += Math.sin(beamCar.a) * nOff;
+      } else {
+        const sv = Math.hypot(beamCar.vx || 0, beamCar.vz || 0);
+        if (sv > 1) { nx += beamCar.vx / sv * nOff; nz += beamCar.vz / sv * nOff; }
+      }
+      const lk = Math.min(1, dt * 7);                          // suavizado del objetivo
+      H.bnx = H.bnx === undefined ? nx : H.bnx + (nx - H.bnx) * lk;
+      H.bnz = H.bnz === undefined ? nz : H.bnz + (nz - H.bnz) * lk;
+      heliObj.beamTgt.position.set(H.bnx, 0, H.bnz);
+      // cono visible del haz: del fuselaje al morro, radio = apertura del foco
+      const dd = Math.hypot(H.bnx - hx, hy - 0, H.bnz - hz);
+      _helV.set((hx - H.bnx) / dd, hy / dd, (hz - H.bnz) / dd);  // base→vértice
       heliObj.beamCone.visible = true;
       heliObj.beamCone.quaternion.setFromUnitVectors(_helUp, _helV);
-      heliObj.beamCone.position.set((hx + beamCar.x) / 2, hy / 2, (hz + beamCar.z) / 2);
+      heliObj.beamCone.position.set((hx + H.bnx) / 2, hy / 2, (hz + H.bnz) / 2);
       const cr = Math.tan(0.30) * dd * 0.72;
       heliObj.beamCone.scale.set(cr, dd, cr);
-      heliObj.beamPool.position.set(beamCar.x, 0.16 + bankYAt(pathIdx, 0), beamCar.z);
+      heliObj.beamPool.position.set(H.bnx, 0.16 + bankYAt(pathIdx, 0), H.bnz);
       heliObj.beamPool.material.opacity = 0.05 + 0.05 * nk;    // charco tenue — de noche un poco más
     } else {
       heliObj.beamCone.visible = false;
