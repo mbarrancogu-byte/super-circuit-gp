@@ -1372,11 +1372,18 @@
   #splashLang { position: absolute; left: 50%; bottom: 15%; transform: translate(-50%, -50%);
     display: flex; gap: 10px; z-index: 3; }
   /* Botón de opciones en la portada: engranaje flotante esquina superior derecha */
-  #splashOpts { position: absolute; top: 16px; right: 16px; z-index: 4; width: 52px; height: 52px;
+  #splashOpts { position: absolute; top: 50px; right: 16px; z-index: 4; width: 52px; height: 52px;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
-    border-radius: 50%; background: rgba(10,16,34,0.75); border: 2px solid rgba(255,200,80,0.55);
-    box-shadow: 0 4px 18px rgba(0,0,0,0.6), 0 0 14px rgba(255,190,80,0.25); }
-  #splashOpts svg { width: 26px; height: 26px; fill: #ffd070; }
+    border-radius: 50%; border: 2px solid rgba(255,205,95,0.9);
+    background: radial-gradient(circle at 32% 28%, #3d4f77 0%, #141c33 62%, #080d1c 100%);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.65), 0 0 18px rgba(255,190,80,0.4),
+      inset 0 1px 2px rgba(255,255,255,0.25);
+    transition: transform .18s, box-shadow .18s; }
+  #splashOpts svg { width: 28px; height: 28px;
+    transition: transform .45s cubic-bezier(.3,1.4,.5,1); }
+  #splashOpts:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.65), 0 0 30px rgba(255,200,90,0.7),
+    inset 0 1px 2px rgba(255,255,255,0.35); }
+  #splashOpts:hover svg { transform: rotate(100deg); }
   #splashOpts:active { transform: scale(0.9); }
   /* GP naranja metálico 3D sobre el póster — sin fondo, extrusión en elemento hermano
      (con ::before + z-index se pinta delante de la cara en Chromium) */
@@ -8863,7 +8870,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 658;
+const BUILD_NO = 659;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
