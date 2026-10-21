@@ -7198,7 +7198,13 @@ function buildWorld() {
     const oakMat = new THREE.MeshStandardMaterial({ color: 0xcfe0a8, roughness: 0.95, map: foliageTex, vertexColors: true });
     const cypMat = new THREE.MeshStandardMaterial({ color: 0x9ab88e, roughness: 0.95, map: foliageTex, vertexColors: true });
     const barkMat = new THREE.MeshStandardMaterial({ color: 0xc8b8a0, roughness: 1, map: barkTex });
-    const CAP = { pine: 300, pine2: 275, oak: 215, oak2: 215, cyp: 225 };
+    // Registro de culling por distancia: las instancias lejanas de vegetación
+    // pequeña se colapsan a escala 0 (GPU no dibuja nada, cero trabajo de ruteo)
+    window._vegCull = [];
+    window.vegReg = (m, pos, mats, n, dist) => window._vegCull.push({
+      m, n, pos, mats, vis: new Uint8Array(n).fill(1), r2: dist * dist, tm: new THREE.Matrix4() });
+    const CAP = LOW_POWER ? { pine: 170, pine2: 150, oak: 120, oak2: 120, cyp: 130 }
+                          : { pine: 460, pine2: 420, oak: 330, oak2: 330, cyp: 340 };
     const pines = new THREE.InstancedMesh(leafGeo, leafMat, CAP.pine);
     const pines2 = new THREE.InstancedMesh(pineBGeo, leafMat, CAP.pine2);
     const oaks = new THREE.InstancedMesh(oakGeo, oakMat, CAP.oak);
@@ -7269,11 +7275,13 @@ function buildWorld() {
     }
     const shadeGeo = new THREE.PlaneGeometry(1, 1); shadeGeo.rotateX(-Math.PI / 2);
     const shades = new THREE.InstancedMesh(shadeGeo,
-      new THREE.MeshBasicMaterial({ map: window._shadeTex, transparent: true, depthWrite: false }), CAP.pine + CAP.oak + CAP.cyp);
+      new THREE.MeshBasicMaterial({ map: window._shadeTex, transparent: true, depthWrite: false }), CAP.pine + CAP.pine2 + CAP.oak + CAP.oak2 + CAP.cyp);
     shades.renderOrder = 1;
     const shadeR = [5.4, 6.8, 2.4];                        // radio de sombra por especie
     const sOff = { x: -0.6, z: 0.8 };                      // la luz viene de (+x,-z): la sombra cae al contrario
     let ti = 0, nP = 0, nP2 = 0, nO = 0, nO2 = 0, nC = 0, rk = 0, guard = 0;
+    const shPos = new Float32Array((CAP.pine + CAP.pine2 + CAP.oak + CAP.oak2 + CAP.cyp) * 3);
+    const shMat = new Float32Array(shPos.length / 3 * 16);
     // ¿Dentro del complejo de boxes o de la tribuna curva?
     const inPitArea = (x, z) => {
       const pe = window._pitExcl;
@@ -7338,7 +7346,8 @@ function buildWorld() {
       const sr = shadeR[kind] * s * rnd(0.9, 1.15);
       pm.makeScale(sr * 2, 1, sr * 2);
       pm.setPosition(x + sOff.x * sr * 0.35, y0 + 0.12, z + sOff.z * sr * 0.35);
-      shades.setMatrixAt(ti, pm);
+      shades.setMatrixAt(ti, pm); pm.toArray(shMat, ti * 16);
+      shPos[ti * 3] = x; shPos[ti * 3 + 2] = z;
       obstacles.push({ x, z, r: 3 * s, veg: 1 });
       ti++;
       return true;
@@ -7346,10 +7355,10 @@ function buildWorld() {
     // Cinturón arbolado que SIGUE el circuito: a cada pocos metros, a ambos
     // lados, a 30-92u del eje — deja una pradera despejada junto al asfalto
     // (como el césped amplio de los circuitos reales) antes del bosque
-    for (let i = 0; i < pathLen; i += 2) {
+    for (let i = 0; i < pathLen; i += 1) {
       const p = path[i], nx = -p.tz, nz = p.tx;
       for (const sd of [1, -1]) {
-        if (rnd(0, 1) < 0.30) continue;                      // huecos naturales, no es una pared
+        if (rnd(0, 1) < 0.24) continue;                      // huecos naturales, no es una pared
         const lat = 30 + rnd(0, 62);
         const x = p.x + nx * sd * lat + rnd(-7, 7);
         const z = p.z + nz * sd * lat + rnd(-7, 7);
@@ -7358,7 +7367,7 @@ function buildWorld() {
       }
     }
     // Relleno disperso del entorno lejano
-    while (ti < nTrees + 160 && guard++ < 24000) {
+    while (ti < nTrees + 260 && guard++ < 30000) {
       const x = rnd(-900, 900), z = rnd(-900, 900);
       if (nearRoad(x, z, 22)) continue;
       putTree(x, z);
@@ -7373,6 +7382,7 @@ function buildWorld() {
       m.castShadow = true;        // masas de sombra bajo los árboles, como en la foto real
     }
     shades.castShadow = false;    // las sombras "decal" no proyectan (son el suelo)
+    vegReg(shades, shPos, shMat, ti, 430);
     world.add(pines, pines2, oaks, oaks2, cyps);
     world.add(trunksP, trunksO, trunksC);
     // Reparto: cantos pequeños y rocas medias cerca de la pista, peñascos en el entorno
@@ -7414,6 +7424,74 @@ function buildWorld() {
       if (m.instanceColor) m.instanceColor.needsUpdate = true;
     }
     world.add(pines, oaks, cyps, shades, rocksS, rocksM, rocksL);
+    // --- BOSQUE LEJANO (LOD): impostores de dos planos cruzados con silueta
+    // pintada — un draw call por especie, SIN sombras ni colisionadores; solo
+    // dibujan la línea de árboles del fondo más allá del cinturón 3D real.
+    if (!window._treeImpT) {
+      const mkImp = round => {
+        const c = document.createElement('canvas'); c.width = 64; c.height = 96;
+        const x = c.getContext('2d');
+        x.fillStyle = '#6b5236'; x.fillRect(30, 64, 5, 32);            // tronco
+        if (round) {
+          x.fillStyle = '#3d6631'; x.beginPath(); x.ellipse(32, 36, 25, 28, 0, 0, 7); x.fill();
+          x.fillStyle = '#527c44'; x.beginPath(); x.ellipse(23, 26, 12, 13, 0, 0, 7); x.fill();
+        } else {
+          x.fillStyle = '#2f5b2c';
+          for (let k = 0; k < 3; k++) {
+            x.beginPath();
+            x.moveTo(7 + k * 4, 70 - k * 18); x.lineTo(57 - k * 4, 70 - k * 18);
+            x.lineTo(32, 6 + k * 7); x.fill();
+          }
+        }
+        return tex3(c);
+      };
+      window._treeImpT = { pine: mkImp(false), oak: mkImp(true) };
+    }
+    {
+      const impA = new THREE.PlaneGeometry(15, 20); impA.translate(0, 10, 0);
+      const impB = impA.clone(); impB.rotateY(Math.PI / 2);
+      const impGeo = mergeGeos([{ geo: impA, m: new THREE.Matrix4() },
+                                { geo: impB, m: new THREE.Matrix4() }]);
+      const NIP = LOW_POWER ? 240 : 820, NIO = LOW_POWER ? 190 : 640;
+      const imPine = new THREE.InstancedMesh(impGeo, new THREE.MeshStandardMaterial({
+        map: window._treeImpT.pine, alphaTest: 0.4, side: THREE.DoubleSide, roughness: 1 }), NIP);
+      const imOak = new THREE.InstancedMesh(impGeo, new THREE.MeshStandardMaterial({
+        map: window._treeImpT.oak, alphaTest: 0.4, side: THREE.DoubleSide, roughness: 1 }), NIO);
+      imPine.frustumCulled = imOak.frustumCulled = false;
+      let nip = 0, nio = 0; guard = 0;
+      const putImp = (x, z) => {
+        if (inPitArea(x, z) || nearRoad(x, z, 24)) return;
+        const s = rnd(0.8, 1.7);
+        pm.makeRotationY(rnd(0, Math.PI * 2));
+        pm.scale(new THREE.Vector3(s * rnd(0.85, 1.2), s, s * rnd(0.85, 1.2)));
+        pm.setPosition(x, hAt(x, z) - 0.4, z);                 // hundido: nunca flota
+        const useP = rnd(0, 1) < 0.55;
+        if (useP && nip < NIP) { imPine.setMatrixAt(nip, pm);
+          imPine.setColorAt(nip, tCol.setHSL(0.28 + rnd(-0.05, 0.05), rnd(0.35, 0.5), rnd(0.75, 1))); nip++; }
+        else if (nio < NIO) { imOak.setMatrixAt(nio, pm);
+          imOak.setColorAt(nio, tCol.setHSL(0.22 + rnd(-0.05, 0.07), rnd(0.35, 0.5), rnd(0.7, 0.95))); nio++; }
+      };
+      // Anillo exterior del cinturón 3D: a 115-300u del eje, siguiendo la pista
+      for (let i = 0; i < pathLen && (nip + nio) < (NIP + NIO) * 0.6; i += 3) {
+        const p = path[i], nx = -p.tz, nz = p.tx;
+        for (const sd of [1, -1]) {
+          if (rnd(0, 1) < 0.35) continue;
+          const lat = 115 + rnd(0, 185);
+          putImp(p.x + nx * sd * lat + rnd(-9, 9), p.z + nz * sd * lat + rnd(-9, 9));
+        }
+      }
+      // Manchas de arbolado lejano por todo el mapa (fondo del horizonte)
+      while (nip + nio < NIP + NIO && guard++ < 26000) {
+        const x = rnd(-1050, 1050), z = rnd(-1050, 1050);
+        if (nearRoad(x, z, 110)) continue;
+        putImp(x, z);
+      }
+      imPine.count = nip; imOak.count = nio;
+      imPine.instanceMatrix.needsUpdate = imOak.instanceMatrix.needsUpdate = true;
+      if (imPine.instanceColor) imPine.instanceColor.needsUpdate = true;
+      if (imOak.instanceColor) imOak.instanceColor.needsUpdate = true;
+      world.add(imPine, imOak);
+    }
   }
 
   // --- VOLUMEN DE LA HIERBA: matas de césped instanciadas por todo el terreno ---
@@ -7452,8 +7530,9 @@ function buildWorld() {
                                { geo: gp2, m: new THREE.Matrix4() }]);
     const tuftMat = new THREE.MeshStandardMaterial({
       map: window._grassTex, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.95 });
-    const NT = LOW_POWER ? 2000 : 8200;
+    const NT = LOW_POWER ? 3400 : 13500;
     const tufts = new THREE.InstancedMesh(tuftGeo, tuftMat, NT);
+    const tPos = new Float32Array(NT * 3), tMat = new Float32Array(NT * 16);
     tufts.frustumCulled = false;
     const tm = new THREE.Matrix4(), tq = new THREE.Quaternion(), tv = new THREE.Vector3(),
           ts = new THREE.Vector3(), tc = new THREE.Color();
@@ -7489,7 +7568,8 @@ function buildWorld() {
       tq.setFromAxisAngle(tv.set(0, 1, 0), rnd(0, Math.PI * 2));
       tm.compose(tv.set(x, hAt(x, z) - 0.05, z), tq,
                  ts.set(s * rnd(0.9, 1.3), s * rnd(0.4, 0.6), s * rnd(0.9, 1.3)));
-      tufts.setMatrixAt(nt, tm);
+      tufts.setMatrixAt(nt, tm); tm.toArray(tMat, nt * 16);
+      tPos[nt * 3] = x; tPos[nt * 3 + 2] = z;
       // Tono pegado al césped del suelo (claro y poco saturado) — matas oscuras
       // sobre el plano lima se leían como líneas/rayas sobre la hierba
       tufts.setColorAt(nt, tc.setHSL(0.25 + rnd(-0.03, 0.03), rnd(0.26, 0.36), rnd(0.6, 0.72)));
@@ -7497,7 +7577,7 @@ function buildWorld() {
     }
     tufts.count = nt; tufts.instanceMatrix.needsUpdate = true;
     if (tufts.instanceColor) tufts.instanceColor.needsUpdate = true;
-    world.add(tufts);
+    world.add(tufts); vegReg(tufts, tPos, tMat, nt, 400);
 
     // --- SOTOBOSQUE: arbustos, helechos y flores — margen de pista con aspecto real ---
     const _mm = (x, y, z, sx, sy, sz) => new THREE.Matrix4().compose(
@@ -7509,8 +7589,9 @@ function buildWorld() {
       { geo: new THREE.SphereGeometry(0.8, 7, 6),  m: _mm(-0.85, 0.55, -0.3, 1, 0.65, 1) },
     ]);
     const bushMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, map: foliageTex });
-    const NB = LOW_POWER ? 240 : 960;
+    const NB = LOW_POWER ? 380 : 1500;
     const bushes = new THREE.InstancedMesh(bushGeo, bushMat, NB);
+    const bPos = new Float32Array(NB * 3), bMat = new Float32Array(NB * 16);
     bushes.frustumCulled = false;
     // Helechos VOLUMÉTRICOS: roseta de 7 conos inclinados hacia fuera — frondas
     // 3D que se ven bien desde cualquier ángulo, nunca una lámina plana
@@ -7525,8 +7606,9 @@ function buildWorld() {
       return { geo: g, m };
     }));
     const fernMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 });  // el tono verde lo da el color de instancia
-    const NF = LOW_POWER ? 260 : 1000;
+    const NF = LOW_POWER ? 420 : 1600;
     const ferns = new THREE.InstancedMesh(fernGeo, fernMat, NF);
+    const fPos = new Float32Array(NF * 3), fMat = new Float32Array(NF * 16);
     ferns.frustumCulled = false;
     // Flores silvestres: dos planos cruzados con corola pintada (el matiz va por instancia)
     if (!window._florTex) {
@@ -7547,8 +7629,9 @@ function buildWorld() {
     const florGeo = mergeGeos([{ geo: fl1, m: new THREE.Matrix4() }, { geo: fl2, m: new THREE.Matrix4() }]);
     const florMat = new THREE.MeshStandardMaterial({
       map: window._florTex, alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.9 });
-    const NFL = LOW_POWER ? 400 : 1650;
+    const NFL = LOW_POWER ? 640 : 2400;
     const flors = new THREE.InstancedMesh(florGeo, florMat, NFL);
+    const lPos = new Float32Array(NFL * 3), lMat = new Float32Array(NFL * 16);
     flors.frustumCulled = false;
     // Colocación compartida: misma banda cercana/lejana y exclusiones que la hierba
     let nb = 0, nf = 0, nfl = 0, vtry = 0;
@@ -7566,21 +7649,24 @@ function buildWorld() {
         const s = rnd(0.6, 1.9);
         tq.setFromAxisAngle(tv.set(0, 1, 0), rnd(0, Math.PI * 2));
         tm.compose(tv.set(x, y - 0.15, z), tq, ts.set(s * rnd(0.8, 1.2), s, s * rnd(0.8, 1.2)));
-        bushes.setMatrixAt(nb, tm);
+        bushes.setMatrixAt(nb, tm); tm.toArray(bMat, nb * 16);
+        bPos[nb * 3] = x; bPos[nb * 3 + 2] = z;
         bushes.setColorAt(nb, tc.setHSL(0.26 + rnd(-0.04, 0.06), rnd(0.4, 0.6), rnd(0.5, 0.75)));
         nb++;
       } else if (pick < 0.62 && nf < NF) {                // helecho
         const s = rnd(0.7, 1.5);
         tq.setFromAxisAngle(tv.set(0, 1, 0), rnd(0, Math.PI * 2));
         tm.compose(tv.set(x, y - 0.05, z), tq, ts.set(s, s * rnd(0.8, 1.1), s));
-        ferns.setMatrixAt(nf, tm);
+        ferns.setMatrixAt(nf, tm); tm.toArray(fMat, nf * 16);
+        fPos[nf * 3] = x; fPos[nf * 3 + 2] = z;
         ferns.setColorAt(nf, tc.setHSL(0.28 + rnd(-0.03, 0.03), rnd(0.4, 0.55), rnd(0.48, 0.62)));
         nf++;
       } else if (nfl < NFL) {                             // flor: amarilla/blanca/violeta/roja
         const s = rnd(0.7, 1.3);
         tq.setFromAxisAngle(tv.set(0, 1, 0), rnd(0, Math.PI * 2));
         tm.compose(tv.set(x, y - 0.03, z), tq, ts.set(s, s, s));
-        flors.setMatrixAt(nfl, tm);
+        flors.setMatrixAt(nfl, tm); tm.toArray(lMat, nfl * 16);
+        lPos[nfl * 3] = x; lPos[nfl * 3 + 2] = z;
         const pk = rnd(0, 1);
         flors.setColorAt(nfl, pk < 0.4 ? tc.setHSL(0.14, 0.85, 0.6)
           : pk < 0.7 ? tc.setHSL(0.1, 0.1, 0.92)
@@ -7596,6 +7682,9 @@ function buildWorld() {
       if (m.instanceColor) m.instanceColor.needsUpdate = true;
     }
     world.add(bushes, ferns, flors);
+    vegReg(bushes, bPos, bMat, nb, 460);
+    vegReg(ferns, fPos, fMat, nf, 420);
+    vegReg(flors, lPos, lMat, nfl, 380);
 
     // ===== SETO PERIMETRAL: vegetación 3D siguiendo los bordes del circuito =====
     // Cortasetos alineados con la trazada justo fuera del asfalto, con arbustos
@@ -9796,7 +9885,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 694;
+const BUILD_NO = 695;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -15702,6 +15791,29 @@ function loop(now) {
     fpsFr = 0; fpsT = 0;
   }
   padPoll();
+  // Vegetación: culling por distancia cada ~0.45 s — las instancias pequeñas
+  // lejanas colapsan a escala 0 (el GPU no las dibuja) y se restauran al volver.
+  if (window._vegCull && cam3 && now - (loop._vc || 0) > 450) {
+    loop._vc = now;
+    const cx = cam3.position.x, cz = cam3.position.z;
+    for (const e of window._vegCull) {
+      let dirty = false;
+      for (let i = 0; i < e.n; i++) {
+        const dx = e.pos[i * 3] - cx, dz = e.pos[i * 3 + 2] - cz;
+        const vis = dx * dx + dz * dz < e.r2;
+        if (vis !== !!e.vis[i]) {
+          e.vis[i] = vis ? 1 : 0; dirty = true;
+          if (vis) e.m.setMatrixAt(i, e.tm.fromArray(e.mats, i * 16));
+          else {
+            e.tm.makeScale(0.0001, 0.0001, 0.0001);
+            e.tm.setPosition(e.pos[i * 3], 0, e.pos[i * 3 + 2]);
+            e.m.setMatrixAt(i, e.tm);
+          }
+        }
+      }
+      if (dirty) e.m.instanceMatrix.needsUpdate = true;
+    }
+  }
   if (pad._startT) { pad._startT = false; if (playing) setPaused(!paused); }
   if (playing && !paused && (performance.now() >= t0 - 3600 || fsState)) update(dt);   // inputs vivos desde ya, motor corre tras GO
   aiTick();                                                       // ingeniero IA por radio
