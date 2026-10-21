@@ -3142,6 +3142,128 @@ function makeAsphaltTex(marks = true) {
   }
   const tx = tex3(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; return tx;
 }
+// ===== ASFALTO PBR DE ALTA RESOLUCIÓN (1024px) =====
+// Devuelve { map, rough }: difusa con árido multiescala, placas repavimentadas,
+// grietas selladas y el DESPIECE DE MARCAS DE FRENADO — las bandas de goma
+// acumulada donde los coches traccionan. El mapa de rugosidad pinta esas
+// rodadas PULIDAS (más oscuras = más especulares): la trazada brilla distinta
+// bajo el sol o sobre el asfalto mojado, como en un circuito real.
+function makeAsphaltPBR() {
+  const S = LOW_POWER ? 512 : 1024;
+  const c = document.createElement('canvas'); c.width = c.height = S;
+  const t = c.getContext('2d');
+  const rc = document.createElement('canvas'); rc.width = rc.height = S;
+  const r = rc.getContext('2d');
+  const wrap = (x, y, rad, fn) => {
+    for (let dx = -S; dx <= S; dx += S) for (let dy = -S; dy <= S; dy += S) {
+      if (x + dx + rad < 0 || x + dx - rad > S || y + dy + rad < 0 || y + dy - rad > S) continue;
+      fn(x + dx, y + dy);
+    }
+  };
+  // — RUGOSIDAD: base clara (muy rugosa) que iremos puliendo donde hay goma —
+  r.fillStyle = '#ececec'; r.fillRect(0, 0, S, S);
+  for (let i = 0; i < 4200; i++) {                       // grano de rugosidad ±
+    const v = ri(196, 255);
+    r.fillStyle = `rgba(${v},${v},${v},${rnd(0.10, 0.30)})`;
+    const s = 1 + Math.random() * 2.5;
+    r.fillRect(Math.random() * S, Math.random() * S, s, s);
+  }
+  // — DIFUSA: base de asfalto con tonalidad irregular —
+  t.fillStyle = '#33363c'; t.fillRect(0, 0, S, S);
+  for (let i = 0; i < 110; i++) {                        // parches de edad del firme
+    const x = Math.random() * S, y = Math.random() * S, rad = S * 0.03 + Math.random() * S * 0.12;
+    const lt = Math.random() < 0.5, a = 0.05 + Math.random() * 0.10;
+    wrap(x, y, rad, (X, Y) => {
+      const g = t.createRadialGradient(X, Y, 0, X, Y, rad);
+      g.addColorStop(0, lt ? `rgba(76,80,88,${a})` : `rgba(18,20,24,${a})`);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      t.fillStyle = g; t.beginPath(); t.arc(X, Y, rad, 0, 7); t.fill();
+    });
+  }
+  for (let i = 0; i < 52000; i++) {                      // árido fino: grano de piedra
+    const v = ri(34, 108), s = 1 + Math.random() * 2;
+    t.fillStyle = `rgba(${v},${v},${v + ri(0, 9)},${rnd(0.18, 0.55)})`;
+    t.fillRect(Math.random() * S, Math.random() * S, s, s);
+  }
+  for (let i = 0; i < 900; i++) {                        // piedritas claras sueltas
+    const v = ri(120, 165);
+    t.fillStyle = `rgba(${v},${v - ri(0, 10)},${v - ri(4, 20)},${rnd(0.35, 0.7)})`;
+    t.fillRect(Math.random() * S, Math.random() * S, 1 + Math.random() * 2, 1 + Math.random() * 2);
+  }
+  // Placas repavimentadas: rectángulos más oscuros de borde irregular — en la
+  // rugosidad quedan algo más pulidas (asfalto nuevo absorbe peor el agua)
+  for (let i = 0; i < 5; i++) {
+    const x = ri(0.06 * S, 0.72 * S), y = ri(0, 0.9 * S), w = ri(0.16 * S, 0.34 * S), h = ri(0.06 * S, 0.16 * S);
+    for (const cv of [t, r]) {
+      cv.fillStyle = cv === t ? `rgba(${ri(7, 15)},${ri(8, 16)},${ri(10, 19)},${rnd(0.12, 0.22)})`
+                              : `rgba(205,205,205,${rnd(0.18, 0.3)})`;
+      cv.beginPath();
+      cv.moveTo(x + ri(-4, 4), y + ri(-3, 3)); cv.lineTo(x + w + ri(-4, 4), y + ri(-3, 3));
+      cv.lineTo(x + w + ri(-4, 4), y + h + ri(-3, 3)); cv.lineTo(x + ri(-4, 4), y + h + ri(-3, 3));
+      cv.closePath(); cv.fill();
+    }
+  }
+  // Grietas selladas (chapopote): líneas negras sinuosas — pulidas en rugosidad
+  for (let i = 0; i < 7; i++) {
+    let x = Math.random() * S, y = Math.random() * S;
+    const pts = [[x, y]];
+    for (let k = 0; k < 6; k++) { x += ri(-0.12 * S, 0.12 * S); y += ri(-0.08 * S, 0.11 * S); pts.push([x, y]); }
+    for (const cv of [t, r]) {
+      cv.strokeStyle = cv === t ? 'rgba(8,9,12,0.34)' : 'rgba(120,120,120,0.5)';
+      cv.lineWidth = cv === t ? S * 0.0035 : S * 0.005;
+      cv.lineCap = 'round'; cv.lineJoin = 'round';
+      cv.beginPath(); cv.moveTo(pts[0][0], pts[0][1]);
+      for (const p of pts) cv.lineTo(p[0], p[1]);
+      cv.stroke();
+    }
+  }
+  // — DESPIECE DE MARCAS DE FRENADO —
+  // 4 bandas longitudinales de goma (dos por carril), cada una con su propio
+  // trazo ondulado e intensidad variable: el asfalto engomado de la trazada.
+  // En la difusa oscurecen; en rugosidad pulen fuerte → brillo tipo "línea
+  // engomada" que se aprecia a contraluz y en mojado.
+  const bands = [0.30, 0.415, 0.575, 0.69];
+  for (let b = 0; b < bands.length; b++) {
+    const bx = bands[b] * S;
+    const segs = 7, bw = S * (0.020 + rnd(0, 0.010));
+    const inten = 0.30 + rnd(0, 0.25);
+    for (let s = 0; s < segs; s++) {
+      const y0 = (s / segs) * S, y1 = ((s + 1) / segs) * S;
+      const x0 = bx + ri(-bw * 1.6, bw * 1.6), x1 = bx + ri(-bw * 1.6, bw * 1.6);
+      const fade = 0.55 + 0.45 * Math.abs(Math.sin(s * 1.7 + b * 2.3));   // tramos más gastados
+      // difusa: mancha de goma con núcleo denso y hombros suaves
+      wrap((x0 + x1) / 2, (y0 + y1) / 2, bw * 3 + S * 0.03, (X, Y) => {
+        const g = t.createLinearGradient(X - bw * 1.8, Y, X + bw * 1.8, Y);
+        const a = inten * fade;
+        g.addColorStop(0, 'rgba(9,10,13,0)');
+        g.addColorStop(0.30, `rgba(9,10,13,${a * 0.5})`);
+        g.addColorStop(0.50, `rgba(9,10,13,${a})`);
+        g.addColorStop(0.70, `rgba(9,10,13,${a * 0.5})`);
+        g.addColorStop(1, 'rgba(9,10,13,0)');
+        t.fillStyle = g; t.fillRect(X - bw * 1.8, Y - (y1 - y0) / 2, bw * 3.6, y1 - y0 + 2);
+        // rugosidad: misma huella pulida (oscura = menos rugosa = especular)
+        const gr = r.createLinearGradient(X - bw * 1.5, Y, X + bw * 1.5, Y);
+        const ra = (0.55 + a * 0.4) * fade;
+        gr.addColorStop(0, 'rgba(140,140,140,0)');
+        gr.addColorStop(0.5, `rgba(118,118,118,${ra})`);
+        gr.addColorStop(1, 'rgba(140,140,140,0)');
+        r.fillStyle = gr; r.fillRect(X - bw * 1.5, Y - (y1 - y0) / 2, bw * 3.0, y1 - y0 + 2);
+      });
+    }
+  }
+  // Cantos claros: polvo y desgaste en los bordes del tile (bajo los muros)
+  for (const bx of [0, S]) {
+    const g = t.createLinearGradient(bx === 0 ? 0 : S, 0, bx === 0 ? S * 0.09 : S * 0.91, 0);
+    g.addColorStop(0, 'rgba(112,118,128,0.42)'); g.addColorStop(1, 'rgba(112,118,128,0)');
+    t.fillStyle = g; t.fillRect(bx === 0 ? 0 : S * 0.91, 0, S * 0.09, S);
+    const g2 = r.createLinearGradient(bx === 0 ? 0 : S, 0, bx === 0 ? S * 0.09 : S * 0.91, 0);
+    g2.addColorStop(0, 'rgba(255,255,255,0.30)'); g2.addColorStop(1, 'rgba(255,255,255,0)');
+    r.fillStyle = g2; r.fillRect(bx === 0 ? 0 : S * 0.91, 0, S * 0.09, S);   // bordes más rugosos (polvo)
+  }
+  const map = tex3(c); map.wrapS = map.wrapT = THREE.RepeatWrapping;
+  const rough = tex3(rc); rough.wrapS = rough.wrapT = THREE.RepeatWrapping;
+  return { map, rough };
+}
 // Hormigón del puente: paneles de encofrado, escurrimientos y manchas — enlosable
 function makeConcreteTex() {
   const c = document.createElement('canvas'); c.width = c.height = 256;
@@ -3906,7 +4028,9 @@ function buildWorld() {
   const circ = circAt(stage);
   const traced = !!(circ && circ.img);              // foto aérea = día; sin foto = circuito nocturno dibujado
   const neon = !!(circ && !circ.img);               // circuito dibujado a mano = trazado NEÓN
-  const roadTex = neon ? makeAsphaltTex() : makeRoadTex();  // NEÓN = asfalto gris; rally = tierra
+  const pbr = neon ? makeAsphaltPBR() : null;               // NEÓN = asfalto PBR; rally = tierra
+  const roadTex = pbr ? pbr.map : makeRoadTex();
+  const roadRough = pbr ? pbr.rough : null;
   roadTex.wrapS = roadTex.wrapT = THREE.RepeatWrapping;
 
   // --- Cinta de asfalto/tierra: solo en etapas procedurales —
@@ -3932,7 +4056,7 @@ function buildWorld() {
     rg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     rg.setIndex(idx);
     rg.computeVertexNormals();
-    const road = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({ map: roadTex, roughness: 1, side: THREE.DoubleSide,
+    const road = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({ map: roadTex, roughnessMap: roadRough, roughness: 1, side: THREE.DoubleSide,
       color: neon ? 0x8f949c : 0xffffff }));            // NEÓN: el asfalto responde menos a la luz — gris oscuro
     road.position.y = 0.06; road.receiveShadow = true;
     road.material.userData.baseCol = road.material.color.getHex();   // para el look mojado
@@ -5420,7 +5544,7 @@ function buildWorld() {
       g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
       g.setIndex(idx); g.computeVertexNormals();
       const wm = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: clean ? pitTexClean : roadTex,
-        roughness: 0.95, color: neon ? 0x8f949c : 0xffffff, side: THREE.DoubleSide }));
+        roughnessMap: clean ? null : roadRough, roughness: 0.95, color: neon ? 0x8f949c : 0xffffff, side: THREE.DoubleSide }));
       wm.receiveShadow = true;
       pit.add(wm);
       const lg = new THREE.BufferGeometry();
@@ -9000,7 +9124,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 673;
+const BUILD_NO = 674;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
