@@ -2895,6 +2895,7 @@ let wetTires = false;                   // neumáticos de lluvia montados (se ca
 // y muestreo de sensores a ~5 Hz para las pantallas del muro de boxes
 let twW = [0, 0, 0, 0], flexZ = [0, 0, 0, 0], tele = [], teleT = 0, lapTs = [], lapT0 = 0;
 let rain = 0, rainAt = -1, rainEnd = -1; // 0-1 intensidad · t inicio · t en que escampa
+let wetK = 0, wetAp = -1;                // 0-1 asfalto mojado: moja rápido, seca lento (brillo especular)
 let scT = 0;                             // SAFETY CAR: segundos de ritmo limitado por bandera amarilla
 // Pirotecnia de victoria (cohetes + chispas) y bengalas naranjas en las gradas
 let fwRk = null, fwSp = null, fwGo = -9, fwLnT = 0, _fwTex = null;
@@ -3933,7 +3934,9 @@ function buildWorld() {
     const road = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({ map: roadTex, roughness: 1, side: THREE.DoubleSide,
       color: neon ? 0x8f949c : 0xffffff }));            // NEÓN: el asfalto responde menos a la luz — gris oscuro
     road.position.y = 0.06; road.receiveShadow = true;
+    road.material.userData.baseCol = road.material.color.getHex();   // para el look mojado
     world.add(road);
+    world.userData.road = road;
     if (dragMode) {
       // Línea de meta a cuadros rojo/negro cruzando los dos carriles del drag
       const fin = new THREE.Mesh(new THREE.PlaneGeometry(2.3, RW - 1),
@@ -6784,7 +6787,7 @@ function buildWorld() {
   if (!traced && !dragMode) {
     // Bosque variado: pinos (4 conos), ROBLES de copa redondeada y CIPRESES
     // altos y finos — tres especies instanciadas repartidas por el entorno
-    const nTrees = 560;
+    const nTrees = 700;
     const _m = (x, y, z, sx, sy, sz) => new THREE.Matrix4().compose(
       new THREE.Vector3(x, y, z), new THREE.Quaternion(), new THREE.Vector3(sx, sy, sz));
     // Copa de pino A: conos superpuestos — cada uno cubre la base del siguiente
@@ -6856,7 +6859,7 @@ function buildWorld() {
     const oakMat = new THREE.MeshStandardMaterial({ color: 0xcfe0a8, roughness: 0.95, map: foliageTex, vertexColors: true });
     const cypMat = new THREE.MeshStandardMaterial({ color: 0x9ab88e, roughness: 0.95, map: foliageTex, vertexColors: true });
     const barkMat = new THREE.MeshStandardMaterial({ color: 0xc8b8a0, roughness: 1, map: barkTex });
-    const CAP = { pine: 240, pine2: 220, oak: 170, oak2: 170, cyp: 180 };
+    const CAP = { pine: 300, pine2: 275, oak: 215, oak2: 215, cyp: 225 };
     const pines = new THREE.InstancedMesh(leafGeo, leafMat, CAP.pine);
     const pines2 = new THREE.InstancedMesh(pineBGeo, leafMat, CAP.pine2);
     const oaks = new THREE.InstancedMesh(oakGeo, oakMat, CAP.oak);
@@ -7110,7 +7113,7 @@ function buildWorld() {
                                { geo: gp2, m: new THREE.Matrix4() }]);
     const tuftMat = new THREE.MeshStandardMaterial({
       map: window._grassTex, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.95 });
-    const NT = LOW_POWER ? 2000 : 6200;
+    const NT = LOW_POWER ? 2000 : 8200;
     const tufts = new THREE.InstancedMesh(tuftGeo, tuftMat, NT);
     tufts.frustumCulled = false;
     const tm = new THREE.Matrix4(), tq = new THREE.Quaternion(), tv = new THREE.Vector3(),
@@ -7167,7 +7170,7 @@ function buildWorld() {
       { geo: new THREE.SphereGeometry(0.8, 7, 6),  m: _mm(-0.85, 0.55, -0.3, 1, 0.65, 1) },
     ]);
     const bushMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, map: foliageTex });
-    const NB = LOW_POWER ? 240 : 720;
+    const NB = LOW_POWER ? 240 : 960;
     const bushes = new THREE.InstancedMesh(bushGeo, bushMat, NB);
     bushes.frustumCulled = false;
     // Helechos VOLUMÉTRICOS: roseta de 7 conos inclinados hacia fuera — frondas
@@ -7183,7 +7186,7 @@ function buildWorld() {
       return { geo: g, m };
     }));
     const fernMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 });  // el tono verde lo da el color de instancia
-    const NF = LOW_POWER ? 260 : 750;
+    const NF = LOW_POWER ? 260 : 1000;
     const ferns = new THREE.InstancedMesh(fernGeo, fernMat, NF);
     ferns.frustumCulled = false;
     // Flores silvestres: dos planos cruzados con corola pintada (el matiz va por instancia)
@@ -7205,7 +7208,7 @@ function buildWorld() {
     const florGeo = mergeGeos([{ geo: fl1, m: new THREE.Matrix4() }, { geo: fl2, m: new THREE.Matrix4() }]);
     const florMat = new THREE.MeshStandardMaterial({
       map: window._florTex, alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.9 });
-    const NFL = LOW_POWER ? 400 : 1300;
+    const NFL = LOW_POWER ? 400 : 1650;
     const flors = new THREE.InstancedMesh(florGeo, florMat, NFL);
     flors.frustumCulled = false;
     // Colocación compartida: misma banda cercana/lejana y exclusiones que la hierba
@@ -8422,7 +8425,7 @@ function init3() {
   moonLight = new THREE.DirectionalLight(0x9fb2dd, 0.45);
   moonLight.position.set(300, 500, -400);
   moonLight.castShadow = true;
-  moonLight.shadow.mapSize.set(LOW_POWER ? 1024 : 2048, LOW_POWER ? 1024 : 2048);
+  moonLight.shadow.mapSize.set(LOW_POWER ? 1024 : 4096, LOW_POWER ? 1024 : 4096);
   moonLight.shadow.bias = -0.0002;
   moonLight.shadow.radius = 6;                     // penumbra suave: la sombra de la grada no corta en seco
   moonLight.shadow.normalBias = 1.6;               // sin acné: el borde del mapa de sombras no se ve
@@ -8915,7 +8918,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 671;
+const BUILD_NO = 672;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -10412,6 +10415,24 @@ function update(dt) {
     rain = Math.max(0, rain - dt / 14);                       // la pista se seca despacio
     if (rain + dt / 14 >= 1 - 1e-4 && rain < 1) {}            // transición silenciosa
     if (rain === 0) { rainEnd = -1; showToast('☀️ ' + T('rainEnd')); }
+  }
+  // Asfalto mojado: brillo especular + superficie oscurecida mientras llueve;
+  // el charco visual persiste un rato tras escampar (wetK seca más lento que rain)
+  wetK = clamp(wetK + (rain > 0.05 ? dt / 3.5 : -dt / 22), 0, 1);
+  if (wetK !== wetAp) {
+    wetAp = wetK;
+    const rd = world.userData.road;                          // cinta de asfalto procedural
+    if (rd) {
+      rd.material.roughness = 1 - wetK * 0.72;               // 1 → 0.28: reflejo de mojado
+      rd.material.color.setHex(rd.material.userData.baseCol).multiplyScalar(1 - wetK * 0.28);
+    }
+    const bg = world.userData.bgp;                           // foto aérea: el asfalto vive dentro
+    if (bg) {
+      bg.material.color.setHex(todMode === 2 ? 0x0a101c : todMode === 1 ? 0xffd0a0 : 0xffffff)
+        .multiplyScalar(1 - wetK * 0.30);                    // foto empapada: más oscura y saturada
+      world.userData.ter.material.color.setHex(todMode === 2 ? 0x030604 : todMode === 1 ? 0x332c16 : 0x243d1c)
+        .multiplyScalar(1 - wetK * 0.20);                    // hierba mojada: algo más oscura
+    }
   }
   // "LLUVIA EN ASFALTO" / "ASFALTO SECO": aviso persistente mientras lleves
   // las gomas equivocadas — slicks bajo el agua o wets con la pista ya seca
@@ -12155,7 +12176,7 @@ function startStage(n, seed, mp, mode) {
     tt.innerHTML = T('tuto1') + '<br><span style="color:#8fb8ff">' + T('tuto2') + '</span>';
     tt.style.display = 'block';
   } else { tutoT = 0; tt.style.display = 'none'; }
-  tireWear = 0; wetTires = false; rain = 0; rainEnd = -1; pitT = 0; pitUsed = false; ghostT = 0; koTimer = KO_LIMIT;
+  tireWear = 0; wetTires = false; rain = 0; rainEnd = -1; wetK = 0; wetAp = -1; pitT = 0; pitUsed = false; ghostT = 0; koTimer = KO_LIMIT;
   { const rmc = el('rainMsg'); if (rmc) { rmc._s = 0; rmc.classList.remove('show'); rmc.classList.remove('dry'); } }
   scT = 0; formT = (champMode || mode === 'champ') ? 7 : 0;   // campeonato: vuelta de formación
   fwGo = -9; flares = []; flareT = rnd(4, 9);                 // pirotecnia/bengalas limpias por etapa
