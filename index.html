@@ -1408,8 +1408,9 @@
     background-size: 300% 100%; background-repeat: no-repeat;
     -webkit-background-clip: text; background-clip: text;
     animation: gpSheen 4.5s ease-in-out infinite; }
-  /* Escudo 3D oscilante sobre el cielo del póster (JS lo alinea con la imagen) */
-  #splashLogo3D { position: absolute; z-index: 2; pointer-events: none;
+  /* Escudo 3D oscilante sobre el cielo del póster (JS lo alinea con la imagen).
+     z-index:5 — por encima del humo/niebla de la portada: el escudo nunca se empaña */
+  #splashLogo3D { position: absolute; z-index: 5; pointer-events: none;
     filter: drop-shadow(0 12px 22px rgba(0,0,0,0.65)) drop-shadow(0 0 14px rgba(70,140,255,0.35)); }
   #splashLogo3D canvas { width: 100% !important; height: 100% !important; display: block; }
   /* Ruedas del póster girando a tope: discos con rayas cónicas + blur de movimiento */
@@ -8870,7 +8871,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 659;
+const BUILD_NO = 660;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
