@@ -8219,10 +8219,10 @@ function applyTOD() {
     noFog = neon;                                         // el neón nunca lleva niebla
     if (todMode === 0) {                                  // DÍA — sol alto, cielo azul
       scene3.background.setHex(0x7fb4dc); scene3.fog.color.setHex(0x7fb4dc);
-      ambLight.color.setHex(0xcfe0f0); ambLight.intensity = 0.72;
-      hemiLight.color.setHex(0xd8e8f8); hemiLight.groundColor.setHex(0x3d5a30); hemiLight.intensity = 0.64;
+      ambLight.color.setHex(0xcfe0f0); ambLight.intensity = 0.56;
+      hemiLight.color.setHex(0xd8e8f8); hemiLight.groundColor.setHex(0x3d5a30); hemiLight.intensity = 0.48;
       moonLight.color.setHex(0xffefd0); moonOX = 380; moonOZ = 240; moonY = 430;
-      sunInt = neon ? 1.6 : 0.52;
+      sunInt = neon ? 1.6 : 0.42;
     } else if (todMode === 1) {                           // TARDE — hora dorada, sol bajo y naranja
       scene3.background.setHex(0xcf8f68); scene3.fog.color.setHex(0xcf8f68);
       ambLight.color.setHex(0xe8c0a0); ambLight.intensity = 0.68;
@@ -8310,7 +8310,7 @@ function applyTOD() {
   if (rn) rn.grp.visible = night;
   // Exposición por franja: de noche se comprime bastante — farolas y faros
   // destacan sobre la oscuridad en vez de lavar toda la escena
-  if (renderer3) renderer3.toneMappingExposure = night ? 0.46 : dusk ? 0.66 : 0.60;
+  if (renderer3) renderer3.toneMappingExposure = night ? 0.46 : dusk ? 0.66 : 0.52;
   envApply(night ? 'night' : dusk ? 'dusk' : 'day');
 }
 // ===== ENVIRONMENT MAP (IBL): skybox equirectangular procedural → PMREM =====
@@ -9115,7 +9115,7 @@ function init3() {
   renderer3.outputEncoding = THREE.sRGBEncoding;                 // las texturas ya venían en sRGB: sin esto salían apagadas
   if (!LOW_POWER) {                                            // look filmico solo en equipos que aguantan
     renderer3.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer3.toneMappingExposure = 0.62;                       // <1: contraste fílmico, colores ricos
+    renderer3.toneMappingExposure = 0.52;                       // <1: contraste fílmico, colores ricos
   }
   scene3 = new THREE.Scene();
   scene3.background = new THREE.Color(0x060a16);
@@ -9890,7 +9890,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 703;
+const BUILD_NO = 704;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
