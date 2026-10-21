@@ -9568,7 +9568,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 687;
+const BUILD_NO = 688;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -12311,10 +12311,7 @@ function draw(now) {
     // acerca — encendido rápido al aproximar (~90u), apagado suave al alejar
     for (const a of AL.pts) {
       if (a.i === undefined && !a.band && !a.spine) continue;
-      let dm = 1e9;
-      for (const s of srcs) { const d = (a.x - s.x) * (a.x - s.x) + (a.z - s.z) * (a.z - s.z); if (d < dm) dm = d; }
-      dm = Math.sqrt(dm);
-      const tgt = dm < 42 ? 1 : dm < 95 ? 1 - (dm - 42) / 53 : 0;
+      const tgt = 1;                                        // arcos siempre encendidos
       a.v = tgt > a.v ? Math.min(tgt, a.v + dt * 5) : Math.max(tgt, a.v - dt * 1.8);
       if (a.i !== undefined) {
         AL.tmpC.copy(AL.off).lerp(AL.on, a.v); (a.ledM || AL.led).setColorAt(a.i, AL.tmpC);
