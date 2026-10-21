@@ -8873,7 +8873,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 661;
+const BUILD_NO = 662;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -14546,7 +14546,7 @@ function loop(now) {
   fpsFr++; fpsT += (now - (loop._f || now)) / 1000; loop._f = now;
   if (fpsT >= 0.5) {
     const fb = el('fpsBox');
-    if (OPTS.fps) {
+    if (OPTS.fps && !el('intro').classList.contains('show')) {   // la intro tiene su SALTAR en esa esquina
       fb.style.display = 'block';
       fb.textContent = Math.round(fpsFr / fpsT) + ' FPS';
     } else fb.style.display = 'none';
