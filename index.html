@@ -8088,8 +8088,8 @@ function setDayMode(day) {
   if (!scene3) return;
   if (day) {
     scene3.background.setHex(0x7fb4dc); scene3.fog.color.setHex(0x7fb4dc);
-    ambLight.color.setHex(0xcfe0f0); ambLight.intensity = 0.95;
-    hemiLight.color.setHex(0xd8e8f8); hemiLight.groundColor.setHex(0x3d5a30); hemiLight.intensity = 0.8;
+    ambLight.color.setHex(0xcfe0f0); ambLight.intensity = 0.72;
+    hemiLight.color.setHex(0xd8e8f8); hemiLight.groundColor.setHex(0x3d5a30); hemiLight.intensity = 0.64;
     moonLight.color.setHex(0xffefd0); moonLight.intensity = 1.05;
     moonOX = 380; moonOZ = 240; moonY = 430;                // sol a ~44°: sombras largas y dramáticas
   } else {
@@ -8098,11 +8098,11 @@ function setDayMode(day) {
     scene3.fog.color.setHex(neon ? 0x3a4d72 : 0x060a16);
     noFog = neon;                                             // NEÓN: sin niebla — aire limpio de día
     // NEÓN: SOL DIURNO — cielo claro, sol cálido fuerte, sombras duras
-    ambLight.color.setHex(neon ? 0xa8b4cc : 0x36466a); ambLight.intensity = neon ? 0.85 : 0.8;
+    ambLight.color.setHex(neon ? 0xa8b4cc : 0x36466a); ambLight.intensity = neon ? 0.68 : 0.8;
     hemiLight.color.setHex(neon ? 0xb8c8e8 : 0x2a3d68);
-    hemiLight.groundColor.setHex(neon ? 0x4a4a52 : 0x0e121c); hemiLight.intensity = neon ? 0.75 : 0.55;
+    hemiLight.groundColor.setHex(neon ? 0x4a4a52 : 0x0e121c); hemiLight.intensity = neon ? 0.58 : 0.55;
     // Luz solar blanca: fuente principal del NEÓN — blanca cálida e intensa
-    moonLight.color.setHex(neon ? 0xfff0d0 : 0x9fb2dd); moonLight.intensity = neon ? 3.7 : 0.45;
+    moonLight.color.setHex(neon ? 0xfff0d0 : 0x9fb2dd); moonLight.intensity = neon ? 3.2 : 0.45;
     moonOX = 300; moonOZ = -400; moonY = 500;
   }
 }
@@ -8117,21 +8117,21 @@ function applyTOD() {
   if (tod === 'auto') {                                   // cada circuito decide como antes
     todMode = -1;
     setDayMode(traced);
-    sunInt = neon ? 1.85 : traced ? 0.52 : 0.45;   // sol al 50% de intensidad
+    sunInt = neon ? 1.6 : traced ? 0.52 : 0.45;    // sol fuerte pero controlado
   } else {
     todMode = tod === 'day' ? 0 : tod === 'dusk' ? 1 : 2;
     dayMode = todMode === 0;                              // faros apagados solo de día
     noFog = neon;                                         // el neón nunca lleva niebla
     if (todMode === 0) {                                  // DÍA — sol alto, cielo azul
       scene3.background.setHex(0x7fb4dc); scene3.fog.color.setHex(0x7fb4dc);
-      ambLight.color.setHex(0xcfe0f0); ambLight.intensity = 0.95;
-      hemiLight.color.setHex(0xd8e8f8); hemiLight.groundColor.setHex(0x3d5a30); hemiLight.intensity = 0.8;
+      ambLight.color.setHex(0xcfe0f0); ambLight.intensity = 0.72;
+      hemiLight.color.setHex(0xd8e8f8); hemiLight.groundColor.setHex(0x3d5a30); hemiLight.intensity = 0.64;
       moonLight.color.setHex(0xffefd0); moonOX = 380; moonOZ = 240; moonY = 430;
-      sunInt = neon ? 1.85 : 0.52;
+      sunInt = neon ? 1.6 : 0.52;
     } else if (todMode === 1) {                           // TARDE — hora dorada, sol bajo y naranja
       scene3.background.setHex(0xcf8f68); scene3.fog.color.setHex(0xcf8f68);
-      ambLight.color.setHex(0xe8c0a0); ambLight.intensity = 0.9;
-      hemiLight.color.setHex(0xe8b088); hemiLight.groundColor.setHex(0x38301f); hemiLight.intensity = 0.7;
+      ambLight.color.setHex(0xe8c0a0); ambLight.intensity = 0.76;
+      hemiLight.color.setHex(0xe8b088); hemiLight.groundColor.setHex(0x38301f); hemiLight.intensity = 0.58;
       moonLight.color.setHex(0xffb268); moonOX = 560; moonOZ = -340; moonY = 300;   // sol bajo → sombras muy largas
       sunInt = neon ? 1.3 : 0.42;
     } else {                                              // NOCHE — luna fría, estrellas y faros
@@ -8215,7 +8215,7 @@ function applyTOD() {
   if (rn) rn.grp.visible = night;
   // Exposición por franja: de noche se comprime bastante — farolas y faros
   // destacan sobre la oscuridad en vez de lavar toda la escena
-  if (renderer3) renderer3.toneMappingExposure = night ? 0.50 : dusk ? 0.86 : 0.92;
+  if (renderer3) renderer3.toneMappingExposure = night ? 0.46 : dusk ? 0.74 : 0.78;
   envApply(night ? 'night' : dusk ? 'dusk' : 'day');
 }
 // ===== ENVIRONMENT MAP (IBL): skybox equirectangular procedural → PMREM =====
@@ -8854,7 +8854,7 @@ function init3() {
   renderer3.outputEncoding = THREE.sRGBEncoding;                 // las texturas ya venían en sRGB: sin esto salían apagadas
   if (!LOW_POWER) {                                            // look filmico solo en equipos que aguantan
     renderer3.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer3.toneMappingExposure = 0.92;                       // <1: el sol/ highlights no queman la imagen
+    renderer3.toneMappingExposure = 0.78;                       // <1: contraste fílmico, colores ricos
   }
   scene3 = new THREE.Scene();
   scene3.background = new THREE.Color(0x060a16);
@@ -9027,11 +9027,11 @@ function init3() {
       const np = new PP.NormalPass(scene3, cam3);
       ppComp.addPass(np);
       ppSSAO = new PP.SSAOEffect(cam3, np, { samples: 9, rings: 3,
-        radius: 0.3, intensity: 1.4, luminanceInfluence: 0.55,
+        radius: 0.3, intensity: 2.3, luminanceInfluence: 0.55,
         distanceThreshold: 0.6, distanceFalloff: 0.1,
         rangeThreshold: 0.9, rangeFalloff: 0.3 });
-      ppBloom = new PP.BloomEffect({ intensity: 0.55, luminanceThreshold: 0.62,
-        luminanceSmoothing: 0.34, mipmapBlur: true });
+      ppBloom = new PP.BloomEffect({ intensity: 0.27, luminanceThreshold: 0.85,
+        luminanceSmoothing: 0.22, mipmapBlur: true });
       ppComp.addPass(new PP.EffectPass(cam3, ppSSAO, ppBloom, new PP.SMAAEffect()));
       window._ppComp = ppComp;
       return true;
@@ -9040,7 +9040,7 @@ function init3() {
   window._renderScene3 = (scene, cam) => {
     if (!LOW_POWER && cam === cam3 && (OPTS.ao || OPTS.bloom) && ppBuild()) {
       ppSSAO.blendMode.opacity.value = OPTS.ao ? 1 : 0;
-      ppBloom.intensity = OPTS.bloom ? 0.55 : 0;
+      ppBloom.intensity = OPTS.bloom ? 0.27 : 0;
       ppComp.render();
       return;
     }
@@ -9568,7 +9568,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 686;
+const BUILD_NO = 687;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
