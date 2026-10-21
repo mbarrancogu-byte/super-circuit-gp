@@ -4133,6 +4133,7 @@ function buildWorld() {
     const road = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({ map: roadTex, roughnessMap: roadRough,
       normalMap: roadNormal, normalScale: new THREE.Vector2(0.9, 0.9),
       aoMap: roadAO, aoMapIntensity: 0.85, roughness: 1, side: THREE.DoubleSide,
+      envMapIntensity: 0.38,                          // asfalto seco: reflejo IBL sutil, no hielo pulido
       color: neon ? 0x8f949c : 0xffffff }));            // NEÓN: el asfalto responde menos a la luz — gris oscuro
     road.position.y = 0.06; road.receiveShadow = true;
     road.material.userData.baseCol = road.material.color.getHex();   // para el look mojado
@@ -5629,7 +5630,8 @@ function buildWorld() {
       g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
       g.setIndex(idx); g.computeVertexNormals();
       const wm = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: clean ? pitTexClean : roadTex,
-        roughnessMap: clean ? null : roadRough, roughness: 0.95, color: neon ? 0x8f949c : 0xffffff, side: THREE.DoubleSide }));
+        roughnessMap: clean ? null : roadRough, roughness: 0.95, envMapIntensity: 0.4,
+        color: neon ? 0x8f949c : 0xffffff, side: THREE.DoubleSide }));
       wm.receiveShadow = true;
       pit.add(wm);
       const lg = new THREE.BufferGeometry();
@@ -5876,7 +5878,7 @@ function buildWorld() {
         apg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
         apg.setIndex(idx);
         const apron = new THREE.Mesh(apg, new THREE.MeshStandardMaterial({
-          map: window._apronTex, roughness: 0.96, side: THREE.DoubleSide }));
+          map: window._apronTex, roughness: 0.96, envMapIntensity: 0.4, side: THREE.DoubleSide }));
         world.add(apron);
       }
       // Valla de patrocinadores en la franja entre pista y grada: paneles
@@ -6787,7 +6789,7 @@ function buildWorld() {
     world.userData.bgp = bgp; world.userData.ter = ter;   // tintes DÍA/TARDE/NOCHE
   } else {
     // Suelo realista: hierba verde en todos los trazados — como en las fotos aéreas
-    ter.material = new THREE.MeshStandardMaterial({ map: groundTex(false), roughness: 1 });
+    ter.material = new THREE.MeshStandardMaterial({ map: groundTex(false), roughness: 1, envMapIntensity: 0.15 });
     world.add(ter);
     // Bandas de siega del césped: overlay que sigue la ondulación del terreno
     // con franjas que cambian de dirección por zonas (mantenimiento real de un
@@ -9449,7 +9451,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 681;
+const BUILD_NO = 682;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -11035,6 +11037,7 @@ function update(dt) {
     const rd = world.userData.road;                          // cinta de asfalto procedural
     if (rd) {
       rd.material.roughness = 1 - wetK * 0.72;               // 1 → 0.28: reflejo de mojado
+      rd.material.envMapIntensity = 0.38 + wetK * 1.1;       // el IBL crece con el agua: espejo real
       rd.material.color.setHex(rd.material.userData.baseCol).multiplyScalar(1 - wetK * 0.28);
     }
     const bg = world.userData.bgp;                           // foto aérea: el asfalto vive dentro
