@@ -25,3 +25,19 @@ _srv.log
 nul
 android/NUL
 *.code-workspace
+
+# Media / herramientas externas (no van al repo)
+MEZENAS REGALOS/
+WEB/
+pitch/
+_vid/
+_shots/
+cloudflared.exe
+SuperCircuitGP_trailer.mp4
+*.webp.orig
+_alljs.js
+_serve.log
+*-pasted.*
+[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*.jpg
+[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*.png
+*_v.png

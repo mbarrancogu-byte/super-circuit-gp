@@ -1,32 +1,40 @@
-import asyncio
-from playwright.async_api import async_playwright
+import sys, json
+sys.stdout.reconfigure(encoding='utf-8')
+from playwright.sync_api import sync_playwright
 
-async def main():
-    async with async_playwright() as p:
-        b = await p.chromium.launch(channel='chrome')
-        pg = await b.new_page(viewport={'width': 1280, 'height': 760})
-        errors = []
-        pg.on('pageerror', lambda e: errors.append(str(e)))
-        pg.on('console', lambda m: errors.append(m.text) if m.type == 'error' else None)
-        await pg.goto('http://localhost:8765/')
-        await pg.wait_for_timeout(2500)
-        await pg.evaluate("""() => {
-            const s=document.getElementById('splash'); if(s) s.style.display='none';
-            OPTS.cam = 0;
-            startStage(1, 12345);
-        }""")
-        await pg.wait_for_timeout(4500)
-        await pg.evaluate("() => { tutoT = 0; el('tuto').style.display='none'; }")
-        # acelerar desde parado -> quema de rueda
-        await pg.keyboard.down('ArrowUp')
-        await pg.wait_for_timeout(1200)
-        await pg.screenshot(path='_smk1.png')
-        await pg.wait_for_timeout(800)
-        await pg.screenshot(path='_smk2.png')
-        n = await pg.evaluate("() => dustPool.filter(s => s.visible).length")
-        await pg.keyboard.up('ArrowUp')
-        print('sprites humo activos:', n)
-        print('errors:', errors)
-        await b.close()
+URL = 'http://127.0.0.1:52793/index.html'
+errors = []
 
-asyncio.run(main())
+with sync_playwright() as p:
+    br = p.chromium.launch(channel='chrome')
+    pg = br.new_page(viewport={'width': 1280, 'height': 720})
+    pg.on('pageerror', lambda e: errors.append('PAGE: ' + str(e)))
+    pg.on('console', lambda m: errors.append('CONS: ' + m.text) if m.type == 'error' else None)
+    pg.goto(URL)
+    pg.wait_for_timeout(2500)
+    pg.evaluate("() => { const s = document.getElementById('splash'); if (s) s.style.display='none'; startStage(1, 77, false, 'champ'); }")
+    pg.wait_for_timeout(6500)   # semáforo + salida: los CPU queman rueda al lanzar
+
+    # Cuenta sprites de humo activos durante la salida (los CPU deberían echar humo)
+    st1 = pg.evaluate("""() => ({
+        raceT, v: cpus.map(c => +c.v.toFixed(1)),
+        puffs: dustPool.filter(s => s.visible).length, pool: dustPool.length })""")
+    print('launch:', json.dumps(st1))
+    pg.screenshot(path='_smoke_launch.png')
+
+    # Forzar lluvia → spray trasero de los CPU
+    pg.evaluate("() => { rainAt = 0.01; rainEnd = -1; rain = 0.9; }")
+    pg.wait_for_timeout(3000)
+    st2 = pg.evaluate("""() => ({
+        rain, v: cpus.map(c => +c.v.toFixed(1)),
+        puffs: dustPool.filter(s => s.visible).length })""")
+    print('rain:', json.dumps(st2))
+    pg.screenshot(path='_smoke_rain.png')
+
+    # Motor roto de un CPU → humo negro
+    pg.evaluate("() => { cpus[0].dmg = 90; rain = 0; rainAt = -1; rainEnd = -1; }")
+    pg.wait_for_timeout(2000)
+    st3 = pg.evaluate("() => ({ puffs: dustPool.filter(s => s.visible).length })")
+    print('dmg:', json.dumps(st3))
+    print('errors:', errors)
+    br.close()
