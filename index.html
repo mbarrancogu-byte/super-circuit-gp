@@ -5750,13 +5750,27 @@ function buildWorld() {
       const cylGeo = new THREE.CylinderGeometry(1, 1, 1, 6);
       const L = { conc: [], dark: [], met: [], fence: [], lamp: [] };
       const pm2 = new THREE.Matrix4();
-      const segBox = (arr, i, lx, off, y, w, h, d, ry) => {
-        const w2 = gPos(i, lx, off);
-        const s = path[i], ry2 = Math.atan2(-s.tz, s.tx) + (ry || 0);
-        pm2.makeRotationY(ry2).scale(new THREE.Vector3(w, h, d));
-        pm2.setPosition(w2.x, y, w2.z);
+      // Cada pieza se orienta por la CUERDA entre su punto y el siguiente y se
+      // centra en su punto medio — en curva la tangente de un solo punto hace
+      // zigzaguear los paneles y deja solapes coplanares (z-fighting)
+      const segBox = (arr, i, iN, lx, off, y, w, h, d, ry) => {
+        const wa2 = gPos(i, lx, off);
+        let cx = wa2.x, cz = wa2.z, ry2, ww = typeof w === 'string' ? 6.0 : w;
+        if (iN !== undefined && iN !== i) {
+          const wb2 = gPos(iN, lx, off);
+          cx = (wa2.x + wb2.x) / 2; cz = (wa2.z + wb2.z) / 2;
+          const len = Math.hypot(wb2.x - wa2.x, wb2.z - wa2.z) || 0.1;
+          ry2 = Math.atan2(-(wb2.z - wa2.z), wb2.x - wa2.x);
+          if (w === 'chord') ww = len + 0.45;
+          else if (w === 'chordT') ww = len + 0.12;   // junta mínima: la valla transparente no dobla brillo
+        } else {
+          const s = path[i];
+          ry2 = Math.atan2(-s.tz, s.tx);
+        }
+        pm2.makeRotationY(ry2 + (ry || 0)).scale(new THREE.Vector3(ww, h, d));
+        pm2.setPosition(cx, y, cz);
         L[arr].push({ geo: boxGeo, m: pm2.clone() });
-        return w2;
+        return { x: cx, z: cz };
       };
       const roofY = 1.5 + ROWS * RISE + 3.1;
       const backOff = D0 + 2.2 + ROWS * STEP + 1.1;             // detrás de la última fila
@@ -5765,17 +5779,18 @@ function buildWorld() {
         const _c = gPos(i, 0, sOff), by = terrAt(_c.x, _c.z);   // el terreno puede ondular
         window._standPts.push({ x: _c.x, z: _c.z, r: SD / 2 + 13 });
         // basamento + gradas + muro trasero + tejado + pilares + valla
-        segBox('conc', i, 0, sOff, by + 0.75, 6.4, 1.5, SD);
+        const iN = segs[si + 1];                        // siguiente punto: orientación por cuerda
+        segBox('conc', i, iN, 0, sOff, by + 0.75, 'chord', 1.5, SD);
         for (let r = 0; r < ROWS; r++)
-          segBox(r % 4 === 3 ? 'dark' : 'conc', i, 0, D0 + 2.2 + r * STEP + STEP / 2,
-            by + 1.5 + r * RISE + RISE / 2, 6.3, RISE, STEP);
-        segBox('conc', i, 0, backOff, by + (1.5 + ROWS * RISE + 3.4) / 2, 6.3,
+          segBox(r % 4 === 3 ? 'dark' : 'conc', i, iN, 0, D0 + 2.2 + r * STEP + STEP / 2,
+            by + 1.5 + r * RISE + RISE / 2, 'chord', RISE, STEP);
+        segBox('conc', i, iN, 0, backOff, by + (1.5 + ROWS * RISE + 3.4) / 2, 'chord',
           1.5 + ROWS * RISE + 3.4, 0.7);
-        segBox('met', i, 0, D0 + 2.2 + ROWS * STEP - SD * 0.16, by + roofY, 6.5, 0.32, SD * 0.78);
+        segBox('met', i, iN, 0, D0 + 2.2 + ROWS * STEP - SD * 0.16, by + roofY, 'chord', 0.32, SD * 0.78);
         // Tira de luz bajo el labio FRONTAL del techo — ilumina las gradas
         // desde arriba como los focos de los estadios reales
-        segBox('lamp', i, 0, D0 + 2.2 + ROWS * STEP - SD * 0.16 - SD * 0.36,
-          by + roofY - 0.3, 6.4, 0.14, 0.2);
+        segBox('lamp', i, iN, 0, D0 + 2.2 + ROWS * STEP - SD * 0.16 - SD * 0.36,
+          by + roofY - 0.3, 'chord', 0.14, 0.2);
         // pilares traseros del voladizo, uno cada 2 segmentos
         if (si % 2 === 0) {
           const wp = gPos(i, 0, backOff - 1.6);
@@ -5783,7 +5798,7 @@ function buildWorld() {
           L.met.push({ geo: cylGeo, m: pm2.clone() });
         }
         // valla de protección delante de la grada
-        segBox('fence', i, 0, D0 - 0.55, by + 1.5 + 1.7, 6.3, 3.3, 0.08);
+        segBox('fence', i, iN, 0, D0 - 0.55, by + 1.5 + 1.7, 'chordT', 3.3, 0.08);
         const wf = gPos(i, 2.6, D0 - 0.6);                       // poste
         pm2.makeScale(0.05, 3.4, 0.05); pm2.setPosition(wf.x, by + 1.5 + 1.7, wf.z);
         L.met.push({ geo: cylGeo, m: pm2.clone() });
@@ -5791,7 +5806,7 @@ function buildWorld() {
       // testeros en los dos extremos de la tribuna
       for (const [i, lx] of [[segs[0], -2.8], [segs[segs.length - 1], 2.8]]) {
         const _c2 = gPos(i, 0, sOff), by = terrAt(_c2.x, _c2.z);
-        segBox('conc', i, lx, sOff, by + (1.5 + ROWS * RISE + 2.6) / 2, 0.8,
+        segBox('conc', i, undefined, lx, sOff, by + (1.5 + ROWS * RISE + 2.6) / 2, 0.8,
           1.5 + ROWS * RISE + 2.6, SD - 2);
       }
       const addMerged = (arr, mat) => {
@@ -5893,19 +5908,31 @@ function buildWorld() {
           window._adsTex.push(t);
         }
         const adH = 1.9, adOff = D0 - 1.05;                 // delante de la valla, sobre el andén
-        const pGeo = new THREE.PlaneGeometry(1, 1);
+        // Cada panel se dibuja en DOS medias caras: cada media sigue SU cuerda
+        // (orientación por la dirección entre extremos, no por la tangente de
+        // un punto) y el logo se reparte entre ambas por UV — la valla dibuja
+        // la curva suave en vez de zigzaguear paneles planos superpuestos
+        const pGeoA = new THREE.PlaneGeometry(1, 1), pGeoB = new THREE.PlaneGeometry(1, 1);
+        { const u = pGeoA.attributes.uv.array; for (let i2 = 0; i2 < u.length; i2 += 2) u[i2] *= 0.5; }
+        { const u = pGeoB.attributes.uv.array; for (let i2 = 0; i2 < u.length; i2 += 2) u[i2] = u[i2] * 0.5 + 0.5; }
         const adsByTex = window._adsTex.map(() => []);
         const _am = new THREE.Matrix4();
+        const putHalf = (wa, wb) => {
+          const mx = (wa.x + wb.x) / 2, mz = (wa.z + wb.z) / 2;
+          const dx = wb.x - wa.x, dz = wb.z - wa.z, len = Math.hypot(dx, dz) || 0.1;
+          const ry2 = Math.atan2(-dz, dx) + Math.PI;        // local X = cuerda, cara a la pista
+          _am.makeRotationY(ry2).scale(new THREE.Vector3(len * 0.97, adH, 1));
+          _am.setPosition(mx, terrAt(mx, mz) + adH / 2 + 0.06, mz);
+          return _am.clone();
+        };
         let si2 = 0;
         for (let k = 0; k < segs.length; k += 2) {
-          const ia = segs[k], ib = segs[k + 1] !== undefined ? segs[k + 1] : segs[k];
-          const wa = gPos(ia, 0, adOff), wb = gPos(ib, 0, adOff);
-          const mx = (wa.x + wb.x) / 2, mz = (wa.z + wb.z) / 2;
-          const s = path[ia], ry2 = Math.atan2(-s.tz, s.tx) + Math.PI;  // cara a la pista
-          const bw = (ib !== ia ? Math.hypot(wb.x - wa.x, wb.z - wa.z) + 5.5 : 4.8) - 0.85;
-          _am.makeRotationY(ry2).scale(new THREE.Vector3(bw, adH, 1));
-          _am.setPosition(mx, terrAt(mx, mz) + adH / 2 + 0.06, mz);
-          adsByTex[(si2 % 5 === 4 ? window._adsTex.length - 1 : si2 % (window._adsTex.length - 1))].push({ geo: pGeo, m: _am.clone() });
+          const ia = segs[k], ib = segs[k + 1] !== undefined ? segs[k + 1] : segs[k],
+                ic = segs[k + 2] !== undefined ? segs[k + 2] : ib;
+          const wa = gPos(ia, 0, adOff), wb = gPos(ib, 0, adOff), wc = gPos(ic, 0, adOff);
+          const ti = si2 % 5 === 4 ? window._adsTex.length - 1 : si2 % (window._adsTex.length - 1);
+          if (ib !== ia) adsByTex[ti].push({ geo: pGeoA, m: putHalf(wa, wb) });
+          if (ic !== ib) adsByTex[ti].push({ geo: pGeoB, m: putHalf(wb, wc) });
           si2++;
         }
         adsByTex.forEach((arr, ti) => {
@@ -6941,15 +6968,25 @@ function buildWorld() {
     const curbGeo = new THREE.PlaneGeometry(3.6, 2.0); curbGeo.rotateX(-Math.PI / 2);
     const cm = [], ce = new THREE.Euler(), cq = new THREE.Quaternion(),
           cv = new THREE.Vector3(), cs = new THREE.Vector3(1, 1, 1);
-    let cn = 0;
-    for (let i = 0; i < pathLen; i += 3) {
-      const p = path[i], p2 = path[(i + 6) % pathLen];
-      const cross = p.tx * p2.tz - p.tz * p2.tx;
-      if (Math.abs(cross) < 0.28) continue;
+    // Espaciado por DISTANCIA DE ARCO (no cada N puntos): las piezas de 3.6
+    // nunca se solapan coplanares (z-fighting). En eses, el cambio de lado se
+    // pospone hasta que el signo del giro sea estable — nada de saltos erráticos
+    let cn = 0, accC = 0;
+    for (let i = 0; i < pathLen; i++) {
+      const p = path[i], pn = path[(i + 1) % pathLen],
+            p2 = path[(i + 6) % pathLen], p3 = path[(i + 7) % pathLen];
+      accC += Math.hypot(pn.x - p.x, pn.z - p.z);
+      const cross = p.tx * p2.tz - p.tz * p2.tx,
+            cross2 = pn.tx * p3.tz - pn.tz * p3.tx;
+      if (Math.abs(cross) < 0.28) { accC = 0; continue; }
+      if (accC < 4.0) continue;                             // piezas sin solape → nada de z-fighting
+      accC = 0;
       const nx = -p.tz, nz = p.tx;
       const hw = trackHW ? trackHW[i] : RW / 2;
-      // curvas suaves: solo el vértice; cerradas: ambos bordes
-      const sides = Math.abs(cross) > 0.45 ? [1, -1] : [cross > 0 ? -1 : 1];
+      // curvas suaves: solo el vértice; cerradas: ambos bordes; en el vértice
+      // de una S el signo cambia: se omite la pieza del punto de transición
+      const sides = Math.abs(cross) > 0.45 ? [1, -1]
+        : Math.sign(cross) === Math.sign(cross2) ? [cross > 0 ? -1 : 1] : [];
       for (const side of sides) {
         const lat = side * (hw - 0.9);
         ce.set(0, -Math.atan2(p.tz, p.tx), 0); cq.setFromEuler(ce);
@@ -6958,7 +6995,8 @@ function buildWorld() {
       }
     }
     const curbs = new THREE.InstancedMesh(curbGeo,
-      new THREE.MeshBasicMaterial({ color: 0xffffff }), cm.length / 2);
+      new THREE.MeshBasicMaterial({ color: 0xffffff,
+        polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }), cm.length / 2);
     for (let k = 0, m = 0; k < cm.length; k += 2, m++) {
       curbs.setMatrixAt(m, cm[k]);
       curbs.setColorAt(m, new THREE.Color(cm[k + 1]));
@@ -9386,7 +9424,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 679;
+const BUILD_NO = 680;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
