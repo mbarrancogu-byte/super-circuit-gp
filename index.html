@@ -1146,12 +1146,12 @@
       url('fondo_card.jpg') center / 122% no-repeat;
     border: 1px solid transparent;
     box-shadow: 0 6px 16px rgba(0,0,0,0.35); }
-  .powIc { width: 52px; height: 52px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+  .powIc { width: 94px; height: 94px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
     border-radius: 50%; border: 1px solid var(--pc);
     background: radial-gradient(circle at 50% 38%, #2c2f38, #05070c 78%);
     box-shadow: 0 0 14px color-mix(in srgb, var(--pc) 45%, transparent),
       inset 0 2px 6px rgba(255,255,255,0.10); }
-  .powIc svg { width: 28px; height: 28px; }
+  .powIc svg { width: 56px; height: 56px; }
   .powIc .ic { margin: 0; vertical-align: 0; }          /* centra el icono: sin margen/offset de texto */
   .powTx { flex: 0 0 auto; min-width: 0; }
   .powTx b { display: block; font-size: 13px; letter-spacing: 1.5px; color: #ffe8c0; }
@@ -1224,8 +1224,8 @@
     /* POWER-UPS compacto en pantallas estrechas: 3 columnas legibles */
     #powGrid { gap: 7px 8px; }
     .powCard { flex-wrap: wrap; gap: 8px; padding: 8px 8px 12px; }
-    .powIc { width: 36px; height: 36px; }
-    .powIc svg { width: 22px; height: 22px; }
+    .powIc { width: 66px; height: 66px; }
+    .powIc svg { width: 40px; height: 40px; }
     .powTx b { font-size: 9.5px; letter-spacing: 0.5px; }
     .powTx i { font-size: 8.5px; }
     .powTx em { font-size: 8px; }
@@ -1765,8 +1765,8 @@
     .powCard { min-height: 0; }
     .powCard { padding: 4px 6px 10px; gap: 4px; }
     .powFace { gap: 4px; padding: 4px 6px 10px; }
-    .powIc { width: 28px; height: 28px; }
-    .powIc svg { width: 16px; height: 16px; }
+    .powIc { width: 50px; height: 50px; }
+    .powIc svg { width: 30px; height: 30px; }
     .powTx b { font-size: 9px; letter-spacing: .5px; }
     .powTx i { font-size: 7.5px; margin-top: 1px; }
     .powTx em { font-size: 7px; margin-top: 1px; }
@@ -8896,7 +8896,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 667;
+const BUILD_NO = 668;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
