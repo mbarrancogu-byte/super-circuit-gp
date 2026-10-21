@@ -572,7 +572,7 @@
   .screen.show .mbtn:nth-of-type(3) { animation-delay: 0.12s; }
   .screen.show .mbtn:nth-of-type(n+4) { animation-delay: 0.18s; }
   @keyframes mbtnIn { from { opacity: 0; transform: translateY(12px); } }
-  #opts { overflow: hidden; justify-content: flex-start; padding: 10px 12px 72px;
+  #opts { overflow-y: auto; overflow-x: hidden; justify-content: flex-start; padding: 10px 12px 72px;
     /* Fondo con profundidad: luz cenital azul + resplandor cálido inferior + base radial */
     background:
       radial-gradient(ellipse 90% 42% at 50% -6%, rgba(110,160,255,0.22), transparent 62%),
@@ -1089,21 +1089,70 @@
     background: linear-gradient(180deg, rgba(110,40,34,0.9), rgba(46,16,14,0.95));
     color: #ffc0b0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 12px rgba(255,90,70,0.18); }
   .optT.off:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 18px rgba(255,90,70,0.35); }
-  .optT.val, .optT.val.off { border-color: rgba(255,190,80,0.6); color: #ffe2b0;
-    background: linear-gradient(180deg, rgba(120,80,24,0.92), rgba(52,32,10,0.95));
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 0 12px rgba(255,180,60,0.22); }
-  .optT.val:hover, .optT.val.off:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 0 18px rgba(255,180,60,0.4); }
-  /* Botón amarillo — TRAZADA IDEAL */
-  .optT.yel, .optT.yel.off { border-color: rgba(255,214,60,0.85); color: #3a2a00;
-    background: linear-gradient(180deg, #ffe873, #f5b800); font-weight: 900;
-    text-shadow: none;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 0 14px rgba(255,200,40,0.45); }
-  .optT.yel:hover, .optT.yel.off:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 0 22px rgba(255,200,40,0.7); }
-  .langSel { min-width: 110px; }
+  /* Interruptor deslizante — LED verde ON / gris OFF (knob a la derecha = activo) */
+  .optT.sw { width: 92px; min-width: 92px; padding: 7px 34px 7px 9px; text-align: center;
+    font-size: 9px; letter-spacing: 1.5px; position: relative;
+    background: linear-gradient(180deg, rgba(18,58,38,0.9), rgba(8,26,18,0.95));
+    border-color: rgba(90,255,170,0.6); color: #8fffc8;
+    box-shadow: inset 0 0 14px rgba(40,255,140,0.14), inset 0 1px 0 rgba(255,255,255,0.08),
+      0 0 12px rgba(60,255,150,0.20); }
+  .optT.sw::after { content: ''; position: absolute; top: 4px; left: calc(100% - 25px);
+    width: 20px; height: 20px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #dcffea, #3ce88f 45%, #0f8a4a);
+    box-shadow: 0 0 11px rgba(70,255,150,0.85), inset 0 1px 1px rgba(255,255,255,0.6);
+    transition: left .18s ease, background .18s, box-shadow .18s; }
+  .optT.sw.off { padding: 7px 9px 7px 34px;
+    background: linear-gradient(180deg, rgba(42,48,60,0.9), rgba(16,20,28,0.95));
+    border-color: rgba(140,150,170,0.42); color: #8b95a8; text-shadow: none;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05); }
+  .optT.sw.off::after { left: 5px;
+    background: radial-gradient(circle at 35% 30%, #ccd0d8, #5c6470 55%, #2a303a);
+    box-shadow: 0 0 6px rgba(0,0,0,0.65), inset 0 1px 1px rgba(255,255,255,0.28); }
+  /* Botones de valor / acción — metálico-neón cian */
+  .optT.val, .optT.val.off { border-color: rgba(120,200,255,0.6); color: #cfe8ff;
+    background: linear-gradient(180deg, rgba(36,60,100,0.95), rgba(14,26,48,0.95));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 0 12px rgba(80,160,255,0.25); }
+  .optT.val:hover, .optT.val.off:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 0 18px rgba(90,170,255,0.45); }
+  /* Control segmentado — opciones múltiples */
+  .segC { display: flex; gap: 3px; padding: 3px; border-radius: 999px; flex-shrink: 0;
+    background: rgba(8,14,28,0.85); border: 1px solid rgba(120,160,230,0.28);
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.55); }
+  .segB { padding: 5px 11px; border-radius: 999px; border: 1px solid transparent;
+    background: transparent; color: #7d92b8; cursor: pointer;
+    font: 800 10px 'Cascadia Code', Consolas, monospace; letter-spacing: 0.8px;
+    transition: color .15s, background .15s, box-shadow .15s; }
+  .segB:hover { color: #c8d8f5; }
+  .segB.on { color: #04121f; background: linear-gradient(180deg, #a8e4ff, #58b0ff);
+    border-color: rgba(190,235,255,0.85);
+    box-shadow: 0 0 12px rgba(90,180,255,0.55), inset 0 1px 0 rgba(255,255,255,0.65); }
+  /* Idioma: botones con bandera integrada */
+  .langSel { min-width: 118px; display: inline-flex; align-items: center;
+    justify-content: center; gap: 8px; padding: 8px 14px; }
+  .langSel .miniFlag { width: 30px; height: 20px; box-shadow: 0 0 7px rgba(0,0,0,0.55); }
   .langSel.dim { border-color: rgba(130,150,200,0.35);
     background: linear-gradient(180deg, rgba(28,38,68,0.9), rgba(12,18,36,0.95));
     color: #93a6d4; box-shadow: inset 0 1px 0 rgba(255,255,255,0.08); }
+  .langSel.dim .miniFlag { filter: grayscale(0.7) brightness(0.8); }
   .langSel.dim:hover { border-color: rgba(150,175,235,0.55); color: #b8c8f0; }
+  /* Keycaps — teclas físicas del mapeo de controles */
+  .keys { display: flex; gap: 4px; justify-content: center; margin-top: 5px; flex-wrap: wrap; }
+  .keys kbd { font: 800 9px 'Cascadia Code', Consolas, monospace; color: #dce8ff;
+    padding: 3px 6px 4px; border-radius: 5px; min-width: 18px; text-align: center;
+    background: linear-gradient(180deg, #3c4a68, #1a2236);
+    border: 1px solid rgba(160,190,255,0.38); border-bottom-width: 2.5px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.2); }
+  /* VOLVER de opciones — píldora metálica-neón */
+  #optBack { display: block; margin: 14px auto 0; padding: 11px 46px;
+    font: 900 13px 'Cascadia Code', Consolas, monospace; letter-spacing: 5px;
+    color: #cfe8ff; background: linear-gradient(180deg, #24344f, #0e1830);
+    border: 1.5px solid rgba(110,190,255,0.55); border-radius: 999px;
+    box-shadow: 0 0 20px rgba(70,160,255,0.28), inset 0 1px 0 rgba(255,255,255,0.16),
+      0 8px 20px rgba(0,0,0,0.6);
+    transition: box-shadow .2s, border-color .2s, color .2s, transform .15s; }
+  #optBack:hover { color: #fff; border-color: rgba(160,220,255,0.95);
+    transform: translateY(-1px);
+    box-shadow: 0 0 34px rgba(90,180,255,0.5), inset 0 1px 0 rgba(255,255,255,0.22),
+      0 10px 24px rgba(0,0,0,0.65); }
   /* Apartado COCHES: fichas con los controles del coche — ocupan TODO el
      espacio de su panel (crecen en ancho y alto; en estrecho envuelven filas) */
   .optGrp.wide { display: flex; flex-direction: column; }
@@ -2520,35 +2569,35 @@
   <div id="optsGrid">
     <div class="optGrp">
       <div class="optSec" id="secSnd">🔊 SONIDO</div>
-      <div class="optRow"><div class="lbl" id="lbSound">SONIDO</div><button class="optT" id="optSound">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbSound">SONIDO</div><button class="optT sw" id="optSound">ON</button></div>
       <div class="optSec" id="secGfx">🖥️ GRÁFICOS</div>
-      <div class="optRow"><div class="lbl" id="lbShadow">SOMBRAS</div><button class="optT" id="optShadow">ON</button></div>
-      <div class="optRow"><div class="lbl" id="lbSkid">MARCAS DE DERRAPE</div><button class="optT" id="optSkid">ON</button></div>
-      <div class="optRow"><div class="lbl" id="lbDust">POLVO</div><button class="optT" id="optDust">ON</button></div>
-      <div class="optRow"><div class="lbl" id="lbAO">OCLUSIÓN AMBIENTAL</div><button class="optT" id="optAO">ON</button></div>
-      <div class="optRow"><div class="lbl" id="lbBloom">BLOOM</div><button class="optT" id="optBloom">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbShadow">SOMBRAS</div><button class="optT sw" id="optShadow">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbSkid">MARCAS DE DERRAPE</div><button class="optT sw" id="optSkid">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbDust">POLVO</div><button class="optT sw" id="optDust">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbAO">OCLUSIÓN AMBIENTAL</div><button class="optT sw" id="optAO">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbBloom">BLOOM</div><button class="optT sw" id="optBloom">ON</button></div>
       <div class="optSec" id="secAid">🛠️ ASISTENCIA</div>
-      <div class="optRow"><div class="lbl" id="lbAbs">FRENO ASISTIDO</div><button class="optT" id="optAbs">ON</button></div>
-      <div class="optRow"><div class="lbl" id="lbSteer">ASIST. DIRECCIÓN</div><button class="optT" id="optSteer">ON</button></div>
-      <div class="optRow"><div class="lbl" id="lbTire">NEUMÁTICOS</div><button class="optT val" id="optTire">BLANDOS</button></div>
-      <div class="optRow"><div class="lbl" id="lbRline">TRAZADA IDEAL</div><button class="optT yel" id="optRline">OFF</button></div>
+      <div class="optRow"><div class="lbl" id="lbAbs">FRENO ASISTIDO</div><button class="optT sw" id="optAbs">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbSteer">ASIST. DIRECCIÓN</div><button class="optT sw" id="optSteer">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbTire">NEUMÁTICOS</div><div class="segC" id="optTire"><button class="segB on" data-v="0">BLANDOS</button><button class="segB" data-v="1">DUROS</button></div></div>
+      <div class="optRow"><div class="lbl" id="lbRline">TRAZADA IDEAL</div><button class="optT sw" id="optRline">OFF</button></div>
     </div>
     <div class="optGrp">
       <div class="optSec" id="secCtl">🎮 CONTROLES</div>
-      <div class="optRow"><div class="lbl" id="lbTouch">CONTROLES TÁCTILES</div><button class="optT" id="optTouch">ON</button></div>
-      <div class="optRow"><div class="lbl" id="lbLefty">MODO ZURDO</div><button class="optT" id="optLefty">OFF</button></div>
-      <div class="optRow"><div class="lbl" id="lbVib">VIBRACIÓN</div><button class="optT" id="optVib">ON</button></div>
-      <div class="optRow"><div class="lbl" id="lbFps">CONTADOR FPS</div><button class="optT" id="optFps">ON</button></div>
-      <div class="optRow"><div class="lbl" id="lbSens">SENSIBILIDAD GIRO</div><button class="optT val" id="optSens">NORMAL</button></div>
+      <div class="optRow"><div class="lbl" id="lbTouch">CONTROLES TÁCTILES</div><button class="optT sw" id="optTouch">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbLefty">MODO ZURDO</div><button class="optT sw" id="optLefty">OFF</button></div>
+      <div class="optRow"><div class="lbl" id="lbVib">VIBRACIÓN</div><button class="optT sw" id="optVib">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbFps">CONTADOR FPS</div><button class="optT sw" id="optFps">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbSens">SENSIBILIDAD GIRO</div><div class="segC" id="optSens"><button class="segB" data-v="0">BAJA</button><button class="segB on" data-v="1">NORMAL</button><button class="segB" data-v="2">ALTA</button></div></div>
       <div class="optSec" id="secCam">🎥 VISTAS</div>
-      <div class="optRow"><div class="lbl" id="lbCam">VISTA INICIAL</div><button class="optT val" id="optCam">CERCA</button></div>
+      <div class="optRow"><div class="lbl" id="lbCam">VISTA INICIAL</div><div class="segC" id="optCam"><button class="segB on" data-v="0">CERCA</button><button class="segB" data-v="1">CIRCUITO</button></div></div>
       <div class="optSec" id="secLang">🌐 IDIOMA</div>
       <div class="optRow" style="justify-content:center;gap:10px">
         <button class="optT langSel" id="optLangES"><span class="miniFlag" data-flag="es"></span> ESPAÑOL</button>
         <button class="optT langSel dim" id="optLangEN"><span class="miniFlag" data-flag="gb"></span> ENGLISH</button>
       </div>
       <div class="optSec" id="secRec">🏆 RÉCORDS</div>
-      <div class="optRow"><div class="lbl" id="lbEndur">MODO ENDURANCE</div><button class="optT" id="optEndur">OFF</button></div>
+      <div class="optRow"><div class="lbl" id="lbEndur">MODO ENDURANCE</div><button class="optT sw" id="optEndur">OFF</button></div>
       <div class="optRow"><div class="lbl" id="lbRec">RÉCORDS</div><button class="optT val" id="recBtn">VER ▶</button><button class="optT off" id="optReset">BORRAR</button></div>
       <div class="optRow"><div class="lbl" id="lbAch">LOGROS</div><button class="optT val" id="achBtn">VER ▶</button></div>
       <div class="optRow"><div class="lbl">CARS 3D</div><button class="optT val" id="cars3dBtn">VER MODELOS ▶</button></div>
@@ -2556,13 +2605,13 @@
     <div class="optGrp wide">
       <div class="optSec" id="secCar">🏎️ COCHES</div>
       <div id="ctlStrip">
-        <div class="ctlChip"><span class="ctlIc" id="ciSteer"></span><div><b id="ctSteer">GIRAR</b><i>pad ◀ ▶ · A D · ← →</i></div></div>
-        <div class="ctlChip"><span class="ctlIc" id="ciGas"></span><div><b id="ctGas">GAS</b><i>GAS · W · ↑</i></div></div>
-        <div class="ctlChip"><span class="ctlIc" id="ciBrake"></span><div><b id="ctBrake">FRENO</b><i>FRENO · S · ↓</i></div></div>
-        <div class="ctlChip"><span class="ctlIc" id="ciHb"></span><div><b id="ctHb">DERRAPE</b><i>HB · ESPACIO</i></div></div>
-        <div class="ctlChip"><span class="ctlIc" id="ciNitro"></span><div><b>NITRO</b><i>⚡ · SHIFT · N</i></div></div>
-        <div class="ctlChip"><span class="ctlIc" id="ciPit"></span><div><b id="ctPit">Boxes</b><i>PIT · P</i></div></div>
-        <div class="ctlChip"><span class="ctlIc" id="ciZoom"></span><div><b>ZOOM</b><i>+ − · = −</i></div></div>
+        <div class="ctlChip"><span class="ctlIc" id="ciSteer"></span><div><b id="ctSteer">GIRAR</b><div class="keys"><kbd>A</kbd><kbd>D</kbd><kbd>←</kbd><kbd>→</kbd></div></div></div>
+        <div class="ctlChip"><span class="ctlIc" id="ciGas"></span><div><b id="ctGas">GAS</b><div class="keys"><kbd>W</kbd><kbd>↑</kbd></div></div></div>
+        <div class="ctlChip"><span class="ctlIc" id="ciBrake"></span><div><b id="ctBrake">FRENO</b><div class="keys"><kbd>S</kbd><kbd>↓</kbd></div></div></div>
+        <div class="ctlChip"><span class="ctlIc" id="ciHb"></span><div><b id="ctHb">DERRAPE</b><div class="keys"><kbd>ESPACIO</kbd></div></div></div>
+        <div class="ctlChip"><span class="ctlIc" id="ciNitro"></span><div><b>NITRO</b><div class="keys"><kbd>SHIFT</kbd><kbd>N</kbd></div></div></div>
+        <div class="ctlChip"><span class="ctlIc" id="ciPit"></span><div><b id="ctPit">Boxes</b><div class="keys"><kbd>P</kbd></div></div></div>
+        <div class="ctlChip"><span class="ctlIc" id="ciZoom"></span><div><b>ZOOM</b><div class="keys"><kbd>+</kbd><kbd>−</kbd></div></div></div>
       </div>
     </div>
   </div>
@@ -9472,7 +9521,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 683;
+const BUILD_NO = 684;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -13201,8 +13250,18 @@ const SENS_MULT = [0.7, 1.0, 1.35];                  // sensibilidad de giro: BA
 const SENS_KEYS = ['sensLow', 'sensMid', 'sensHigh'];
 const TOUCH_IDS = ['stPad', 'gasBtn', 'brkBtn', 'pitBtn', 'boxexBtn', 'lightsBtn', 'nitroBtn', 'shiftBtn', 'gas2Btn', 'shift2Btn', 'zoomIn', 'zoomOut'];
 function paintSens() {
-  const b = document.getElementById('optSens');
-  b.textContent = T(SENS_KEYS[OPTS.steerSens] || 'sensMid');
+  const c = document.getElementById('optSens'); if (!c) return;
+  [...c.children].forEach((b, i) => {
+    b.textContent = T(SENS_KEYS[i] || 'sensMid');
+    b.classList.toggle('on', i === OPTS.steerSens);
+  });
+}
+function paintCam() {
+  const c = document.getElementById('optCam'); if (!c) return;
+  [...c.children].forEach((b, i) => {
+    b.textContent = T(i ? 'track' : 'near');
+    b.classList.toggle('on', i === OPTS.cam);
+  });
 }
 function buzz(p) { if (OPTS.vib && navigator.vibrate) navigator.vibrate(p); }
 // Selector de hora del día del menú: AUTO / DÍA / TARDE / NOCHE
@@ -13658,7 +13717,7 @@ function applyLang() {
   const oe = document.getElementById('optEndur');
   if (oe) { oe.textContent = OPTS.endur ? 'ON' : 'OFF'; oe.classList.toggle('off', !OPTS.endur); }
   set('optReset', T('erase')); setI('optBack', 'back', T('back')); setI('menuBack', 'back', T('back'));
-  paintOpt('optCam', OPTS.cam, T('track'), T('near'));
+  paintCam();
   document.getElementById('optLangES').classList.toggle('dim', LANG !== 'es');
   document.getElementById('optLangEN').classList.toggle('dim', LANG !== 'en');
   setI('playBtn', 'flag', T('play')); setI('versusBtn', 'swords', T('versus')); setI('demoBtn', 'tv', T('demo'));
@@ -13734,22 +13793,26 @@ for (const [id, l] of [['slpES', 'es'], ['slpEN', 'en']]) {
     e.preventDefault(); e.stopPropagation(); setLang(l);
   });
 }
-paintOpt('optCam', OPTS.cam, T('track'), T('near'));
-document.getElementById('optCam').addEventListener('click', () => {
-  OPTS.cam = OPTS.cam ? 0 : 1; saveOpts(); applyOpts();
-  paintOpt('optCam', OPTS.cam, T('track'), T('near'));
+paintCam();
+document.getElementById('optCam').addEventListener('click', e => {
+  const b = e.target.closest('.segB'); if (!b) return;
+  OPTS.cam = +b.dataset.v; saveOpts(); applyOpts(); paintCam();
 });
 paintSens();
-document.getElementById('optSens').addEventListener('click', () => {
-  OPTS.steerSens = (OPTS.steerSens + 1) % 3; saveOpts(); paintSens();
+document.getElementById('optSens').addEventListener('click', e => {
+  const b = e.target.closest('.segB'); if (!b) return;
+  OPTS.steerSens = +b.dataset.v; saveOpts(); paintSens();
 });
 function paintTire() {
-  const b = document.getElementById('optTire');
-  b.textContent = OPTS.tire ? T('tireH') : T('tireS');
-  b.classList.toggle('off', false);
+  const c = document.getElementById('optTire'); if (!c) return;
+  [...c.children].forEach((b, i) => {
+    b.textContent = T(i ? 'tireH' : 'tireS');
+    b.classList.toggle('on', i === OPTS.tire);
+  });
 }
-document.getElementById('optTire').addEventListener('click', () => {
-  OPTS.tire = OPTS.tire ? 0 : 1; saveOpts(); paintTire();
+document.getElementById('optTire').addEventListener('click', e => {
+  const b = e.target.closest('.segB'); if (!b) return;
+  OPTS.tire = +b.dataset.v; saveOpts(); paintTire();
 });
 document.getElementById('optEndur').addEventListener('click', () => {
   OPTS.endur = OPTS.endur ? 0 : 1; saveOpts();
