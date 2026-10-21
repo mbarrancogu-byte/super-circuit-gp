@@ -8219,7 +8219,7 @@ function applyTOD() {
   if (rn) rn.grp.visible = night;
   // Exposición por franja: de noche se comprime bastante — farolas y faros
   // destacan sobre la oscuridad en vez de lavar toda la escena
-  if (renderer3) renderer3.toneMappingExposure = night ? 0.46 : dusk ? 0.74 : 0.78;
+  if (renderer3) renderer3.toneMappingExposure = night ? 0.46 : dusk ? 0.72 : 0.62;
   envApply(night ? 'night' : dusk ? 'dusk' : 'day');
 }
 // ===== ENVIRONMENT MAP (IBL): skybox equirectangular procedural → PMREM =====
@@ -9024,7 +9024,7 @@ function init3() {
   renderer3.outputEncoding = THREE.sRGBEncoding;                 // las texturas ya venían en sRGB: sin esto salían apagadas
   if (!LOW_POWER) {                                            // look filmico solo en equipos que aguantan
     renderer3.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer3.toneMappingExposure = 0.78;                       // <1: contraste fílmico, colores ricos
+    renderer3.toneMappingExposure = 0.62;                       // <1: contraste fílmico, colores ricos
   }
   scene3 = new THREE.Scene();
   scene3.background = new THREE.Color(0x060a16);
@@ -9796,7 +9796,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 692;
+const BUILD_NO = 693;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
