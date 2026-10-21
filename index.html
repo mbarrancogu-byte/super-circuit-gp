@@ -2572,6 +2572,7 @@
       <div class="optSec" id="secSnd">🔊 SONIDO</div>
       <div class="optRow"><div class="lbl" id="lbSound">SONIDO</div><button class="optT sw" id="optSound">ON</button></div>
       <div class="optSec" id="secGfx">🖥️ GRÁFICOS</div>
+      <div class="optRow"><div class="lbl" id="lbGfxQ">CALIDAD</div><div class="segC" id="optGfx"><button class="segB" data-v="0">BAJO</button><button class="segB on" data-v="1">ESTÁNDAR</button><button class="segB" data-v="2">ULTRA</button></div></div>
       <div class="optRow"><div class="lbl" id="lbShadow">SOMBRAS</div><button class="optT sw" id="optShadow">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbSkid">MARCAS DE DERRAPE</div><button class="optT sw" id="optSkid">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbDust">POLVO</div><button class="optT sw" id="optDust">ON</button></div>
@@ -9889,7 +9890,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 697;
+const BUILD_NO = 698;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -13625,7 +13626,7 @@ function fmtT(s) {
 }
 /* ================== OPCIONES ================== */
 const OPTS = { sound: 1, shadow: 1, skid: 1, dust: 1, ao: 1, bloom: 1, cam: 0, brakeAid: 1, steerAid: 1, car: 0,
-               lefty: 0, vib: 1, fps: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0, tod: 'dusk', rline: 0, aiEng: 0, res: 0 };   // res: 0=AUTO 1=ALTA 2=ULTRA   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
+               lefty: 0, vib: 1, fps: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0, tod: 'dusk', rline: 0, aiEng: 0, res: 0, gfx: 1 };   // res: 0=AUTO 1=ALTA 2=ULTRA · gfx: preset -1=custom   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
 try { Object.assign(OPTS, JSON.parse(localStorage.getItem('af1_opts') || '{}')); } catch (e) {}
 if (!OPTS.todV) { OPTS.tod = 'dusk'; OPTS.todV = 1; saveOpts(); }   // migración única: atardecer por defecto (el usuario puede cambiarlo en el selector)
 function saveOpts() { try { localStorage.setItem('af1_opts', JSON.stringify(OPTS)); } catch (e) {} }
@@ -13659,7 +13660,7 @@ function buzz(p) { if (OPTS.vib && navigator.vibrate) navigator.vibrate(p); }
 const RES_MULT = [1, 1.35, 1.75];
 function applyRes() {
   if (!renderer3) return;
-  const base = LOW_POWER ? Math.min(DPR, 1.2) : DPR;
+  const base = (LOW_POWER || OPTS.gfx === 0) ? Math.min(DPR, 1.2) : DPR;
   renderer3.setPixelRatio(Math.min(base * (RES_MULT[OPTS.res || 0] || 1), 3));
   renderer3.setSize(W, H, false);
   if (window._ppComp) window._ppComp.setSize(W, H);
@@ -13669,8 +13670,32 @@ function paintRes() {
   [...c.children].forEach((b, i) => b.classList.toggle('on', i === (OPTS.res || 0)));
 }
 for (const b of document.querySelectorAll('#optRes .segB'))
-  b.addEventListener('click', () => { OPTS.res = +b.dataset.v; saveOpts(); applyRes(); paintRes(); buzz(12); });
+  b.addEventListener('click', () => { OPTS.res = +b.dataset.v; OPTS.gfx = -1; saveOpts(); applyRes(); paintRes(); paintGfx(); buzz(12); });
 paintRes();
+// Presets de calidad: un toque mueve resolución + todos los efectos
+const GFX_PRESETS = {
+  0: { shadow: 0, skid: 0, dust: 0, ao: 0, bloom: 0, res: 0 },      // BAJO
+  1: { shadow: 1, skid: 1, dust: 1, ao: 1, bloom: 1, res: 0 },      // ESTÁNDAR
+  2: { shadow: 1, skid: 1, dust: 1, ao: 1, bloom: 1, res: 2 },      // ULTRA
+};
+function paintGfx(loc) {
+  const c = document.getElementById('optGfx'); if (!c) return;
+  const names = ['gfxLow', 'gfxStd', 'gfxUltra'];
+  [...c.children].forEach((b, i) => { if (loc !== false) b.textContent = T(names[i]); b.classList.toggle('on', i === OPTS.gfx); });
+}
+function applyGfx(v) {
+  OPTS.gfx = v;
+  const p = GFX_PRESETS[v];
+  if (p) Object.assign(OPTS, p);
+  saveOpts(); applyOpts(); applyRes();
+  paintOpt('optShadow', OPTS.shadow, 'ON', 'OFF'); paintOpt('optSkid', OPTS.skid, 'ON', 'OFF');
+  paintOpt('optDust', OPTS.dust, 'ON', 'OFF'); paintOpt('optAO', OPTS.ao, 'ON', 'OFF');
+  paintOpt('optBloom', OPTS.bloom, 'ON', 'OFF');
+  paintRes(); paintGfx();
+}
+for (const b of document.querySelectorAll('#optGfx .segB'))
+  b.addEventListener('click', () => { applyGfx(+b.dataset.v); buzz(12); });
+paintGfx(false);
 // Selector de hora del día del menú: AUTO / DÍA / TARDE / NOCHE
 function paintTOD() {
   const t = OPTS.tod || 'auto';
@@ -13709,6 +13734,9 @@ wireOpt('optSkid', 'skid', 'ON', 'OFF');
 wireOpt('optDust', 'dust', 'ON', 'OFF');
 wireOpt('optAO', 'ao', 'ON', 'OFF');
 wireOpt('optBloom', 'bloom', 'ON', 'OFF');
+// Cambiar un efecto a mano convierte el preset en "personalizado"
+for (const id of ['optShadow', 'optSkid', 'optDust', 'optAO', 'optBloom'])
+  document.getElementById(id).addEventListener('click', () => { OPTS.gfx = -1; paintGfx(); });
 wireOpt('optAbs', 'brakeAid', 'ON', 'OFF');
 wireOpt('optSteer', 'steerAid', 'ON', 'OFF');
 wireOpt('optRline', 'rline', 'ON', 'OFF');
@@ -13859,6 +13887,7 @@ const I18N = {
     hint: '◀ ▶ dirige · GAS/FRENO pedales · HB derrape · ⚡ nitro · teclado WASD + Shift',
     secSnd: 'SONIDO', secGfx: 'GRÁFICOS', secAid: 'ASISTENCIA', secCtl: 'CONTROLES', secCam: 'VISTAS', secLang: 'IDIOMA', secRec: 'RÉCORDS',
     sound: 'SONIDO', shadows: 'SOMBRAS', skid: 'MARCAS DE DERRAPE', dust: 'POLVO', ao: 'OCLUSIÓN AMBIENTAL', bloom: 'BLOOM SUAVE', res: 'RESOLUCIÓN',
+    gfxQ: 'CALIDAD GRÁFICA', gfxLow: 'BAJO', gfxStd: 'ESTÁNDAR', gfxUltra: 'ULTRA',
     brakeAid: 'FRENO ASISTIDO', steerAid: 'ASIST. DIRECCIÓN', initView: 'VISTA INICIAL',
     rline: 'TRAZADA IDEAL',
     aiEng: 'INGENIERO IA', aiKey: 'API KEY GEMINI',
@@ -13986,6 +14015,7 @@ const I18N = {
     hint: '◀ ▶ steer · GAS/BRAKE pedals · HB drift · ⚡ nitro · WASD + Shift',
     secSnd: 'SOUND', secGfx: 'GRAPHICS', secAid: 'DRIVER AIDS', secCtl: 'CONTROLS', secCam: 'CAMERA', secLang: 'LANGUAGE', secRec: 'RECORDS',
     sound: 'SOUND', shadows: 'SHADOWS', skid: 'SKID MARKS', dust: 'DUST', ao: 'AMBIENT OCCLUSION', bloom: 'SOFT BLOOM', res: 'RESOLUTION',
+    gfxQ: 'GRAPHICS QUALITY', gfxLow: 'LOW', gfxStd: 'STANDARD', gfxUltra: 'ULTRA',
     brakeAid: 'BRAKE ASSIST', steerAid: 'STEER ASSIST', initView: 'START VIEW',
     rline: 'RACING LINE',
     aiEng: 'AI ENGINEER', aiKey: 'GEMINI API KEY',
@@ -14132,7 +14162,7 @@ function applyLang() {
   const ci = (id, n) => { const e = document.getElementById(id); if (e) e.innerHTML = ic(n); };
   ci('ciSteer', 'wheel'); ci('ciGas', 'bolt'); ci('ciBrake', 'warn'); ci('ciHb', 'tire');
   ci('ciNitro', 'burst'); ci('ciPit', 'pit'); ci('ciZoom', 'cam');
-  set('lbSound', T('sound')); set('lbShadow', T('shadows')); set('lbSkid', T('skid')); set('lbDust', T('dust')); set('lbAO', T('ao')); set('lbBloom', T('bloom')); set('lbRes', T('res'));
+  set('lbSound', T('sound')); set('lbShadow', T('shadows')); set('lbSkid', T('skid')); set('lbDust', T('dust')); set('lbAO', T('ao')); set('lbBloom', T('bloom')); set('lbRes', T('res')); set('lbGfxQ', T('gfxQ')); paintGfx();
   set('lbAbs', T('brakeAid')); set('lbSteer', T('steerAid')); set('lbCam', T('initView'));
   set('lbTire', T('tire')); set('lbRline', T('rline')); paintTire();
   set('lbAI', T('aiEng')); set('lbAIKey', T('aiKey')); paintAiKey();
