@@ -1086,8 +1086,9 @@
   /* Apartado COCHES: fichas con los controles del coche — ocupan TODO el
      espacio de su panel (crecen en ancho y alto; en estrecho envuelven filas) */
   .optGrp.wide { display: flex; flex-direction: column; }
-  #ctlStrip { display: flex; gap: 6px; flex: 1 1 auto; min-height: 0; padding: 3px 2px 6px;
-    flex-wrap: wrap; align-content: stretch; scrollbar-width: none; }
+  #ctlStrip { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
+    gap: 6px; flex: 1 1 auto; min-height: 0; padding: 3px 2px 6px;
+    align-content: stretch; scrollbar-width: none; }
   #ctlStrip::-webkit-scrollbar { display: none; }
   .ctlChip { position: relative; display: flex; align-items: center; gap: 8px; padding: 6px 10px;
     flex: 1 1 auto; justify-content: center; min-width: 0; min-height: 58px; align-self: stretch;
@@ -8895,7 +8896,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 666;
+const BUILD_NO = 667;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
