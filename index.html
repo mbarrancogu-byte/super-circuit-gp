@@ -5841,7 +5841,9 @@ function buildWorld() {
       const sConc = new THREE.MeshStandardMaterial({ map: makeConcreteTex(),
         color: 0x4a4f58, roughness: 0.94 });                // gradas: hormigón gris oscuro
       const sDark = new THREE.MeshStandardMaterial({ color: 0x23262d, roughness: 0.88 });
-      const sMet = new THREE.MeshStandardMaterial({ color: 0x1d2129, roughness: 0.55, metalness: 0.5 });   // techo oscuro (no vacío)
+      const sMet = new THREE.MeshStandardMaterial({ color: 0x1d2129, roughness: 0.55, metalness: 0.5 });   // pilares/postes del tejado
+      const sRoof = new THREE.MeshStandardMaterial({ map: makeConcreteTex(),
+        color: 0x23262b, roughness: 0.97 });                 // tejado: hormigón negro mate
       const sFence = new THREE.MeshBasicMaterial({ color: 0x9aa4b0, transparent: true,
         opacity: 0.16, side: THREE.DoubleSide, depthWrite: false });
       // posición mundo: avance lx por la tangente + offset lateral por la normal (lado +n = opuesto a boxes)
@@ -5864,7 +5866,7 @@ function buildWorld() {
       };
       const boxGeo = new THREE.BoxGeometry(1, 1, 1);
       const cylGeo = new THREE.CylinderGeometry(1, 1, 1, 6);
-      const L = { conc: [], dark: [], met: [], fence: [], lamp: [] };
+      const L = { conc: [], dark: [], met: [], roof: [], fence: [], lamp: [] };
       const pm2 = new THREE.Matrix4();
       // Cada pieza se orienta por la CUERDA entre su punto y el siguiente y se
       // centra en su punto medio — en curva la tangente de un solo punto hace
@@ -5902,7 +5904,7 @@ function buildWorld() {
             by + 1.5 + r * RISE + RISE / 2, 'chord', RISE, STEP);
         segBox('conc', i, iN, 0, backOff, by + (1.5 + ROWS * RISE + 3.4) / 2, 'chord',
           1.5 + ROWS * RISE + 3.4, 0.7);
-        segBox('met', i, iN, 0, D0 + 2.2 + ROWS * STEP - SD * 0.16, by + roofY, 'chord', 0.32, SD * 0.78);
+        segBox('roof', i, iN, 0, D0 + 2.2 + ROWS * STEP - SD * 0.16, by + roofY, 'chord', 0.32, SD * 0.78);
         // Fascia frontal del techo: cierra el hueco a oscuras que quedaba
         // entre la última fila y el labio del voladizo (banda negra visible)
         segBox('conc', i, iN, 0, D0 + 6.4, by + roofY - 1.75, 'chord', 3.4, 0.45);
@@ -5933,6 +5935,7 @@ function buildWorld() {
         m2.frustumCulled = false; world.add(m2);
       };
       addMerged(L.conc, sConc); addMerged(L.dark, sDark); addMerged(L.met, sMet);
+      addMerged(L.roof, sRoof);
       addMerged(L.fence, sFence);
       // Andén asfáltico delante de la tribuna: pavimento gris que sigue su
       // curva — sustituye la franja de terreno oscuro entre el arcén y la grada
