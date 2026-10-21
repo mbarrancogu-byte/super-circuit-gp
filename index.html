@@ -1058,6 +1058,7 @@
     padding: 8px 22px; border-radius: 999px; font-size: 15px; font-weight: 700; letter-spacing: 1px;
     opacity: 0; transition: opacity .3s; pointer-events: none; }
   #toast.show { opacity: 1; }
+  #toast.low { top: 238px; }                             /* bajo el banner de lluvia/seco */
   /* ===== OPCIONES premium: glass cards + toggles iluminados ===== */
   #opts { background:
       radial-gradient(ellipse at 50% -10%, rgba(255,170,60,0.10), transparent 55%),
@@ -9518,7 +9519,10 @@ function pitMenuShow() {
 function pitMenuHide() { const pm = el('pitMenu'); if (pm) pm.classList.remove('show'); }
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.innerHTML = msg; t.classList.add('show');
+  t.innerHTML = msg;
+  const rm = document.getElementById('rainMsg');
+  t.classList.toggle('low', !!(rm && rm.classList.contains('show')));   // apilado bajo el aviso de clima
+  t.classList.add('show');
   clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2200);
 }
 function dustPuff(x, z, vx, vz, col, life, sc, op) {
@@ -9659,7 +9663,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 689;
+const BUILD_NO = 690;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
