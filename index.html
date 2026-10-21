@@ -1371,6 +1371,25 @@
   /* Idiomas dentro de la portada — JS los posa sobre el volante de la foto */
   #splashLang { position: absolute; left: 50%; bottom: 15%; transform: translate(-50%, -50%);
     display: flex; gap: 10px; z-index: 3; }
+  /* Botón START grande centrado bajo las banderas — arranca el juego */
+  #splashStart { position: absolute; left: 50%; transform: translateX(-50%); z-index: 6;
+    display: flex; align-items: center; gap: 14px; padding: 13px 38px; cursor: pointer;
+    border-radius: 44px; border: 2px solid rgba(255,205,95,0.95);
+    background: radial-gradient(ellipse at 50% 22%, #33415f 0%, #131b31 60%, #080d1c 100%);
+    color: #ffd870; font-size: 24px; font-weight: 900; font-style: italic; letter-spacing: 6px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7), 0 0 16px rgba(255,190,80,0.45);
+    box-shadow: 0 8px 26px rgba(0,0,0,0.65), 0 0 26px rgba(255,190,80,0.4),
+      inset 0 1px 2px rgba(255,255,255,0.28);
+    animation: stPulse 1.7s ease-in-out infinite;
+    transition: transform .16s, box-shadow .16s; }
+  #splashStart svg { width: 36px; height: 36px;
+    filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.7)) drop-shadow(0 0 8px rgba(255,210,110,0.55)); }
+  #splashStart:hover { transform: translateX(-50%) scale(1.05);
+    box-shadow: 0 8px 26px rgba(0,0,0,0.65), 0 0 44px rgba(255,200,90,0.75),
+      inset 0 1px 2px rgba(255,255,255,0.35); }
+  #splashStart:active { transform: translateX(-50%) scale(0.94); }
+  @keyframes stPulse { 0%, 100% { box-shadow: 0 8px 26px rgba(0,0,0,0.65), 0 0 22px rgba(255,190,80,0.35), inset 0 1px 2px rgba(255,255,255,0.28); }
+    50% { box-shadow: 0 8px 30px rgba(0,0,0,0.65), 0 0 46px rgba(255,205,95,0.8), inset 0 1px 2px rgba(255,255,255,0.28); } }
   /* Botón de opciones en la portada: engranaje flotante esquina superior derecha */
   #splashOpts { position: absolute; top: 50px; right: 16px; z-index: 4; width: 52px; height: 52px;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -2168,6 +2187,7 @@
     <div class="lpFlag" id="slpES" data-flag="es"><span>ESPAÑOL</span></div>
     <div class="lpFlag" id="slpEN" data-flag="gb"><span>ENGLISH</span></div>
   </div>
+  <div id="splashStart"><svg><use href="#i-flag"/></svg><span>START</span></div>
   <div id="glbLoad"><span id="glbLbl">3D</span><div id="glbTrack"><i id="glbBar"></i></div></div>
 </div>
 
@@ -8875,7 +8895,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 665;
+const BUILD_NO = 666;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -13175,6 +13195,9 @@ document.getElementById('optReset').addEventListener('click', () => {
     sl.style.top = clY(r.top + r.height * 0.40) + 'px';   // justo debajo del "WORLD TRACKS"
     sl.style.bottom = 'auto';
     sl.style.gap = '12px';   // las dos banderas juntas, centradas
+    const ss = document.getElementById('splashStart');  // botón START bajo las banderas
+    ss.style.left = clX(r.left + r.width * 0.5) + 'px';
+    ss.style.top = clY(r.top + r.height * 0.485) + 'px';
     bs.style.left = clX(r.left + r.width * 0.5) + 'px';   // flecha sobre el "START RACE"
     bs.style.top = clY(r.top + r.height * 0.885) + 'px';
     const sg = document.getElementById('startGlow');    // halo sobre el texto START RACE
@@ -13214,6 +13237,9 @@ document.getElementById('optReset').addEventListener('click', () => {
     e.stopPropagation(); e.preventDefault();
     close(1);
     document.getElementById('optsBtn').click();   // misma animación de entrada que desde el menú
+  });
+  document.getElementById('splashStart').addEventListener('pointerdown', e => {
+    e.stopPropagation(); e.preventDefault(); close();
   });
   sp.addEventListener('pointerdown', () => close());   // wrapper: el evento no se cuele como noIntro
   window.addEventListener('keydown', function k(e) {
