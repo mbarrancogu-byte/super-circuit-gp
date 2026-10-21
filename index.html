@@ -4828,15 +4828,22 @@ function buildWorld() {
           new THREE.TorusGeometry(R - 0.3, 0.5, 6, 24, Math.PI),
           new THREE.MeshBasicMaterial({ color: 0xa038ff, transparent: true, opacity: 0.42,
             blending: THREE.AdditiveBlending, depthWrite: false }), nRib);
+        const AL0 = window._archLed, _wht = new THREE.Color(1, 1, 1);
         for (let k = 0; k < nRib; k++) {
           const p = path[(i0 + k * 7) % pathLen];
           wE.set(0, Math.atan2(-p.tx, -p.tz), 0); wQ.setFromEuler(wE);
           wM.compose(wV.set(p.x, 0, p.z), wQ, wS.set(1, 1, 1));
           ribs.setMatrixAt(k, wM); ledRib.setMatrixAt(k, wM); haloRib.setMatrixAt(k, wM);
-          if (window._archLed) window._archLed.pts.push({ x: p.x, z: p.z, y: R });
+          // En circuitos con sistema de proximidad los nervios arrancan
+          // APAGADOS (rosa casi negro) y solo encienden al acercar un coche;
+          // sin ese sistema quedan encendidos como antes
+          ledRib.setColorAt(k, AL0 ? AL0.off : _wht);
+          haloRib.setColorAt(k, AL0 ? AL0.offH : _wht);
+          if (AL0) AL0.pts.push({ x: p.x, z: p.z, y: R, i: k, ledM: ledRib, haloM: haloRib, v: 0 });
         }
         ribs.instanceMatrix.needsUpdate = true;
         ledRib.instanceMatrix.needsUpdate = true; haloRib.instanceMatrix.needsUpdate = true;
+        ledRib.instanceColor.needsUpdate = true; haloRib.instanceColor.needsUpdate = true;
         world.add(ribs, ledRib, haloRib);
         // Espina central: viga longitudinal que une TODOS los arcos por el
         // ápex + filo LED morado a juego con los nervios
@@ -4855,6 +4862,9 @@ function buildWorld() {
             new THREE.MeshBasicMaterial({ color: 0xe070ff }));
           spineLed.position.y = -0.42;                  // cuelga bajo la viga
           world.add(spine, spineLed);
+          // La tira del lomo responde a proximidad: el loop toma el `v` máximo
+          // de los nervios del túnel (registrados con ledM === ledRib)
+          if (AL0) { spineLed.material.color.copy(AL0.off); AL0.spineM = spineLed.material; }
         }
         // Bocas del túnel: arco grueso de hormigón en la entrada y la salida,
         // con banda luminosa que marca el portal desde lejos
@@ -4868,10 +4878,11 @@ function buildWorld() {
             wE.set(0, Math.atan2(-p.tx, -p.tz), 0); wQ.setFromEuler(wE);
             wM.compose(wV.set(p.x, 0, p.z), wQ, wS.set(1, 1, 1));
             const mouth = new THREE.Mesh(mouthGeo, concM);
-            const band = new THREE.Mesh(bandGeo, bandM);
+            const band = new THREE.Mesh(bandGeo, bandM.clone());
+            if (AL0) band.material.emissiveIntensity = 0.08;   // apagada hasta que llega un coche
             mouth.applyMatrix4(wM); band.applyMatrix4(wM);
             world.add(mouth, band);
-            if (window._archLed) window._archLed.pts.push({ x: p.x, z: p.z, y: R + 0.4 });
+            if (AL0) AL0.pts.push({ x: p.x, z: p.z, y: R + 0.4, band: band.material, v: 0 });
           }
         }
         // "TÚNEL" pintado en el asfalto unos metros antes de la boca — letras
@@ -5824,7 +5835,7 @@ function buildWorld() {
       const sConc = new THREE.MeshStandardMaterial({ map: makeConcreteTex(),
         color: 0x4a4f58, roughness: 0.94 });                // gradas: hormigón gris oscuro
       const sDark = new THREE.MeshStandardMaterial({ color: 0x23262d, roughness: 0.88 });
-      const sMet = new THREE.MeshStandardMaterial({ color: 0x111216, roughness: 0.6, metalness: 0.5 });   // techo NEGRO
+      const sMet = new THREE.MeshStandardMaterial({ color: 0x1d2129, roughness: 0.55, metalness: 0.5 });   // techo oscuro (no vacío)
       const sFence = new THREE.MeshBasicMaterial({ color: 0x9aa4b0, transparent: true,
         opacity: 0.16, side: THREE.DoubleSide, depthWrite: false });
       // posición mundo: avance lx por la tangente + offset lateral por la normal (lado +n = opuesto a boxes)
@@ -5886,10 +5897,12 @@ function buildWorld() {
         segBox('conc', i, iN, 0, backOff, by + (1.5 + ROWS * RISE + 3.4) / 2, 'chord',
           1.5 + ROWS * RISE + 3.4, 0.7);
         segBox('met', i, iN, 0, D0 + 2.2 + ROWS * STEP - SD * 0.16, by + roofY, 'chord', 0.32, SD * 0.78);
-        // Tira de luz bajo el labio FRONTAL del techo — ilumina las gradas
+        // Fascia frontal del techo: cierra el hueco a oscuras que quedaba
+        // entre la última fila y el labio del voladizo (banda negra visible)
+        segBox('conc', i, iN, 0, D0 + 6.4, by + roofY - 1.75, 'chord', 3.4, 0.45);
+        // Tira de luz sobre la cara de la fascia — ilumina las gradas
         // desde arriba como los focos de los estadios reales
-        segBox('lamp', i, iN, 0, D0 + 2.2 + ROWS * STEP - SD * 0.16 - SD * 0.36,
-          by + roofY - 0.3, 'chord', 0.14, 0.2);
+        segBox('lamp', i, iN, 0, D0 + 6.1, by + roofY - 0.7, 'chord', 0.16, 0.14);
         // pilares traseros del voladizo, uno cada 2 segmentos
         if (si % 2 === 0) {
           const wp = gPos(i, 0, backOff - 1.6);
@@ -9555,7 +9568,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 685;
+const BUILD_NO = 686;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -12297,15 +12310,25 @@ function draw(now) {
     // Aros LED por proximidad: cada arco solo se enciende cuando un coche se
     // acerca — encendido rápido al aproximar (~90u), apagado suave al alejar
     for (const a of AL.pts) {
-      if (a.i === undefined) continue;
+      if (a.i === undefined && !a.band && !a.spine) continue;
       let dm = 1e9;
       for (const s of srcs) { const d = (a.x - s.x) * (a.x - s.x) + (a.z - s.z) * (a.z - s.z); if (d < dm) dm = d; }
       dm = Math.sqrt(dm);
       const tgt = dm < 42 ? 1 : dm < 95 ? 1 - (dm - 42) / 53 : 0;
       a.v = tgt > a.v ? Math.min(tgt, a.v + dt * 5) : Math.max(tgt, a.v - dt * 1.8);
-      AL.tmpC.copy(AL.off).lerp(AL.on, a.v); AL.led.setColorAt(a.i, AL.tmpC);
-      AL.tmpC.copy(AL.offH).lerp(AL.onH, a.v); AL.halo.setColorAt(a.i, AL.tmpC);
+      if (a.i !== undefined) {
+        AL.tmpC.copy(AL.off).lerp(AL.on, a.v); (a.ledM || AL.led).setColorAt(a.i, AL.tmpC);
+        AL.tmpC.copy(AL.offH).lerp(AL.onH, a.v); (a.haloM || AL.halo).setColorAt(a.i, AL.tmpC);
+        if (a.ledM) a.ledM.instanceColor.needsUpdate = true;
+        if (a.haloM) a.haloM.instanceColor.needsUpdate = true;
+      }
+      if (a.band) a.band.emissiveIntensity = 0.08 + a.v * 1.05;
       if (a.pool) a.pool.material.opacity = a.v * 0.9;
+    }
+    // El lomo del túnel toma el brillo del nervio más iluminado
+    if (AL.spineM) {
+      let sv = 0; for (const a of AL.pts) { if (a.ledM && a.v > sv) sv = a.v; }
+      AL.spineM.color.copy(AL.off).lerp(AL.on, sv);
     }
     AL.led.instanceColor.needsUpdate = true; AL.halo.instanceColor.needsUpdate = true;
   }
