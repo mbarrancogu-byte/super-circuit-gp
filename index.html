@@ -8360,7 +8360,8 @@ function buildCar(paintHex, withLight) {
 // de cuello de cisne, difusor con estrías, escapes, antenas, bargeboards,
 // suspensión de tirantes y ruedas que giran y direccionan de verdad.
 function buildF1Pro(tint, liv) {
-  liv = liv === 'nexus' ? { accent: 0xffd828, helm: 0xd82818, suit: 0xc8201a } : null;
+  liv = liv === 'nexus' ? { accent: 0xffd828, helm: 0xd82818, suit: 0xc8201a }
+      : liv === 'falcon' ? { accent: 0xffd828, helm: 0xd82818, suit: 0xc8201a, v2: true } : null;
   const grp = new THREE.Group();
   const paint = new THREE.MeshPhysicalMaterial({ color: tint, roughness: 0.26, metalness: 0.6,
     clearcoat: 1, clearcoatRoughness: 0.12 });
@@ -8472,6 +8473,24 @@ function buildF1Pro(tint, liv) {
     brk.rotation.z = Math.PI / 2; spin.add(brk);
     const cov = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.3, r * 0.3, wdt + 0.08, 10), paint);
     cov.rotation.z = Math.PI / 2; spin.add(cov);              // cubre-rueda del color
+    if (liv && liv.v2) {                                      // letras amarillas del flanco
+      if (!window._tireTex) {
+        const tc = document.createElement('canvas'); tc.width = tc.height = 128;
+        const x = tc.getContext('2d');
+        x.strokeStyle = '#ffd828'; x.lineWidth = 9;
+        x.beginPath(); x.arc(64, 64, 50, 0, Math.PI * 2); x.stroke();
+        x.lineWidth = 4; x.beginPath(); x.arc(64, 64, 38, 0, Math.PI * 2); x.stroke();
+        x.fillStyle = '#ffd828'; x.font = '900 15px Arial'; x.textAlign = 'center';
+        x.save(); x.translate(64, 64); x.fillText('N E X U S', 0, -40); x.restore();
+        x.save(); x.translate(64, 64); x.rotate(Math.PI); x.fillText('R A C I N G', 0, -41); x.restore();
+        window._tireTex = tex3(tc); window._tireTex.encoding = THREE.sRGBEncoding;
+      }
+      const tm = new THREE.Mesh(new THREE.PlaneGeometry(r * 1.9, r * 1.9),
+        new THREE.MeshBasicMaterial({ map: window._tireTex, transparent: true, depthWrite: false }));
+      const sx = Math.sign(x);
+      tm.position.x = sx * (wdt / 2 + 0.03); tm.rotation.y = sx * Math.PI / 2;
+      spin.add(tm);                                           // gira con la rueda como las reales
+    }
     g.add(spin); grp.add(g);
     const s = Math.sign(x);                                   // tirantes doble horquilla
     rod(s * 0.72, 0.95, z + 0.35, x - s * 0.28, r + 0.15, z + 0.05, 0.035);
@@ -8530,6 +8549,60 @@ function buildF1Pro(tint, liv) {
       x.font = 'italic 700 26px Arial'; x.fillText('D Y N A M I C S', 256, 76);
     });
     for (const s of [-1, 1]) dec(nxT, 2.3, 0.43, s * 1.452, 0.85, -0.7, 0, s * Math.PI / 2);
+    if (liv.v2) {
+      // NEXUS DYNAMICS gigante en la aleta de tiburón + QUANTUM FUELLING arriba
+      const finT = mkT(512, 128, x => {
+        x.textAlign = 'center'; x.shadowColor = 'rgba(8,16,48,0.9)'; x.shadowBlur = 8;
+        x.fillStyle = '#f4f7ff'; x.font = 'italic 900 74px Arial'; x.fillText('NEXUS', 256, 58);
+        x.font = 'italic 700 32px Arial'; x.fillText('D Y N A M I C S', 256, 102);
+      });
+      for (const s of [-1, 1]) dec(finT, 2.25, 0.56, s * 0.052, 1.78, -2.1, 0, s * Math.PI / 2);
+      const qfT = mkT(512, 48, x => {
+        x.fillStyle = '#ffd828'; x.font = '900 34px Arial'; x.textAlign = 'center';
+        x.shadowColor = 'rgba(8,16,48,0.9)'; x.shadowBlur = 5;
+        x.fillText('QUANTUM FUELLING', 256, 36);
+      });
+      for (const s of [-1, 1]) dec(qfT, 1.7, 0.16, s * 0.052, 2.16, -2.1, 0, s * Math.PI / 2);
+      // CHRONOS bajo NEXUS + insignia SECTOR 7 WORKS + FLUX-RIDER / THERMO-CORE
+      const chT = mkT(512, 80, x => {
+        x.fillStyle = '#ffd828'; x.textAlign = 'center';
+        x.shadowColor = 'rgba(8,16,48,0.9)'; x.shadowBlur = 5;
+        x.font = '900 22px Arial'; x.fillText('◉', 78, 52);
+        x.fillStyle = '#f4f7ff'; x.font = 'italic 900 52px Arial'; x.fillText('CHRONOS', 292, 54);
+      });
+      for (const s of [-1, 1]) dec(chT, 1.95, 0.3, s * 1.452, 0.6, -0.55, 0, s * Math.PI / 2);
+      const s7T = mkT(256, 64, x => {
+        x.strokeStyle = '#ffd828'; x.lineWidth = 4; x.strokeRect(8, 8, 240, 48);
+        x.fillStyle = '#f4f7ff'; x.font = '700 24px Arial'; x.textAlign = 'center';
+        x.fillText('SECTOR 7', 128, 40);
+      });
+      for (const s of [-1, 1]) dec(s7T, 0.75, 0.19, s * 1.452, 0.44, 0.25, 0, s * Math.PI / 2);
+      const fxT = mkT(512, 80, x => {
+        x.fillStyle = '#f4f7ff'; x.textAlign = 'center';
+        x.font = 'italic 700 34px Arial';
+        x.fillText('FLUX-RIDER', 256, 30);
+        x.fillStyle = '#ffd828'; x.font = 'italic 700 30px Arial'; x.fillText('THERMO-CORE', 256, 66);
+      });
+      for (const s of [-1, 1]) dec(fxT, 1.5, 0.23, s * 0.49, 1.32, -2.65, 0, s * Math.PI / 2);
+      // Morro: centro azul + VELOCITAS R&D 01 en el borde del cockpit
+      B(new THREE.BoxGeometry(1.7, 0.075, 0.56), paint, 0, 0.30, 5.05);
+      const rdT = mkT(512, 48, x => {
+        x.fillStyle = '#f4f7ff'; x.font = '700 30px Arial'; x.textAlign = 'center';
+        x.fillText('🇮🇹 VELOCITAS R&D 01 🇮🇹', 256, 36);
+      });
+      for (const s of [-1, 1]) dec(rdT, 1.35, 0.13, s * 0.49, 1.62, -0.55, 0, s * Math.PI / 2);
+      // Puntas amarillas del alerón trasero con AERO-FORGE (como la referencia)
+      const awT = mkT(256, 48, x => {
+        x.fillStyle = '#14181f'; x.font = '900 32px Arial'; x.textAlign = 'center';
+        x.fillText('AERO-FORGE', 128, 36);
+      });
+      for (const s of [-1, 1]) {
+        B(new THREE.BoxGeometry(1.2, 0.075, 0.72), accM, s * 1.32, 1.8, -4.5, -0.1);
+        dec(awT, 1.1, 0.2, s * 1.32, 1.845, -4.5, -Math.PI / 2 - 0.1);
+      }
+      // Alerón delantero: puntas amarillas (el centro ya es azul por el parche)
+      // → el plano queda amarillo completo salvo el centro, igual que la foto
+    }
     // Llamas sobre el alerón trasero (cenital) y las placas laterales
     const flT = mkT(512, 96, x => {
       for (let i = 0; i < 9; i++) {
@@ -8587,6 +8660,8 @@ const CARS = [
   { name: 'AZUL',     tint: 0x2a66e0, st: { top: 1.01, acc: 1.03, grip: 1.05, res: 1.02 } },
   { name: 'NEXUS',    tint: 0x2a63d8, pro: true, liv: 'nexus',
     st: { top: 1.06, acc: 1.02, grip: 1.03, res: 1.00 } },
+  { name: 'NEXUS RS', tint: 0x2457c8, pro: true, liv: 'falcon',
+    st: { top: 1.07, acc: 1.03, grip: 1.05, res: 1.01 } },
   { name: 'R26',      tint: 0xf2f2f2, img: 'f1_r26.png', shx: 64,
     sh: [[48, 29], [80, 29], [48, 93], [80, 93]],
     st: { top: 1.04, acc: 1.06, grip: 1.04, res: 0.97 } },
@@ -9663,7 +9738,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 690;
+const BUILD_NO = 691;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
