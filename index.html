@@ -2505,6 +2505,7 @@
       <div class="optRow"><div class="lbl" id="lbSkid">MARCAS DE DERRAPE</div><button class="optT" id="optSkid">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbDust">POLVO</div><button class="optT" id="optDust">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbAO">OCLUSIÓN AMBIENTAL</div><button class="optT" id="optAO">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbBloom">BLOOM</div><button class="optT" id="optBloom">ON</button></div>
       <div class="optSec" id="secAid">🛠️ ASISTENCIA</div>
       <div class="optRow"><div class="lbl" id="lbAbs">FRENO ASISTIDO</div><button class="optT" id="optAbs">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbSteer">ASIST. DIRECCIÓN</div><button class="optT" id="optSteer">ON</button></div>
@@ -8630,37 +8631,71 @@ function init3() {
   moonLight.position.set(300, 500, -400);
   moonLight.castShadow = true;
   moonLight.shadow.mapSize.set(LOW_POWER ? 1024 : 4096, LOW_POWER ? 1024 : 4096);
-  // ===== SSAO-LITE: ambient occlusion por profundidad de pantalla =====
-  // La escena se dibuja en un render target supersampleado (x1.25) con depth
-  // texture; un pase fullscreen oscurece donde hay geometría cercana tapando —
-  // sombras de contacto alrededor de coches, muros y árboles.
-  let aoRT = null, aoScene = null, aoCam = null, aoMat = null;
+  // ===== POST-PROCESADO HQ: SSAO-lite + BLOOM suave + tone mapping neutro =====
+  // Cadena: escena → RT supersampleado x1.25 (color+depth) → extracción de
+  // altas luces a media res → blur gaussiano separable x2 → composite final
+  // con AO por profundidad, mezcla de bloom y curva neutra de highlights.
+  let aoRT = null, aoScene = null, aoCam = null, aoMat = null, aoQuad = null;
+  let bA = null, bB = null, brightMat = null, blurMat = null;
+  const FS_VERT = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
   window._aoOK = !LOW_POWER && typeof THREE.DepthTexture === 'function';
   function aoBuild() {
     const sz = renderer3.getDrawingBufferSize(new THREE.Vector2());
     const rw = Math.round(sz.x * 1.25), rh = Math.round(sz.y * 1.25);
+    const bw = Math.max(2, rw >> 1), bh = Math.max(2, rh >> 1);
     try {
       if (!aoRT || aoRT.width !== rw || aoRT.height !== rh) {
-        if (aoRT) aoRT.dispose();
+        if (aoRT) { aoRT.dispose(); bA.dispose(); bB.dispose(); }
         aoRT = new THREE.WebGLRenderTarget(rw, rh, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
         aoRT.depthTexture = new THREE.DepthTexture(rw, rh);
-        if (aoMat) { aoMat.uniforms.tCol.value = aoRT.texture; aoMat.uniforms.tDepth.value = aoRT.depthTexture; }
+        const bf = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false };
+        bA = new THREE.WebGLRenderTarget(bw, bh, bf); bB = new THREE.WebGLRenderTarget(bw, bh, bf);
+        if (aoMat) {
+          aoMat.uniforms.tCol.value = aoRT.texture; aoMat.uniforms.tDepth.value = aoRT.depthTexture;
+          aoMat.uniforms.uRes.value.set(rw, rh);
+          blurMat.uniforms.uInv.value.set(1 / bw, 1 / bh);
+        }
       }
       if (!aoMat) {
         aoCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
         aoScene = new THREE.Scene();
-        aoMat = new THREE.ShaderMaterial({
-          depthTest: false, depthWrite: false,
+        // Pase 1: extracción de altas luces con rodilla suave
+        brightMat = new THREE.ShaderMaterial({ depthTest: false, depthWrite: false,
+          uniforms: { tCol: { value: null }, uTh: { value: 0.62 }, uKnee: { value: 0.38 } },
+          vertexShader: FS_VERT,
+          fragmentShader: `precision highp float;
+            varying vec2 vUv; uniform sampler2D tCol; uniform float uTh, uKnee;
+            void main() {
+              vec3 c = texture2D(tCol, vUv).rgb;
+              float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+              gl_FragColor = vec4(c * smoothstep(uTh, uTh + uKnee, l), 1.0);
+            }` });
+        // Pase 2: blur gaussiano separable 5-tap (2 iteraciones → resplandor amplio)
+        blurMat = new THREE.ShaderMaterial({ depthTest: false, depthWrite: false,
+          uniforms: { tCol: { value: null }, uDir: { value: new THREE.Vector2(1, 0) },
+                      uInv: { value: new THREE.Vector2(1 / bw, 1 / bh) } },
+          vertexShader: FS_VERT,
+          fragmentShader: `precision highp float;
+            varying vec2 vUv; uniform sampler2D tCol; uniform vec2 uDir, uInv;
+            void main() {
+              vec2 d = uDir * uInv * 1.6;
+              vec3 s = texture2D(tCol, vUv).rgb * 0.227027;
+              s += (texture2D(tCol, vUv + d * 1.3846).rgb + texture2D(tCol, vUv - d * 1.3846).rgb) * 0.3162162;
+              s += (texture2D(tCol, vUv + d * 3.2308).rgb + texture2D(tCol, vUv - d * 3.2308).rgb) * 0.0702703;
+              gl_FragColor = vec4(s, 1.0);
+            }` });
+        // Pase final: AO por profundidad + bloom + tone mapping neutro leve
+        aoMat = new THREE.ShaderMaterial({ depthTest: false, depthWrite: false,
           uniforms: {
-            tCol: { value: aoRT.texture }, tDepth: { value: aoRT.depthTexture },
+            tCol: { value: aoRT.texture }, tDepth: { value: aoRT.depthTexture }, tBloom: { value: bA.texture },
             uNear: { value: 1 }, uFar: { value: 2400 }, uFocal: { value: 800 },
-            uRes: { value: new THREE.Vector2(rw, rh) }, uStr: { value: 1.1 }
+            uRes: { value: new THREE.Vector2(rw, rh) }, uStr: { value: 1.1 }, uBloomK: { value: 0.34 }
           },
-          vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+          vertexShader: FS_VERT,
           fragmentShader: `precision highp float;
             varying vec2 vUv;
-            uniform sampler2D tCol, tDepth;
-            uniform float uNear, uFar, uFocal, uStr;
+            uniform sampler2D tCol, tDepth, tBloom;
+            uniform float uNear, uFar, uFocal, uStr, uBloomK;
             uniform vec2 uRes;
             float viewDist(vec2 uv) {
               float z = texture2D(tDepth, uv).x;
@@ -8669,42 +8704,64 @@ function init3() {
             }
             void main() {
               vec3 col = texture2D(tCol, vUv).rgb;
-              float d = viewDist(vUv);
               float ao = 1.0;
-              if (d < uFar * 0.95) {
-                float R = 1.7;                                 // radio de oclusión en metros
-                float rp = clamp(R * uFocal / d, 3.0, 26.0);   // metros → píxeles a esa distancia
-                float j = fract(sin(dot(vUv * uRes, vec2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
-                float occ = 0.0;
-                for (int i = 0; i < 8; i++) {                  // anillo exterior: contacto amplio
-                  float a = j + 6.2831853 * float(i) / 8.0;
-                  float df = d - viewDist(vUv + vec2(cos(a), sin(a)) * rp / uRes);
-                  occ += smoothstep(0.10, R * 0.85, df) * (1.0 - clamp((df - R * 2.5) / (R * 5.0), 0.0, 1.0));
+              if (uStr > 0.001) {
+                float d = viewDist(vUv);
+                if (d < uFar * 0.95) {
+                  float R = 1.7;                               // radio de oclusión en metros
+                  float rp = clamp(R * uFocal / d, 3.0, 26.0); // metros → píxeles a esa distancia
+                  float j = fract(sin(dot(vUv * uRes, vec2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
+                  float occ = 0.0;
+                  for (int i = 0; i < 8; i++) {                // anillo exterior: contacto amplio
+                    float a = j + 6.2831853 * float(i) / 8.0;
+                    float df = d - viewDist(vUv + vec2(cos(a), sin(a)) * rp / uRes);
+                    occ += smoothstep(0.10, R * 0.85, df) * (1.0 - clamp((df - R * 2.5) / (R * 5.0), 0.0, 1.0));
+                  }
+                  for (int i = 0; i < 4; i++) {                // anillo interior: pliegue fino
+                    float a = j * 1.7 + 6.2831853 * float(i) / 4.0;
+                    float df = d - viewDist(vUv + vec2(cos(a), sin(a)) * rp * 0.45 / uRes);
+                    occ += smoothstep(0.06, R * 0.4, df) * 0.6 * (1.0 - clamp((df - R * 1.5) / (R * 4.0), 0.0, 1.0));
+                  }
+                  ao = 1.0 - min(1.0, occ / 10.4) * uStr;
                 }
-                for (int i = 0; i < 4; i++) {                  // anillo interior: pliegue fino
-                  float a = j * 1.7 + 6.2831853 * float(i) / 4.0;
-                  float df = d - viewDist(vUv + vec2(cos(a), sin(a)) * rp * 0.45 / uRes);
-                  occ += smoothstep(0.06, R * 0.4, df) * 0.6 * (1.0 - clamp((df - R * 1.5) / (R * 4.0), 0.0, 1.0));
-                }
-                ao = 1.0 - min(1.0, occ / 10.4) * uStr;
               }
-              gl_FragColor = vec4(col * ao, 1.0);
-            }`
-        });
-        const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), aoMat);
-        quad.frustumCulled = false; aoScene.add(quad);
-      } else aoMat.uniforms.uRes.value.set(rw, rh);
+              col = col * ao + texture2D(tBloom, vUv).rgb * uBloomK;
+              // Tone mapping neutro leve: medios intactos, rolloff suave >1
+              // para que el bloom no queme las altas luces
+              vec3 over = max(col - 1.0, vec3(0.0));
+              col = min(col, vec3(1.0)) + over / (1.0 + over * 0.6);
+              gl_FragColor = vec4(col, 1.0);
+            }` });
+        aoQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), aoMat);
+        aoQuad.frustumCulled = false; aoScene.add(aoQuad);
+      }
       return true;
     } catch (e) { aoRT = null; return false; }
   }
   window._renderScene3 = (scene, cam) => {
-    if (window._aoOK && OPTS.ao) {
+    if (window._aoOK && (OPTS.ao || OPTS.bloom)) {
       if (!aoBuild()) window._aoOK = false;
       else {
+        renderer3.setRenderTarget(aoRT); renderer3.render(scene, cam);
+        if (OPTS.bloom) {                                       // bright → blur x2 (H/V)
+          aoQuad.material = brightMat;
+          brightMat.uniforms.tCol.value = aoRT.texture;
+          renderer3.setRenderTarget(bA); renderer3.render(aoScene, aoCam);
+          aoQuad.material = blurMat;
+          for (let k = 0; k < 2; k++) {
+            blurMat.uniforms.tCol.value = bA.texture; blurMat.uniforms.uDir.value.set(1, 0);
+            renderer3.setRenderTarget(bB); renderer3.render(aoScene, aoCam);
+            blurMat.uniforms.tCol.value = bB.texture; blurMat.uniforms.uDir.value.set(0, 1);
+            renderer3.setRenderTarget(bA); renderer3.render(aoScene, aoCam);
+          }
+          aoMat.uniforms.tBloom.value = bA.texture;
+          aoMat.uniforms.uBloomK.value = 0.34;
+        } else aoMat.uniforms.uBloomK.value = 0;
+        aoQuad.material = aoMat;
         aoMat.uniforms.uNear.value = cam.near;
         aoMat.uniforms.uFar.value = cam.far;
         aoMat.uniforms.uFocal.value = cam.projectionMatrix.elements[5] * aoRT.height * 0.5;
-        renderer3.setRenderTarget(aoRT); renderer3.render(scene, cam);
+        aoMat.uniforms.uStr.value = OPTS.ao ? 1.1 : 0;
         renderer3.setRenderTarget(null); renderer3.render(aoScene, aoCam);
         return;
       }
@@ -9203,7 +9260,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 675;
+const BUILD_NO = 676;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -12817,7 +12874,7 @@ function fmtT(s) {
   return `${mm}:${String(Math.floor(s % 60)).padStart(2, '0')}.${Math.floor((s % 1) * 10)}`;
 }
 /* ================== OPCIONES ================== */
-const OPTS = { sound: 1, shadow: 1, skid: 1, dust: 1, ao: 1, cam: 0, brakeAid: 1, steerAid: 1, car: 0,
+const OPTS = { sound: 1, shadow: 1, skid: 1, dust: 1, ao: 1, bloom: 1, cam: 0, brakeAid: 1, steerAid: 1, car: 0,
                lefty: 0, vib: 1, fps: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0, tod: 'dusk', rline: 0 };   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
 try { Object.assign(OPTS, JSON.parse(localStorage.getItem('af1_opts') || '{}')); } catch (e) {}
 if (!OPTS.todV) { OPTS.tod = 'dusk'; OPTS.todV = 1; saveOpts(); }   // migración única: atardecer por defecto (el usuario puede cambiarlo en el selector)
@@ -12874,6 +12931,7 @@ wireOpt('optShadow', 'shadow', 'ON', 'OFF');
 wireOpt('optSkid', 'skid', 'ON', 'OFF');
 wireOpt('optDust', 'dust', 'ON', 'OFF');
 wireOpt('optAO', 'ao', 'ON', 'OFF');
+wireOpt('optBloom', 'bloom', 'ON', 'OFF');
 wireOpt('optAbs', 'brakeAid', 'ON', 'OFF');
 wireOpt('optSteer', 'steerAid', 'ON', 'OFF');
 wireOpt('optRline', 'rline', 'ON', 'OFF');
@@ -13011,7 +13069,7 @@ const I18N = {
     online: 'CARRERA ONLINE', bt: 'DUELO BLUETOOTH', subtitle: 'RALLY NOCTURNO · CONTRARRELOJ',
     hint: '◀ ▶ dirige · GAS/FRENO pedales · HB derrape · ⚡ nitro · teclado WASD + Shift',
     secSnd: 'SONIDO', secGfx: 'GRÁFICOS', secAid: 'ASISTENCIA', secCtl: 'CONTROLES', secCam: 'VISTAS', secLang: 'IDIOMA', secRec: 'RÉCORDS',
-    sound: 'SONIDO', shadows: 'SOMBRAS', skid: 'MARCAS DE DERRAPE', dust: 'POLVO', ao: 'OCLUSIÓN AMBIENTAL',
+    sound: 'SONIDO', shadows: 'SOMBRAS', skid: 'MARCAS DE DERRAPE', dust: 'POLVO', ao: 'OCLUSIÓN AMBIENTAL', bloom: 'BLOOM SUAVE',
     brakeAid: 'FRENO ASISTIDO', steerAid: 'ASIST. DIRECCIÓN', initView: 'VISTA INICIAL',
     rline: 'TRAZADA IDEAL',
     touchUi: 'CONTROLES TÁCTILES', lefty: 'MODO ZURDO', vib: 'VIBRACIÓN', fps: 'CONTADOR FPS', sens: 'SENSIBILIDAD GIRO',
@@ -13132,7 +13190,7 @@ const I18N = {
     online: 'ONLINE RACE', bt: 'BLUETOOTH DUEL', subtitle: 'NIGHT RALLY · TIME TRIAL',
     hint: '◀ ▶ steer · GAS/BRAKE pedals · HB drift · ⚡ nitro · WASD + Shift',
     secSnd: 'SOUND', secGfx: 'GRAPHICS', secAid: 'DRIVER AIDS', secCtl: 'CONTROLS', secCam: 'CAMERA', secLang: 'LANGUAGE', secRec: 'RECORDS',
-    sound: 'SOUND', shadows: 'SHADOWS', skid: 'SKID MARKS', dust: 'DUST', ao: 'AMBIENT OCCLUSION',
+    sound: 'SOUND', shadows: 'SHADOWS', skid: 'SKID MARKS', dust: 'DUST', ao: 'AMBIENT OCCLUSION', bloom: 'SOFT BLOOM',
     brakeAid: 'BRAKE ASSIST', steerAid: 'STEER ASSIST', initView: 'START VIEW',
     rline: 'RACING LINE',
     touchUi: 'TOUCH CONTROLS', lefty: 'LEFT-HANDED', vib: 'HAPTICS', fps: 'FPS COUNTER', sens: 'STEER SENSITIVITY',
@@ -13273,7 +13331,7 @@ function applyLang() {
   const ci = (id, n) => { const e = document.getElementById(id); if (e) e.innerHTML = ic(n); };
   ci('ciSteer', 'wheel'); ci('ciGas', 'bolt'); ci('ciBrake', 'warn'); ci('ciHb', 'tire');
   ci('ciNitro', 'burst'); ci('ciPit', 'pit'); ci('ciZoom', 'cam');
-  set('lbSound', T('sound')); set('lbShadow', T('shadows')); set('lbSkid', T('skid')); set('lbDust', T('dust')); set('lbAO', T('ao'));
+  set('lbSound', T('sound')); set('lbShadow', T('shadows')); set('lbSkid', T('skid')); set('lbDust', T('dust')); set('lbAO', T('ao')); set('lbBloom', T('bloom'));
   set('lbAbs', T('brakeAid')); set('lbSteer', T('steerAid')); set('lbCam', T('initView'));
   set('lbTire', T('tire')); set('lbRline', T('rline')); paintTire();
   set('lbTouch', T('touchUi')); set('lbLefty', T('lefty')); set('lbVib', T('vib')); set('lbFps', T('fps')); set('lbSens', T('sens'));
