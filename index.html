@@ -8223,8 +8223,8 @@ function applyTOD() {
       sunInt = neon ? 1.6 : 0.52;
     } else if (todMode === 1) {                           // TARDE — hora dorada, sol bajo y naranja
       scene3.background.setHex(0xcf8f68); scene3.fog.color.setHex(0xcf8f68);
-      ambLight.color.setHex(0xe8c0a0); ambLight.intensity = 0.76;
-      hemiLight.color.setHex(0xe8b088); hemiLight.groundColor.setHex(0x38301f); hemiLight.intensity = 0.58;
+      ambLight.color.setHex(0xe8c0a0); ambLight.intensity = 0.68;
+      hemiLight.color.setHex(0xe8b088); hemiLight.groundColor.setHex(0x38301f); hemiLight.intensity = 0.5;
       moonLight.color.setHex(0xffb268); moonOX = 560; moonOZ = -340; moonY = 300;   // sol bajo → sombras muy largas
       sunInt = neon ? 1.3 : 0.42;
     } else {                                              // NOCHE — luna fría, estrellas y faros
@@ -8308,7 +8308,7 @@ function applyTOD() {
   if (rn) rn.grp.visible = night;
   // Exposición por franja: de noche se comprime bastante — farolas y faros
   // destacan sobre la oscuridad en vez de lavar toda la escena
-  if (renderer3) renderer3.toneMappingExposure = night ? 0.46 : dusk ? 0.72 : 0.62;
+  if (renderer3) renderer3.toneMappingExposure = night ? 0.46 : dusk ? 0.66 : 0.60;
   envApply(night ? 'night' : dusk ? 'dusk' : 'day');
 }
 // ===== ENVIRONMENT MAP (IBL): skybox equirectangular procedural → PMREM =====
@@ -9291,7 +9291,10 @@ function init3() {
         rangeThreshold: 0.9, rangeFalloff: 0.3 });
       ppBloom = new PP.BloomEffect({ intensity: 0.27, luminanceThreshold: 0.85,
         luminanceSmoothing: 0.22, mipmapBlur: true });
-      ppComp.addPass(new PP.EffectPass(cam3, ppSSAO, ppBloom, new PP.SMAAEffect()));
+      // Grado final: contraste fílmico + saturación — quita el look "lavado"
+      const ppGrade = new PP.BrightnessContrastEffect({ brightness: -0.02, contrast: 0.14 });
+      const ppSat = new PP.HueSaturationEffect({ saturation: 0.16 });
+      ppComp.addPass(new PP.EffectPass(cam3, ppSSAO, ppBloom, ppGrade, ppSat, new PP.SMAAEffect()));
       window._ppComp = ppComp;
       return true;
     } catch (e) { ppComp = null; ppFail = true; return false; }
@@ -9885,7 +9888,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 695;
+const BUILD_NO = 696;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
