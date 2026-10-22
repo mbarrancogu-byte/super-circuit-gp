@@ -10202,7 +10202,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 724;
+const BUILD_NO = 725;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -10283,17 +10283,112 @@ function aiDrive(x, z, vx, vz, a, pi) {
 // Máquina de estados: COUNTDOWN (en parrilla, balizas, controles bloqueados por
 // el propio semáforo del juego) → LEAD (acelera y lidera sobre la trazada) →
 // PULL-IN (se desvía al lado de boxes y frena) → DESPAWN (dispose libre).
+// Safety Car GT (tipo AMG de la foto): coupé ancho rojo, capó largo, cabina
+// atrasada, gran alerón trasero y barra de luces ámbar sobre el techo
+function buildSCar() {
+  const out = new THREE.Group(), gt = new THREE.Group();
+  const red = new THREE.MeshStandardMaterial({ color: 0xd01420, roughness: 0.3, metalness: 0.6 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x14161a, roughness: 0.8, metalness: 0.2 });
+  const glass = new THREE.MeshStandardMaterial({ color: 0x0a1424, roughness: 0.12, metalness: 0.9 });
+  // Carrocería: perfil lateral del coupé (x = largo, y = alto) extruido en anchura
+  const pr = new THREE.Shape();
+  pr.moveTo(4.55, 0.32); pr.lineTo(4.72, 0.55); pr.lineTo(4.6, 0.85);   // morro bajo
+  pr.lineTo(4.05, 1.0); pr.lineTo(1.7, 1.16);                           // capó largo
+  pr.lineTo(0.35, 1.92); pr.lineTo(-1.5, 1.95);                         // parabrisas → techo
+  pr.lineTo(-2.6, 1.55); pr.lineTo(-4.3, 1.32);                         // luna trasera → cola
+  pr.lineTo(-4.55, 1.0); pr.lineTo(-4.5, 0.4); pr.lineTo(-4.2, 0.28);
+  pr.closePath();
+  const body = new THREE.Mesh(new THREE.ExtrudeGeometry(pr,
+    { depth: 3.0, bevelEnabled: true, bevelThickness: 0.45, bevelSize: 0.25, bevelSegments: 3 }), red);
+  body.geometry.translate(0, 0, -1.5); gt.add(body);
+  // Habitáculo acristalado: envolvente oscuro un pelín mayor que la carrocería —
+  // así el pabellón de vidrio asoma sobre el rojo (parabrisas+lateral+trasera)
+  const win = new THREE.Shape();
+  win.moveTo(1.55, 1.18); win.lineTo(0.35, 1.97); win.lineTo(-1.48, 1.99);
+  win.lineTo(-2.5, 1.62); win.lineTo(-2.35, 1.2); win.closePath();
+  const cab = new THREE.Mesh(new THREE.ExtrudeGeometry(win,
+    { depth: 3.4, bevelEnabled: true, bevelThickness: 0.45, bevelSize: 0.25, bevelSegments: 3 }), glass);
+  cab.geometry.translate(0, 0, -1.7); gt.add(cab);
+  // Parrilla negra, splitter y difusor
+  const gr = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.55, 2.1), dark);
+  gr.position.set(4.55, 0.62, 0); gt.add(gr);
+  const lip = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.16, 3.6), dark);
+  lip.position.set(4.0, 0.18, 0); gt.add(lip);
+  const dif = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.35, 3.3), dark);
+  dif.position.set(-4.35, 0.4, 0); gt.add(dif);
+  // Faros rasgados + pilotos traseros
+  const hlM = new THREE.MeshBasicMaterial({ color: 0xeaf4ff });
+  const tlM = new THREE.MeshBasicMaterial({ color: 0xff2820 });
+  for (const s of [-1, 1]) {
+    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.16, 0.55), hlM);
+    hl.position.set(4.28, 0.92, s * 1.05); hl.rotation.x = s * 0.12; gt.add(hl);
+    const tl = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.85), tlM);
+    tl.position.set(-4.62, 1.05, s * 1.0); gt.add(tl);
+    const mr = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.18, 0.35), dark);
+    mr.position.set(1.35, 1.62, s * 2.1); gt.add(mr);                  // retrovisores
+  }
+  // Ruedas: neumático negro + llanta clara — sobresalen del ancho de la carrocería
+  const wG = new THREE.CylinderGeometry(0.78, 0.78, 0.7, 18);
+  const rG = new THREE.CylinderGeometry(0.4, 0.4, 0.74, 12);
+  const tireM = new THREE.MeshStandardMaterial({ color: 0x0b0c0e, roughness: 0.92 });
+  const rimM = new THREE.MeshStandardMaterial({ color: 0x9aa2ad, roughness: 0.35, metalness: 0.8 });
+  for (const [wx, wz] of [[2.9, 1.95], [2.9, -1.95], [-2.9, 1.95], [-2.9, -1.95]]) {
+    const w = new THREE.Mesh(wG, tireM), rim = new THREE.Mesh(rG, rimM);
+    w.rotation.x = rim.rotation.x = Math.PI / 2;
+    w.position.set(wx, 0.78, wz); rim.position.set(wx, 0.78, wz);
+    gt.add(w, rim);
+  }
+  // Gran alerón trasero con soportes y placas laterales
+  const wing = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.1, 3.7), dark);
+  wing.position.set(-4.15, 2.3, 0); wing.rotation.z = 0.16; gt.add(wing);
+  for (const s of [-1, 1]) {
+    const mt = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.85, 0.12), dark);
+    mt.position.set(-4.0, 1.9, s * 0.9); gt.add(mt);
+    const ep = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.08), dark);
+    ep.position.set(-4.1, 2.25, s * 1.86); ep.rotation.z = 0.16; gt.add(ep);
+  }
+  // Barra de luces del techo: carcasa + dos bloques ámbar + soportes
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.22, 3.0), dark);
+  bar.position.set(-0.6, 2.6, 0); gt.add(bar);
+  const amberM = new THREE.MeshBasicMaterial({ color: 0xffb020 });
+  for (const s of [-1, 1]) {
+    const seg = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.2, 0.75), amberM);
+    seg.position.set(-0.6, 2.61, s * 1.05); gt.add(seg);
+    const st = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.34, 0.12), dark);
+    st.position.set(-0.6, 2.42, s * 1.0); gt.add(st);
+  }
+  // Rótulos "SAFETY CAR" en las puertas
+  const dCv = document.createElement('canvas'); dCv.width = 256; dCv.height = 40;
+  const dg = dCv.getContext('2d');
+  dg.font = '900 30px Arial'; dg.textAlign = 'center'; dg.textBaseline = 'middle';
+  dg.fillStyle = '#f2f4f8'; dg.fillText('SAFETY CAR', 128, 22);
+  const dT = tex3(dCv);
+  for (const s of [-1, 1]) {
+    const dm = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 0.47),
+      new THREE.MeshBasicMaterial({ map: dT, transparent: true, depthWrite: false }));
+    dm.rotation.y = s * Math.PI / 2;
+    dm.position.set(0.7, 1.0, s * 1.97); gt.add(dm);
+  }
+  // Sombra de contacto como el resto de coches
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 12),
+    new THREE.MeshBasicMaterial({ map: carShadowTex(0xd01420), transparent: true,
+      depthWrite: false, opacity: 0.7 }));
+  shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.13; out.add(shadow);
+  gt.rotation.y = -Math.PI / 2;                                 // morro → +z como el F1
+  out.add(gt);
+  return out;
+}
 let scCar = null;
 function scSpawn() {
   scDispose();
   if (dragMode) return;
-  const grp = buildF1(0xff9c1a);                      // naranja safety
-  // Balizas ámbar alternas sobre el techo (rotativa de safety car)
+  const grp = buildSCar();                              // GT rojo tipo AMG safety car
+  // Balizas ámbar alternas sobre la barra del techo (rotativa de safety car)
   const tex = tex3(makeGlowTex(255, 190, 60, 1));
   const bc = [];
   for (const s of [-1, 1]) {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0.9 }));
-    sp.scale.set(1.7, 1.7, 1); sp.position.set(s * 0.85, 3.1, 0.15);
+    sp.scale.set(1.7, 1.7, 1); sp.position.set(s * 1.05, 2.82, -0.6);
     grp.add(sp); bc.push(sp);
   }
   const i0 = 1 % pathLen;                              // ~10m delante del cajón P1 (sIdx+5 ≈ línea)
