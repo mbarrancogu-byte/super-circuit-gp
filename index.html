@@ -1459,9 +1459,14 @@
     display: flex; gap: 10px; z-index: 3; }
   /* Botón START grande centrado bajo las banderas — arranca el juego */
   #splashStart { position: absolute; left: 50%; transform: translateX(-50%); z-index: 6;
-    display: flex; align-items: center; gap: 14px; padding: 13px 38px; cursor: pointer;
+    display: flex; align-items: center; gap: 14px; padding: 15px 42px; cursor: pointer;
     border-radius: 44px; border: 2px solid rgba(255,205,95,0.95);
-    background: radial-gradient(ellipse at 50% 22%, #33415f 0%, #131b31 60%, #080d1c 100%);
+    /* fibra de carbono oscura con reflejo frío arriba */
+    background:
+      radial-gradient(ellipse at 50% 18%, rgba(120,150,210,0.4), transparent 58%),
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 7px),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 7px),
+      linear-gradient(180deg, #1d2638 0%, #0d1322 62%, #070b16 100%);
     color: #ffd870; font-size: 24px; font-weight: 900; font-style: italic; letter-spacing: 6px;
     text-shadow: 0 2px 6px rgba(0,0,0,0.7), 0 0 16px rgba(255,190,80,0.45);
     box-shadow: 0 8px 26px rgba(0,0,0,0.65), 0 0 26px rgba(255,190,80,0.4),
@@ -1477,7 +1482,8 @@
   @keyframes stPulse { 0%, 100% { box-shadow: 0 8px 26px rgba(0,0,0,0.65), 0 0 22px rgba(255,190,80,0.35), inset 0 1px 2px rgba(255,255,255,0.28); }
     50% { box-shadow: 0 8px 30px rgba(0,0,0,0.65), 0 0 46px rgba(255,205,95,0.8), inset 0 1px 2px rgba(255,255,255,0.28); } }
   /* Botón de opciones en la portada: engranaje flotante esquina superior derecha */
-  #splashOpts { position: absolute; top: 50px; right: 16px; z-index: 4; width: 52px; height: 52px;
+  #splashOpts { position: absolute; top: 50px; right: 16px; z-index: 4; width: 56px; height: 56px;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
     display: flex; align-items: center; justify-content: center; cursor: pointer;
     border-radius: 50%; border: 2px solid rgba(255,205,95,0.9);
     background: radial-gradient(circle at 32% 28%, #3d4f77 0%, #141c33 62%, #080d1c 100%);
@@ -1589,6 +1595,8 @@
   #splashSmoke i:nth-child(3) { left: 58%; bottom: 10%; width: 34%; height: 48%; animation-duration: 3.0s; animation-delay: -0.7s; }
   #splashSmoke i:nth-child(4) { left: 72%; bottom: 2%;  width: 28%; height: 40%; animation-duration: 3.8s; animation-delay: -2.1s; }
   #splashSmoke i:nth-child(5) { left: 36%; bottom: 0%;  width: 26%; height: 38%; animation-duration: 2.6s; animation-delay: -1.9s; }
+  #splashSmoke i:nth-child(6) { left: 8%;  bottom: 2%;  width: 30%; height: 44%; animation-duration: 3.3s; animation-delay: -2.6s; }
+  #splashSmoke i:nth-child(7) { left: 62%; bottom: 0%;  width: 30%; height: 42%; animation-duration: 2.9s; animation-delay: -0.4s; }
   /* Ráfaga de burnout: crece fuerte desde las ruedas cada 6.4s */
   #splashSmoke i.surge { left: 24%; bottom: 6%; width: 52%; height: 62%; opacity: 0;
     background: radial-gradient(ellipse at center, rgba(245,248,255,0.55), rgba(210,220,240,0.25) 50%, transparent 70%);
@@ -1619,12 +1627,67 @@
     filter: blur(5px);
     animation: startGlowP 1.1s ease-in-out infinite; }
   @keyframes startGlowP { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  /* ===== Barra de navegación inferior REAL: dock de fibra de carbono que
+     cubre la barra pixelada del póster con botones táctiles nítidos ===== */
+  #splashNav { position: absolute; left: 0; right: 0; bottom: 0; z-index: 7;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 30px 16px 14px; gap: 8px;
+    background: linear-gradient(180deg, transparent, rgba(5,9,16,0.88) 26%, rgba(3,6,11,0.97)); }
+  #splashNav::before { content: ''; position: absolute; inset: 0; pointer-events: none;
+    background:
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.022) 0 2px, transparent 2px 7px),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,0.022) 0 2px, transparent 2px 7px); }
+  .spNav { position: relative; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 4px; min-width: 96px; min-height: 58px;
+    padding: 9px 12px; cursor: pointer; border-radius: 14px;
+    background: linear-gradient(180deg, rgba(30,40,60,0.92), rgba(10,15,27,0.92));
+    border: 1.5px solid rgba(160,180,215,0.4);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 8px 18px rgba(0,0,0,0.55);
+    color: #cfe0f8; font-size: 10px; font-weight: 800; letter-spacing: 1.6px;
+    transition: transform .15s, border-color .15s, box-shadow .15s; }
+  .spNav svg { width: 30px; height: 30px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8)); }
+  .spNav:hover { border-color: rgba(255,205,95,0.65);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 10px 22px rgba(0,0,0,0.6),
+      0 0 14px rgba(255,200,80,0.22); }
+  .spNav:active { transform: scale(0.93); }
+  /* Volante central: fibra de carbono + franja roja de centrado + luz propia */
+  #spNavWheelWrap { position: relative; display: flex; flex-direction: column;
+    align-items: center; gap: 3px; }
+  #spNavWheel { position: relative; width: 80px; height: 80px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    border: 2.5px solid #4a5364;
+    background:
+      radial-gradient(circle at 50% 30%, #39424f 0%, #171d2b 56%, #090d17 100%);
+    box-shadow: 0 7px 22px rgba(0,0,0,0.7), 0 0 26px rgba(120,170,255,0.28),
+      inset 0 2px 5px rgba(255,255,255,0.16), inset 0 -4px 8px rgba(0,0,0,0.5);
+    animation: wheelGlow 1.7s ease-in-out infinite;
+    transition: transform .16s; }
+  /* tejido de fibra de carbono por encima del radio del volante */
+  #spNavWheel::before { content: ''; position: absolute; inset: 3px; border-radius: 50%;
+    background:
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.045) 0 2px, transparent 2px 6px),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,0.045) 0 2px, transparent 2px 6px);
+    pointer-events: none; }
+  /* franja roja de centrado en la parte superior del aro */
+  #spNavWheel::after { content: ''; position: absolute; top: -4px; left: 50%;
+    width: 12px; height: 16px; transform: translateX(-50%); border-radius: 3px;
+    background: linear-gradient(180deg, #ff4438, #b0120a);
+    box-shadow: 0 0 10px rgba(255,60,40,0.85); }
+  #spNavWheel svg { width: 46px; height: 46px;
+    filter: drop-shadow(0 0 8px rgba(160,200,255,0.4)); }
+  #spNavWheel:active { transform: scale(0.92); }
+  @keyframes wheelGlow { 0%, 100% { box-shadow: 0 7px 22px rgba(0,0,0,0.7), 0 0 18px rgba(120,170,255,0.2), inset 0 2px 5px rgba(255,255,255,0.16), inset 0 -4px 8px rgba(0,0,0,0.5); }
+    50% { box-shadow: 0 7px 24px rgba(0,0,0,0.7), 0 0 38px rgba(150,195,255,0.5), inset 0 2px 5px rgba(255,255,255,0.16), inset 0 -4px 8px rgba(0,0,0,0.5); } }
+  #spNavWheelLbl { font-size: 10px; font-weight: 900; letter-spacing: 2.4px;
+    color: #e8f0ff; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 12px rgba(140,190,255,0.4); }
   .lpFlag { position: relative; overflow: hidden; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 2px; cursor: pointer;
-    padding: 10px 14px; border-radius: 12px; min-width: 78px; line-height: 1;
+    padding: 12px 16px; border-radius: 12px; min-width: 92px; min-height: 46px; line-height: 1;
     background: rgba(8,14,28,0.6);
-    border: 2px solid rgba(140,170,255,0.28);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 20px rgba(0,0,0,0.45);
+    border: 2px solid rgba(178,190,212,0.5);
+    box-shadow: inset 0 0 0 2px rgba(18,26,42,0.85), inset 0 1px 0 rgba(255,255,255,0.16),
+      0 8px 20px rgba(0,0,0,0.45);
     backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
     transition: transform .15s, border-color .15s, box-shadow .15s; }
   /* Bandera ondeando de fondo: dibujada con gradientes CSS (los emoji de bandera
@@ -2082,6 +2145,18 @@
   <circle cx="12" cy="12" r="2.6" fill="url(#gGold)"/>
   <path d="M12 14.6 L12 20.6 M9.9 10.9 L3.6 8.4 M14.1 10.9 L20.4 8.4" stroke="url(#gSilv)" stroke-width="2.2"/>
 </symbol>
+<!-- monoplaza de lado: alerón trasero alto, cuña baja, morro largo, ruedas -->
+<symbol id="i-f1" viewBox="0 0 24 24">
+  <rect x="1.4" y="4.4" width="2.2" height="1.2" rx="0.2" fill="url(#gSilv)"/>
+  <rect x="2.0" y="5.5" width="1.0" height="4.6" fill="url(#gSilv)"/>
+  <path fill="url(#gSilv)" d="M4.6 10.8 L8.4 9.0 L11.4 8.5 Q12.8 6.8 14.6 7.3 L15.4 8.2 L19 9.1 L22.6 11.0 L22.6 12.4 L4.6 12.4 Z"/>
+  <rect x="21.0" y="12.7" width="2.6" height="1.0" rx="0.3" fill="url(#gSilv)"/>
+  <rect x="6.2" y="12.7" width="14.2" height="0.8" fill="url(#gSilv)"/>
+  <circle cx="7.4" cy="16.0" r="2.6" fill="#0b0f16" stroke="#9aa4b4" stroke-width="0.9"/>
+  <circle cx="7.4" cy="16.0" r="1.0" fill="#9aa4b4"/>
+  <circle cx="18.0" cy="16.0" r="2.6" fill="#0b0f16" stroke="#9aa4b4" stroke-width="0.9"/>
+  <circle cx="18.0" cy="16.0" r="1.0" fill="#9aa4b4"/>
+</symbol>
 <!-- aviso -->
 <symbol id="i-warn" viewBox="0 0 24 24">
   <path d="M12 3.4 L22 20 L2 20 Z" fill="url(#gRed)"/>
@@ -2267,7 +2342,7 @@
 <div id="splash"><img src="portada.jpg" alt="">
   <div id="splashLogo3D"></div>
   <div id="splashWheels"><i></i><i></i></div>
-  <div id="splashSmoke"><i></i><i></i><i></i><i></i><i></i><i class="surge"></i></div>
+  <div id="splashSmoke"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="surge"></i></div>
   <div id="splashFog"><i></i><i></i><i></i><i></i><i></i></div>
   <div id="splashOpts"><svg class="ic"><use href="#i-gear"/></svg></div>
   <div id="startGlow"></div>
@@ -2277,6 +2352,16 @@
     <div class="lpFlag" id="slpEN" data-flag="gb"><span>ENGLISH</span></div>
   </div>
   <div id="splashStart"><svg><use href="#i-flag"/></svg><span>START</span></div>
+  <!-- Barra de navegación real: cubre la nav pixelada del póster con
+       controles táctiles nítidos (SELECT CAR · volante START · ONLINE) -->
+  <div id="splashNav">
+    <button class="spNav" id="spNavCar"><svg><use href="#i-f1"/></svg><span>SELECT CAR</span></button>
+    <div id="spNavWheelWrap">
+      <button id="spNavWheel"><svg><use href="#i-wheel"/></svg></button>
+      <span id="spNavWheelLbl">START RACE</span>
+    </div>
+    <button class="spNav" id="spNavOn"><svg><use href="#i-globe"/></svg><span>ONLINE</span><span>MULTIPLAYER</span></button>
+  </div>
   <div id="glbLoad"><span id="glbLbl">3D</span><div id="glbTrack"><i id="glbBar"></i></div></div>
 </div>
 
@@ -9941,7 +10026,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 713;
+const BUILD_NO = 714;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -14477,13 +14562,14 @@ document.getElementById('optReset').addEventListener('click', () => {
     const ss = document.getElementById('splashStart');  // botón START bajo las banderas
     ss.style.left = clX(r.left + r.width * 0.5) + 'px';
     ss.style.top = clY(r.top + r.height * 0.485) + 'px';
-    bs.style.left = clX(r.left + r.width * 0.5) + 'px';   // flecha sobre el "START RACE"
-    bs.style.top = clY(r.top + r.height * 0.885) + 'px';
-    const sg = document.getElementById('startGlow');    // halo sobre el texto START RACE
-    sg.style.left = clX(r.left + r.width * 0.5) + 'px';
-    sg.style.top = clY(r.top + r.height * 0.925) + 'px';
-    sg.style.width = (r.width * 0.30) + 'px';
-    sg.style.height = (r.height * 0.075) + 'px';
+    const navH = Math.min(120, Math.max(86, vh * 0.14));        // alto real del dock inferior
+    bs.style.left = clX(vw * 0.5) + 'px';                       // flecha sobre el volante real
+    bs.style.top = clY(vh - navH - 56) + 'px';
+    const sg = document.getElementById('startGlow');    // halo detrás del volante START RACE
+    sg.style.left = clX(vw * 0.5) + 'px';
+    sg.style.top = clY(vh - navH + 34) + 'px';
+    sg.style.width = '132px';
+    sg.style.height = '56px';
     const sm = document.getElementById('splashSmoke');        // humo sobre las ruedas traseras
     sm.style.left = (r.left + r.width * 0.13) + 'px';
     sm.style.top = (r.top + r.height * 0.52) + 'px';
@@ -14519,6 +14605,17 @@ document.getElementById('optReset').addEventListener('click', () => {
   });
   document.getElementById('splashStart').addEventListener('pointerdown', e => {
     e.stopPropagation(); e.preventDefault(); close();
+  });
+  // Barra inferior real: SELECT CAR → menú (selector de coche), volante →
+  // arranca igual que START, ONLINE → pantalla VERSUS con el lobby abierto
+  document.getElementById('spNavCar').addEventListener('pointerdown', e => {
+    e.stopPropagation(); e.preventDefault(); close(1);
+  });
+  document.getElementById('spNavWheel').addEventListener('pointerdown', e => {
+    e.stopPropagation(); e.preventDefault(); close();
+  });
+  document.getElementById('spNavOn').addEventListener('pointerdown', e => {
+    e.stopPropagation(); e.preventDefault(); close(1); openVersus();
   });
   sp.addEventListener('pointerdown', () => close());   // wrapper: el evento no se cuele como noIntro
   window.addEventListener('keydown', function k(e) {
