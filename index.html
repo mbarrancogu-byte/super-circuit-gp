@@ -9941,7 +9941,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 712;
+const BUILD_NO = 713;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -15999,6 +15999,40 @@ function addLogoSpots(lsc) {
   }
   lsc.add(rig);
 }
+// ===== LOGO PREMIUM: entorno de estudio + textura mejorada + relieve =====
+// Equirect procedural con cielo brillante y bandas de softbox — da reflejos
+// cromados reales al borde y a las caras metálicas del escudo
+function logoEnv(lsc, lr) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+  const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, 128);
+  gr.addColorStop(0, '#e2ebf6'); gr.addColorStop(0.45, '#93abc9');
+  gr.addColorStop(0.55, '#2e3847'); gr.addColorStop(1, '#131a24');
+  g.fillStyle = gr; g.fillRect(0, 0, 256, 128);
+  g.fillStyle = 'rgba(255,255,255,0.9)';                  // softboxes → vetas de reflejo
+  g.fillRect(28, 16, 74, 10); g.fillRect(150, 30, 62, 8); g.fillRect(100, 52, 90, 6);
+  const et = tex3(c); et.mapping = THREE.EquirectangularReflectionMapping;
+  const pm = new THREE.PMREMGenerator(lr); pm.compileEquirectangularShader();
+  lsc.environment = pm.fromEquirectangular(et).texture;
+  et.dispose(); pm.dispose();
+}
+// Logo con más definición: contraste/saturación subidos sobre la propia textura
+function logoMapTex(img, sx, sy, sw, sh) {
+  const c = document.createElement('canvas'); c.width = sw; c.height = sh;
+  const g = c.getContext('2d');
+  g.filter = 'contrast(1.08) saturate(1.08)';
+  g.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  return t;
+}
+// Relieve: mapa de bump desde la luminancia — letras e ilustración en 3D sutil
+function logoBumpTex(img, sx, sy, sw, sh) {
+  const c = document.createElement('canvas'); c.width = sw; c.height = sh;
+  const g = c.getContext('2d');
+  g.filter = 'grayscale(1) contrast(1.5) brightness(0.92)';
+  g.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  return new THREE.CanvasTexture(c);
+}
 // Escudo GP en 3D: silueta extruida con la imagen en las caras. Gira solo
 // y se puede arrastrar para rotarlo a mano
 (function () {
@@ -16012,10 +16046,11 @@ function addLogoSpots(lsc) {
   lr.setSize(W(), H());
   host.appendChild(lr.domElement);
   const lsc = new THREE.Scene();
+  logoEnv(lsc, lr);                                       // IBL de estudio: cromados reales
   const lcam = new THREE.PerspectiveCamera(34, W() / H(), 0.1, 50);
   lcam.position.set(0, 0, 1.85);
   lsc.add(new THREE.AmbientLight(0xffffff, 0.55));
-  const key2 = new THREE.DirectionalLight(0xfff3d8, 1.05); key2.position.set(1.1, 1.9, 5.2); lsc.add(key2);
+  const key2 = new THREE.DirectionalLight(0xfff3d8, 1.2); key2.position.set(1.1, 1.9, 5.2); lsc.add(key2);
   key2.castShadow = true;                                    // sombra proyectada tras el escudo
   key2.shadow.mapSize.set(1024, 1024);
   key2.shadow.camera.left = key2.shadow.camera.bottom = -1.7;
@@ -16034,9 +16069,11 @@ function addLogoSpots(lsc) {
     depth: DEPTH, bevelEnabled: true, bevelThickness: 0.020, bevelSize: 0.030, bevelSegments: 6,
     curveSegments: 18 });
   exg.center();
-  // caras con la textura del escudo; canto metálico oscuro
-  const faceMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.25, roughness: 0.45 });
-  const edgeMat = new THREE.MeshStandardMaterial({ color: 0x23262e, metalness: 0.85, roughness: 0.35 });
+  // caras con la textura del escudo; canto cromado plateado
+  const faceMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.3,
+    roughness: 0.4, envMapIntensity: 0.4 });
+  const edgeMat = new THREE.MeshStandardMaterial({ color: 0x9aa2ad, metalness: 1.0,
+    roughness: 0.2, envMapIntensity: 1.3 });
   const mesh = new THREE.Mesh(exg, [faceMat, edgeMat]);
   mesh.castShadow = true;
   grp.add(mesh);
@@ -16088,16 +16125,20 @@ function addLogoSpots(lsc) {
       uv.setXY(i, U0 + (pos.getX(i) - bb.min.x) / sx * (U1 - U0),
                   (pos.getY(i) - bb.min.y) / sy);
     uv.needsUpdate = true;
-    faceMat.map = t; faceMat.transparent = true; faceMat.alphaTest = 0.15; faceMat.needsUpdate = true;
+    faceMat.map = logoMapTex(t.image, 0, 0, t.image.width, t.image.height);
+    faceMat.bumpMap = logoBumpTex(t.image, 0, 0, t.image.width, t.image.height);
+    faceMat.bumpScale = 0.008;                              // relieve sutil en el interior
+    faceMat.transparent = true; faceMat.alphaTest = 0.15; faceMat.needsUpdate = true;
     // Placa de texto delante del escudo: banda "SUPER CIRCUIT" recortada de la
     // imagen a su ancho real — sobresale por los lados como en el logo original
-    const bc = document.createElement('canvas'); bc.width = 520; bc.height = 78;
-    bc.getContext('2d').drawImage(t.image, 0, 138, 520, 78, 0, 0, 520, 78);
-    const bt = new THREE.CanvasTexture(bc); bt.colorSpace = THREE.SRGBColorSpace;
     const scale = sx / (U1 - U0) / 520;                      // unidades por px de imagen
     const pw = sx / (U1 - U0), ph = pw * 78 / 520;
     const bmesh = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph),
-      new THREE.MeshBasicMaterial({ map: bt, transparent: true }));
+      new THREE.MeshStandardMaterial({
+        map: logoMapTex(t.image, 0, 138, 520, 78),
+        bumpMap: logoBumpTex(t.image, 0, 138, 520, 78), bumpScale: 0.02,
+        metalness: 0.85, roughness: 0.26, envMapIntensity: 1.15,
+        transparent: true }));
     bmesh.position.set(0, (331 - 177) * scale, 0.075);
     bmesh.castShadow = true;
     grp.add(bmesh);
@@ -16150,10 +16191,11 @@ function addLogoSpots(lsc) {
   lr.domElement.style.width = '100%'; lr.domElement.style.height = '100%';
   host.appendChild(lr.domElement);
   const lsc = new THREE.Scene();
+  logoEnv(lsc, lr);                                       // IBL de estudio: cromados reales
   const lcam = new THREE.PerspectiveCamera(34, 1.5, 0.1, 50);
   lcam.position.set(0, 0, 1.85);
   lsc.add(new THREE.AmbientLight(0xffffff, 0.72));
-  const key2 = new THREE.DirectionalLight(0xfff3d8, 1.35); key2.position.set(1.1, 1.9, 5.2); lsc.add(key2);
+  const key2 = new THREE.DirectionalLight(0xfff3d8, 1.5); key2.position.set(1.1, 1.9, 5.2); lsc.add(key2);
   key2.castShadow = true;                                    // sombra proyectada tras el escudo
   key2.shadow.mapSize.set(1024, 1024);
   key2.shadow.camera.left = key2.shadow.camera.bottom = -1.7;
@@ -16170,8 +16212,10 @@ function addLogoSpots(lsc) {
   const exg = new THREE.ExtrudeGeometry(shape, { depth: 0.045, bevelEnabled: true,
     bevelThickness: 0.020, bevelSize: 0.030, bevelSegments: 6, curveSegments: 18 });
   exg.center();
-  const faceMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.25, roughness: 0.45 });
-  const edgeMat = new THREE.MeshStandardMaterial({ color: 0x23262e, metalness: 0.85, roughness: 0.35 });
+  const faceMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.3,
+    roughness: 0.4, envMapIntensity: 0.4 });
+  const edgeMat = new THREE.MeshStandardMaterial({ color: 0x9aa2ad, metalness: 1.0,
+    roughness: 0.2, envMapIntensity: 1.3 });
   const shield = new THREE.Mesh(exg, [faceMat, edgeMat]);
   shield.castShadow = true;
   grp.add(shield);
@@ -16222,14 +16266,18 @@ function addLogoSpots(lsc) {
       uv.setXY(i, U0 + (pos.getX(i) - bb.min.x) / sx * (U1 - U0),
                   (pos.getY(i) - bb.min.y) / sy);
     uv.needsUpdate = true;
-    faceMat.map = t; faceMat.transparent = true; faceMat.alphaTest = 0.15; faceMat.needsUpdate = true;
-    const bc = document.createElement('canvas'); bc.width = 520; bc.height = 78;
-    bc.getContext('2d').drawImage(t.image, 0, 138, 520, 78, 0, 0, 520, 78);
-    const bt = new THREE.CanvasTexture(bc); bt.colorSpace = THREE.SRGBColorSpace;
+    faceMat.map = logoMapTex(t.image, 0, 0, t.image.width, t.image.height);
+    faceMat.bumpMap = logoBumpTex(t.image, 0, 0, t.image.width, t.image.height);
+    faceMat.bumpScale = 0.008;
+    faceMat.transparent = true; faceMat.alphaTest = 0.15; faceMat.needsUpdate = true;
     const scale = sx / (U1 - U0) / 520;
     const pw = sx / (U1 - U0), ph = pw * 78 / 520;
     const bmesh = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph),
-      new THREE.MeshBasicMaterial({ map: bt, transparent: true }));
+      new THREE.MeshStandardMaterial({
+        map: logoMapTex(t.image, 0, 138, 520, 78),
+        bumpMap: logoBumpTex(t.image, 0, 138, 520, 78), bumpScale: 0.02,
+        metalness: 0.85, roughness: 0.26, envMapIntensity: 1.15,
+        transparent: true }));
     bmesh.position.set(0, (331 - 177) * scale, 0.075);
     bmesh.castShadow = true;
     grp.add(bmesh);
