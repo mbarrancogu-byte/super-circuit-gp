@@ -10202,7 +10202,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 723;
+const BUILD_NO = 724;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -14169,16 +14169,72 @@ function buildCarStrip() {
     card.addEventListener('click', () => selCar(i));
     carStripEl.appendChild(card);
     // Si la livery real llega después de pintar la tarjeta, refresca la miniatura
+    // (salvo que ya se hayan montado las capturas 3D)
     if (c2._im && !c2._im.complete) c2._im.addEventListener('load',
-      () => { card.querySelector('img').src = tintThumb(c2.tint); });
+      () => { if (!shot3d.done) card.querySelector('img').src = tintThumb(c2.tint); });
   });
   // El R26 puede llegar tarde: repinta todas las tarjetas con su silueta
-  if (!r26Thumb.complete) r26Thumb.addEventListener('load', () =>
+  if (!r26Thumb.complete) r26Thumb.addEventListener('load', () => {
+    if (shot3d.done) return;
     [...carStripEl.children].forEach((el, j) =>
-      el.querySelector('img').src = tintThumb(CARS[j].tint)));
+      el.querySelector('img').src = tintThumb(CARS[j].tint));
+  });
 }
-if (f1Thumb.complete && f1Thumb.naturalWidth) { buildCarStrip(); m3dShow(OPTS.car || 0); }
-else f1Thumb.onload = () => { buildCarStrip(); m3dShow(OPTS.car || 0); };
+// Miniaturas 3D de las tarjetas: cada coche se renderiza una vez con el mismo
+// modelo que la ficha (GLB/procedural + pegatinas) y sustituye al sprite 2D
+const shot3d = { r: null, scene: null, cam: null, done: false };
+async function shotCard3D() {
+  if (shot3d.done) return; shot3d.done = true;
+  const cv = document.createElement('canvas'); cv.width = 220; cv.height = 150;
+  shot3d.r = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true,
+    preserveDrawingBuffer: true });
+  shot3d.r.outputEncoding = THREE.sRGBEncoding;
+  shot3d.scene = new THREE.Scene();
+  shot3d.cam = new THREE.PerspectiveCamera(30, 220 / 150, 0.1, 60);
+  shot3d.scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x2a3242, 1.15));
+  const sk = new THREE.DirectionalLight(0xfff2dc, 1.6); sk.position.set(5, 9, 5);
+  shot3d.scene.add(sk);
+  const sm = new THREE.DirectionalLight(0x80b0ff, 0.9); sm.position.set(-6, 5, -5);
+  shot3d.scene.add(sm);
+  const S = shot3d;
+  S.cam.position.set(0, 3.0, 9.4); S.cam.lookAt(0, 0.55, 0);   // 3/4 elevado como la ficha
+  const tc = document.createElement('canvas'); tc.width = 220; tc.height = 150;
+  const t2 = tc.getContext('2d');
+  for (let i = 0; i < CARS.length; i++) {
+    const card = carStripEl.children[i]; if (!card) return;
+    try {
+      const mdl = c3dNorm(await c3dModel(CARS[i]), 6.4);
+      if (mdl.userData.r26) mdl.scale.multiplyScalar(0.62);
+      else if (mdl.userData.pro) mdl.scale.multiplyScalar(1.9);
+      placeSponsorDecals(mdl, mdl, addSponsorDecals(mdl, CARS[i].tint));
+      mdl.rotation.y = -Math.PI / 2 - 0.5;                      // tres cuartos frontal
+      S.scene.add(mdl);
+      S.r.render(S.scene, S.cam);
+      S.scene.remove(mdl);
+      // Recorta el margen transparente: el coche llena toda la miniatura
+      t2.clearRect(0, 0, 220, 150); t2.drawImage(cv, 0, 0);
+      const dd = t2.getImageData(0, 0, 220, 150).data;
+      let x0 = 220, x1 = 0, y0 = 150, y1 = 0;
+      for (let y = 0; y < 150; y++) for (let x = 0; x < 220; x++)
+        if (dd[(y * 220 + x) * 4 + 3] > 40) {
+          if (x < x0) x0 = x; if (x > x1) x1 = x;
+          if (y < y0) y0 = y; if (y > y1) y1 = y;
+        }
+      if (x1 <= x0) continue;
+      const cc = document.createElement('canvas');
+      cc.width = x1 - x0 + 8; cc.height = y1 - y0 + 8;
+      cc.getContext('2d').drawImage(tc, x0 - 4, y0 - 4, cc.width, cc.height,
+        0, 0, cc.width, cc.height);
+      card.querySelector('img').src = cc.toDataURL('image/png');
+    } catch (e) {}                                             // queda la miniatura 2D
+  }
+}
+const bootCards = () => {
+  buildCarStrip(); m3dShow(OPTS.car || 0);
+  setTimeout(shotCard3D, 300);                                 // primero el menú, luego las fotos 3D
+};
+if (f1Thumb.complete && f1Thumb.naturalWidth) bootCards();
+else f1Thumb.onload = bootCards;
 // Precalienta el GLB del R26: los coches de carrera lo montan al entrar en pista
 setTimeout(() => { try { c3dR26(); } catch (e) {} }, 600);
 document.getElementById('carPrev').addEventListener('click', () => selCar((OPTS.car || 0) - 1));
