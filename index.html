@@ -10199,7 +10199,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 727;
+const BUILD_NO = 728;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -10388,19 +10388,21 @@ function scSpawn() {
     sp.scale.set(1.7, 1.7, 1); sp.position.set(s * 1.05, 2.82, -0.6);
     grp.add(sp); bc.push(sp);
   }
-  const i0 = 1 % pathLen;                              // ~10m delante del cajón P1 (sIdx+5 ≈ línea)
-  const p = path[i0];
-  grp.position.set(p.x, 0, p.z);
-  grp.rotation.y = Math.PI / 2 - Math.atan2(p.tz, p.tx);
-  scene3.add(grp);
-  // Lado de boxes: hacia donde apunta la boca del pit lane si existe
-  let pitSide = 1;
+  // Espera APARCADO junto a la salida del pit lane (como el SC real de F1),
+  // fuera de la trazada — no en medio de la recta estorbando la salida
   const rt = window._pitRoute;
-  if (rt && rt.pts && rt.pts[0]) {
-    const p0 = path[0];
-    pitSide = Math.sign((rt.pts[0].x - p0.x) * (-p0.tz) + (rt.pts[0].z - p0.z) * p0.tx) || 1;
+  let px, pz, pa;
+  if (rt && rt.pts && rt.pts.length > 4) {
+    const q1 = rt.pts[rt.pts.length - 3], q2 = rt.pts[rt.pts.length - 1];
+    px = q2.x; pz = q2.z; pa = Math.atan2(q2.z - q1.z, q2.x - q1.x);
+  } else {                                             // sin pit lane: a un lado de la recta
+    const p = path[1 % pathLen], hw = (trackHW ? trackHW[1] : RW / 2) * 1.5;
+    px = p.x - p.tz * hw; pz = p.z + p.tx * hw; pa = Math.atan2(p.tz, p.tx);
   }
-  scCar = { grp, bc, s: i0, s0: i0, v: 0, ph: 1, lat: 0, stopT: 0, blink: 0, pitSide };
+  grp.position.set(px, 0, pz);
+  grp.rotation.y = Math.PI / 2 - pa;
+  scene3.add(grp);
+  scCar = { grp, bc, px, pz, pa, blink: 0 };
 }
 function scDispose() {
   if (!scCar) return;
@@ -10411,43 +10413,17 @@ function scDispose() {
   });
   scCar = null;
 }
-function scReset() {                                   // falsa salida: vuelve a su sitio delante de P1
+function scReset() {                                   // falsa salida: sigue aparcado en boxes
   if (!scCar) return;
-  const i0 = scCar.s0, p = path[i0];
-  scCar.s = i0; scCar.v = 0; scCar.ph = 1; scCar.lat = 0; scCar.stopT = 0;
-  scCar.grp.position.set(p.x, 0, p.z);
-  scCar.grp.rotation.y = Math.PI / 2 - Math.atan2(p.tz, p.tx);
+  scCar.grp.position.set(scCar.px, 0, scCar.pz);
+  scCar.grp.rotation.y = Math.PI / 2 - scCar.pa;
 }
-function scTick(dt, go) {
+function scTick(dt) {
   const sc = scCar; if (!sc) return;
   sc.blink += dt;                                       // rotativas alternas ~3 Hz
   const ph = (sc.blink * 3) % 2 < 1;
   sc.bc[0].material.opacity = ph ? 0.95 : 0.15;
   sc.bc[1].material.opacity = ph ? 0.15 : 0.95;
-  if (sc.ph === 1) {                                    // COUNTDOWN: quieto en parrilla
-    if (go && !fsState) sc.ph = 2;                      // GO (luz verde) → LEAD/RACING
-    return;
-  }
-  const tgt = sc.ph === 2 ? 26 : 0;                     // ritmo pace car / frena al quitarse
-  sc.v += clamp(tgt - sc.v, -30 * dt, 14 * dt);
-  const i0 = ((Math.floor(sc.s) % pathLen) + pathLen) % pathLen;
-  const p0 = path[i0], pN = path[(i0 + 1) % pathLen];
-  sc.s += sc.v * dt / Math.max(0.3, Math.hypot(pN.x - p0.x, pN.z - p0.z));
-  const i = ((Math.floor(sc.s) % pathLen) + pathLen) % pathLen, iN = (i + 1) % pathLen;
-  const f = sc.s - Math.floor(sc.s), pa = path[i], pb = path[iN];
-  // Lidera ~1/3 de vuelta (máx ~440m) y luego entra en PULL-IN hacia boxes
-  if (sc.ph === 2 && sc.s - sc.s0 > Math.min(pathLen * 0.35, 220)) sc.ph = 3;
-  const hw = trackHW ? trackHW[i] : RW / 2;
-  const latT = sc.ph === 3 ? sc.pitSide * hw * 0.95 : 0;
-  sc.lat += (latT - sc.lat) * Math.min(1, dt * 1.4);
-  const x = pa.x + (pb.x - pa.x) * f + (-pa.tz) * sc.lat;
-  const z = pa.z + (pb.z - pa.z) * f + (pa.tx) * sc.lat;
-  sc.grp.position.set(x, 0, z);
-  sc.grp.rotation.y = Math.PI / 2 - Math.atan2(pb.tz, pb.tx);
-  if (sc.ph === 3 && sc.v < 0.5) {                      // ya apartado: se retira al alejarse el jugador 50m
-    sc.stopT += dt;
-    if (sc.stopT > 4 || Math.hypot(car.x - x, car.z - z) > 50) scDispose();
-  }
 }
 
 // El rival CPU avanza sobre la spline con perfil de velocidad (no es kinematic jugable, es "slot car")
@@ -11972,9 +11948,9 @@ function update(dt) {
     if (vAbs > 30) { const k = 30 / vAbs; car.vx *= k; car.vz *= k; }
     if (scT <= 0) showToast('🟢 ' + T('scIn'));
   }
-  scTick(dt, go);                                         // pace car: parrilla → lidera → se aparta
+  scTick(dt);                                             // safety car: rotativas (aparcado en boxes)
   const sc = el('scChip');
-  const scShow = scT > 0 || !!scCar;                      // bandera amarilla o pace car físico en pista
+  const scShow = scT > 0;                                 // solo periodo real de safety car
   if (sc._on !== scShow) { sc._on = scShow; sc.style.display = scShow ? 'block' : 'none'; }
 
   // VUELTA DE FORMACIÓN (campeonato): los primeros segundos se rueda lento en
@@ -13720,7 +13696,7 @@ function startStage(n, seed, mp, mode) {
             a: Math.atan2(ps.tz, ps.tx), vx: 0, vz: 0, steer: 0 };
   }
   carGrp.position.set(car.x, 0, car.z);
-  scSpawn();   // el pace car ocupa su puesto ~10m delante del cajón P1
+  scSpawn();   // el safety car espera aparcado en la salida de boxes
   // El heli de TV SIEMPRE cubre la salida: ya en el aire al arrancar, a poca
   // distancia del primer cajón de la parrilla (la pole), y su órbita empieza
   // justo sobre la parrilla para que no se marche de inmediato
