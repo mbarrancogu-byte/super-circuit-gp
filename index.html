@@ -425,10 +425,6 @@
   /* 2 JUGADORES: J1 a la izquierda (GAS + ▲MARCHA), J2 a la derecha */
   #gas2Btn  { right: 14px; bottom: 40px; width: 98px; height: 98px; font-size: 15px;
     border-color: rgba(130,160,255,0.65); color: #b8ccff; }
-  #shift2Btn { right: 14px; bottom: 148px; width: 88px; height: 88px; font-size: 15px;
-    border-color: rgba(130,160,255,0.65); color: #b8ccff; }
-  #shift2Btn.hot { border-color: #7dffb0; color: #c8ffdd;
-    box-shadow: 0 0 18px rgba(125,255,176,0.55); animation: shPulse .28s infinite alternate; }
   #hud.p2 #gasBtn { right: auto; left: 14px; }
   #hud.p2 #shiftBtn { bottom: 146px; }
   #shiftBtn { left: 14px; bottom: 40px; width: 88px; height: 88px;
@@ -1378,7 +1374,6 @@
     #gasBtn { width: 62px; height: 62px; font-size: 11px; right: 10px; bottom: 36px; }
     #shiftBtn { width: 76px; height: 76px; font-size: 12px; left: 10px; bottom: 36px; }
     #gas2Btn { width: 84px; height: 84px; font-size: 13px; right: 10px; bottom: 36px; }
-    #shift2Btn { width: 76px; height: 76px; font-size: 12px; right: 10px; bottom: 128px; }
     #hud.p2 #gasBtn { left: 10px; }
     #hud.p2 #shiftBtn { bottom: 124px; }
     #hud.drag #speedBox { left: 58px; bottom: 48px; }
@@ -1679,6 +1674,9 @@
     transition: transform .15s, border-color .15s, box-shadow .15s; }
   .spNav svg { width: 30px; height: 30px;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8)); }
+  /* el R26 en 3D ocupa el hueco del icono — horizontal como un monoplaza */
+  #spNavCarCv { width: 64px; height: 42px; margin: -6px 0 -4px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7)); }
   .spNav:hover { border-color: rgba(255,205,95,0.65);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 10px 22px rgba(0,0,0,0.6),
       0 0 14px rgba(255,200,80,0.22); }
@@ -2452,7 +2450,6 @@
 <div class="tbtn" id="brkBtn">FRENO</div>
 <div class="tbtn" id="shiftBtn" style="display:none">▲<br><span style="font-size:10px">MARCHA</span></div>
 <div class="tbtn" id="gas2Btn" style="display:none">GAS<br><span style="font-size:10px">J2</span></div>
-<div class="tbtn" id="shift2Btn" style="display:none">▲<br><span style="font-size:10px">J2</span></div>
 <div class="tbtn" id="pitBtn">PIT</div>
 <div class="tbtn" id="boxexBtn"><svg class="ic"><use href="#i-wrench"/></svg><span>BOXES</span></div>
 <div class="tbtn" id="lightsBtn"><svg class="ic" style="width:26px;height:26px;margin:0"><use href="#i-light"/></svg></div>
@@ -2481,7 +2478,7 @@
   <!-- Barra de navegación real: cubre la nav pixelada del póster con
        controles táctiles nítidos (SELECT CAR · volante START · ONLINE) -->
   <div id="splashNav">
-    <button class="spNav" id="spNavCar"><svg><use href="#i-f1"/></svg><span>SELECT CAR</span></button>
+    <button class="spNav" id="spNavCar"><canvas id="spNavCarCv"></canvas><span>SELECT CAR</span></button>
     <div id="spNavWheelWrap">
       <button id="spNavWheel"><svg><use href="#i-wheel"/></svg></button>
       <span id="spNavWheelLbl">START RACE</span>
@@ -9793,7 +9790,7 @@ function init3() {
 /* ================== CONTROLES ================== */
 const keys = {};
 let inGas = 0, inBrake = 0, inSteer = 0, inHB = false, inShift = 0, shiftHeld = false;
-let inGas2 = 0, inShift2 = 0, shiftHeld2 = false;   // entradas del JUGADOR 2 (modo local)
+let inGas2 = 0;                                     // entradas del JUGADOR 2 (modo local)
 addEventListener('keydown', e => {
   keys[e.code] = true;
   // Mientras la intro cinematográfica está abierta el teclado no hace nada:
@@ -9878,7 +9875,7 @@ document.getElementById('lightsBtn').addEventListener('click', () => {
 bindBtn('gasBtn', () => inGas = 1, () => inGas = 0);
 bindBtn('shiftBtn', () => inShift = 1, () => inShift = 0);
 bindBtn('gas2Btn', () => inGas2 = 1, () => inGas2 = 0);
-bindBtn('shift2Btn', () => inShift2 = 1, () => inShift2 = 0);
+// (el botón ▲ J2 se eliminó: J2 cambia con Shift derecho / Enter)
 bindBtn('brkBtn', () => inBrake = 1, () => inBrake = 0);
 bindBtn('nitroBtn', () => inNitro = true, () => inNitro = false);
 bindBtn('pitBtn', () => pitReq = true, () => pitReq = false);
@@ -10202,7 +10199,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 725;
+const BUILD_NO = 727;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -10624,7 +10621,7 @@ function cpuDrive(c, dt) {
     if (c.boost > 0) { c.boost -= dt; c.v += 60 * dt; }  // empujón del cambio perfecto
     if (c.gear === undefined) c.gear = 1;
     const ckmh = c.v * 3.4, crpm = Math.max(0, (ckmh - (c.gear - 1) * GEAR_SPAN) / GEAR_SPAN);
-    const s2 = inShift2 || keys.ShiftRight || keys.Enter;
+    const s2 = keys.ShiftRight || keys.Enter;
     if (s2 && !c.shHeld && go2 && c.gear < 6) {
       c.gear++;
       if (crpm >= 0.80 && crpm < 0.97) {               // CAMBIO PERFECTO de J2
@@ -12361,8 +12358,6 @@ function update(dt) {
   const rb = el('rpmBar');
   if (rb) { rb.style.width = Math.min(100, rpmNow * 100).toFixed(0) + '%'; rb.classList.toggle('hot', rpmNow > 0.8); }
   el('shiftBtn').classList.toggle('hot', dragMode && rpmNow > 0.8 && gear < 6);
-  el('shift2Btn').classList.toggle('hot', p2Mode && cpu && cpu.gear < 6 &&
-    (cpu.v * 3.4 - (cpu.gear - 1) * GEAR_SPAN) / GEAR_SPAN > 0.8);
   el('gearNum').classList.toggle('shiftNow', dragMode && rpmNow > 0.8 && gear < 6);
   const tt = Math.floor(raceT), mm = Math.floor(tt / 60), tenth = Math.floor((raceT % 1) * 10);
   const tStr = `${mm}:${String(tt % 60).padStart(2, '0')}.${tenth}`;
@@ -13815,7 +13810,7 @@ function startStage(n, seed, mp, mode) {
   trackSegM = 0;
   if (pfCtx) pfCtx.clearRect(0, 0, PF_W, PF_H);
   inShift = 0; shiftHeld = false; launchDone = false;
-  inGas2 = 0; inShift2 = 0; shiftHeld2 = false;
+  inGas2 = 0;
   sectT0 = 0; sectBestLap[0] = sectBestLap[1] = sectBestLap[2] = null;
   fsState = 0; fsSlots = null; fsX = car.x; fsZ = car.z; fsBanT = 0;   // cajón del jugador (ref. falsa salida)
   fsCount = 0; dsq = false;                                     // strikes de salida por carrera
@@ -13837,7 +13832,7 @@ function startStage(n, seed, mp, mode) {
   document.getElementById('speedBox').style.display = 'block';
   for (const id of TOUCH_IDS)
     document.getElementById(id).style.display = (OPTS.touchUi && (id !== 'shiftBtn' || dragMode) &&
-      ((id !== 'gas2Btn' && id !== 'shift2Btn') || p2Mode)) ? 'flex' : 'none';
+      (id !== 'gas2Btn' || p2Mode)) ? 'flex' : 'none';
   el('mmZoomIn').style.display = 'flex'; el('mmZoomOut').style.display = 'flex';   // zoom del radar siempre disponible
   el('mmGrowIn').style.display = 'flex'; el('mmGrowOut').style.display = 'flex';   // y su tamaño también
   document.getElementById('stageChip').innerHTML = ic('flag') + (circAt(stage) ? circAt(stage).name : T('stage') + ' ' + stage);
@@ -13863,7 +13858,7 @@ function startStage(n, seed, mp, mode) {
       el(id).style.display = (OPTS.touchUi &&
         (id === 'gasBtn' || id === 'shiftBtn' ||
          (!p2Mode && id === 'brkBtn') ||
-         (p2Mode && (id === 'gas2Btn' || id === 'shift2Btn')))) ? 'flex' : 'none';
+         (p2Mode && id === 'gas2Btn'))) ? 'flex' : 'none';
   }
   playing = true;
   // Ningún control del menú/HUD conserva el foco: Enter/Espacio lo re-dispararían
@@ -14053,7 +14048,7 @@ function addPts(n) {
 }
 const SENS_MULT = [0.7, 1.0, 1.35];                  // sensibilidad de giro: BAJA/NORMAL/ALTA
 const SENS_KEYS = ['sensLow', 'sensMid', 'sensHigh'];
-const TOUCH_IDS = ['stPad', 'gasBtn', 'brkBtn', 'pitBtn', 'boxexBtn', 'lightsBtn', 'nitroBtn', 'shiftBtn', 'gas2Btn', 'shift2Btn', 'zoomIn', 'zoomOut'];
+const TOUCH_IDS = ['stPad', 'gasBtn', 'brkBtn', 'pitBtn', 'boxexBtn', 'lightsBtn', 'nitroBtn', 'shiftBtn', 'gas2Btn', 'zoomIn', 'zoomOut'];
 function paintSens() {
   const c = document.getElementById('optSens'); if (!c) return;
   [...c.children].forEach((b, i) => {
@@ -14955,6 +14950,34 @@ document.getElementById('optReset').addEventListener('click', () => {
     if (e.code !== 'Enter' && e.code !== 'Space') return;
     close();
   });
+})();
+/* Icono 3D del SELECT CAR de portada: el R26 girando en directo dentro del
+   botón. Reutiliza el GLB ya cacheado por c3dR26 (preheat al arrancar) y solo
+   dibuja mientras la portada siga visible */
+(function spCarIcon() {
+  // c3d se declara como const más abajo: esperar al siguiente tick (TDZ)
+  setTimeout(() => c3dR26().then(base => {
+    const cv = document.getElementById('spNavCarCv'), sp = document.getElementById('splash');
+    if (!cv || !base) return;
+    const r = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true });
+    r.outputEncoding = THREE.sRGBEncoding;
+    const sc = new THREE.Scene();
+    sc.add(new THREE.HemisphereLight(0xcfe0ff, 0x2a3242, 1.15));
+    const k = new THREE.DirectionalLight(0xfff2dc, 1.6); k.position.set(5, 9, 5); sc.add(k);
+    const r2 = new THREE.DirectionalLight(0x80b0ff, 0.9); r2.position.set(-6, 5, -5); sc.add(r2);
+    const cam = new THREE.PerspectiveCamera(28, 1.5, 0.1, 60);
+    cam.position.set(0, 3.6, 12.4); cam.lookAt(0, 0.55, 0);
+    const car = c3dNorm(base.clone(true), 5.0);
+    sc.add(car);
+    (function tick() {
+      requestAnimationFrame(tick);
+      if (sp.classList.contains('hide') || !sp.isConnected) return;   // portada cerrada: no dibujar
+      car.rotation.y += 0.008;
+      const w = cv.clientWidth || 64, h = cv.clientHeight || 42;
+      if (cv.width !== w * 2) { r.setSize(w * 2, h * 2, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+      r.render(sc, cam);
+    })();
+  }).catch(() => {}), 0);   // sin GLB: el hueco queda vacío, el botón sigue funcionando
 })();
 /* ===== INTRO cinematográfica: 5 pantallas con movimiento, caption y sonido ===== */
 let _introTm = null, _introIdx = -1, _introDone = false;
