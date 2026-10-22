@@ -1,9 +1,10 @@
 // Service worker: actualiza primero por red y guarda copia para offline (PWA)
-const CACHE = 'scgp-v294';
+const CACHE = 'scgp-v323';
 const ASSETS = [
   './', 'index.html', 'circuitos.js', 'fondo.jpg', 'fondo2.jpg', 'portada.jpg',
   'fondo_pw.png', 'fondo_card.jpg', 'fondo_manual.jpg', 'f1.png', 'f1sel.png', 'f1_r26.png', 'f1_scarlet.png', 'f1_verde.png', 'f1_amarillo.png', 'f1_negro.png', 'f1_rosa.png', 'f1_naranja.png', 'volante.webp', 'logo_gp.webp', 'trofeo.webp', 'logo_shape.js', 'RADIO.mp3', 'three.min.js', 'postprocessing.min.js', 'peerjs.min.js',
-  'cockpit.webp', 'icon-192.png', 'icon-512.png', 'manifest.json'
+  'cockpit.webp', 'icon-192.png', 'icon-512.png', 'manifest.json', 'scar.glb', 'gltfloader.js',
+  'circ1_day.jpg', 'circ1_dusk.jpg', 'circ1_night.jpg', 'circ2_day.jpg', 'circ2_dusk.jpg', 'circ2_night.jpg'
 ];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
