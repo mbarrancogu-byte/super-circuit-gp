@@ -3000,6 +3000,7 @@ let wetTires = false;                   // neumáticos de lluvia montados (se ca
 // Telemetría: desgaste por rueda [DI, DD, TI, TD], flex del chasis por zona
 // y muestreo de sensores a ~5 Hz para las pantallas del muro de boxes
 let twW = [0, 0, 0, 0], flexZ = [0, 0, 0, 0], tele = [], teleT = 0, lapTs = [], lapT0 = 0;
+let tireWarm = 1;                       // gomas frías tras boxes: 0 frías → 1 en temperatura
 let rain = 0, rainAt = -1, rainEnd = -1; // 0-1 intensidad · t inicio · t en que escampa
 let wetK = 0, wetAp = -1;                // 0-1 asfalto mojado: moja rápido, seca lento (brillo especular)
 let scT = 0;                             // SAFETY CAR: segundos de ritmo limitado por bandera amarilla
@@ -7086,6 +7087,36 @@ function buildWorld() {
     }
   }
 
+  // Marbles: restos de goma instanciados amontonados en los bordes de las
+  // curvas, fuera de la trayectoria ideal — como se acumulan en un GP real
+  {
+    const mbGeo = new THREE.SphereGeometry(0.09, 5, 4);
+    const mbM = [], pm3 = new THREE.Matrix4();
+    for (let i = 0; i < pathLen; i += 2) {
+      const p = path[i], pn = path[(i + 6) % pathLen];
+      const cr = Math.abs(p.tx * pn.tz - p.tz * pn.tx);
+      if (cr < 0.05) continue;                                        // solo curvas
+      const hw = (trackHW ? trackHW[i] : RW / 2);
+      const nx = -p.tz, nz = p.tx;
+      const n2 = 2 + ((cr * 40) | 0);                                 // más marbles cuanto más cerrada
+      for (let k = 0; k < n2; k++) {
+        const side = Math.random() < 0.5 ? -1 : 1;
+        const lat = side * (hw - rnd(0.3, 2.6));                      // pegados al borde/piano
+        pm3.makeScale(rnd(0.7, 1.8), rnd(0.5, 1.1), rnd(0.7, 1.8));
+        pm3.setPosition(p.x + nx * lat + rnd(-0.8, 0.8),
+          0.09 + bankYAt(i, lat), p.z + nz * lat + rnd(-0.8, 0.8));
+        mbM.push(pm3.clone());
+      }
+    }
+    if (mbM.length) {
+      const im = new THREE.InstancedMesh(mbGeo, new THREE.MeshStandardMaterial({
+        color: 0x191a1c, roughness: 0.95 }), mbM.length);
+      for (let k = 0; k < mbM.length; k++) im.setMatrixAt(k, mbM[k]);
+      im.instanceMatrix.needsUpdate = true;
+      world.add(im);
+    }
+  }
+
   if (!traced && !dragMode) {
     // Pianos rojo/blanco en los bordes de las curvas: piezas alternas apoyadas
     // sobre la línea blanca del borde — el rasgo más reconocible de un circuito
@@ -9910,7 +9941,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 703;
+const BUILD_NO = 712;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -11188,12 +11219,14 @@ function update(dt) {
   }
 
   // Agarre lateral: coche × neumáticos × lluvia — el derrape es lateral que no se disipa
-  const tireGrip = OPTS.tire ? 0.98 - tireWear * 0.001 : 1.10 - tireWear * 0.0032;
+  const tireGrip = (OPTS.tire ? 0.98 - tireWear * 0.001 : 1.10 - tireWear * 0.0032)
+                   * (0.85 + 0.15 * tireWarm);             // gomas frías tras boxes: −15% hasta calentar
   const bkG = bankArr ? Math.abs(bankArr[pathIdx] || 0) : 0;
   const grip = (hb ? 1.4 : (offroad > 0.5 ? 4.5 : 8.5)) * st.grip * tireGrip
                * (1 - rain * (wetTires ? 0.10 : 0.44))   // slicks bajo la lluvia: el coche patina mucho
                * (wetTires && rain < 0.2 ? 0.90 : 1)      // wets en seco: agarre peor
                * (1 + bkG * 0.08)              // el peralte empuja el coche hacia el vértice: más agarre
+               * (1 - slipT * Math.min(1, Math.abs(steer) * 1.6) * 0.10)  // aire sucio: la estela roba carga en curva
                * (oilT > 0 ? 0.20 : 1);         // sobre aceite: casi sin agarre lateral
   vl *= Math.exp(-grip * dt);
   vl += steer * spd * dt * (hb ? 0.5 : 0.14);  // el volante empuja el lateral (inicio del drift)
@@ -11376,6 +11409,8 @@ function update(dt) {
   twW[1] = Math.min(100, twW[1] + dt * (0.55 + stA * 1.9 + (slidingNow ? 2.0 : 0) + offroad * 1.4) * wk);   // DD
   twW[2] = Math.min(100, twW[2] + dt * (0.55 + (slidingNow ? 3.0 : 0) + gasEff * 0.5 + offroad * 1.4) * wk); // TI
   twW[3] = Math.min(100, twW[3] + dt * (0.55 + (slidingNow ? 3.0 : 0) + gasEff * 0.5 + offroad * 1.4) * wk); // TD
+  // Calentamiento de gomas: sube al rodar, más rápido cargándolas en curva
+  tireWarm = Math.min(1, tireWarm + dt * (0.02 + spd * 0.0009 + stA * 0.035));
   // Flex del chasis por zonas: carga lateral delantera/lateral/trasera + baches
   flexZ[0] += stA * spd * dt * 0.02;                                       // morro: giros
   flexZ[1] += stA * spd * dt * 0.014 * (steer > 0 ? 1 : 0.25);             // pontón der.
@@ -11440,6 +11475,8 @@ function update(dt) {
           const hadWet = wetTires;
           wetTires = rain > 0.25;                       // el equipo monta lo que toca: wets o slicks
           tireWear = 0; for (let i = 0; i < 4; i++) twW[i] = 0;
+          tireWarm = 0.22;                                       // salen frías: menos agarre hasta rodar
+          setTimeout(() => showToast('🧊 ' + T('coldTires')), 1600);
           done.push(wetTires ? T('wetOn') : (hadWet ? T('dryOn') : T('tire')));
         }
         if (pitSel.body) { dmg = 0; dmgBroken = false; done.push(T('pmBody')); }
@@ -13295,6 +13332,7 @@ function startStage(n, seed, mp, mode) {
   for (const s of flareGlows) s.visible = false;
   if (fwRk) for (const s of fwRk.concat(fwSp)) s.visible = false;
   twW = [0, 0, 0, 0]; flexZ = [0, 0, 0, 0]; tele = []; teleT = 0; lapTs = []; lapT0 = 0;   // telemetría limpia
+  tireWarm = 1;
   raceFastest = cpuFastest = Infinity;                // la vuelta rápida empieza de cero
   fastLapPt = null;                                   // la marca morada del minimapa se borra
   reBuf = []; replaying = false; reI = 0;             // buffer de replay limpio
@@ -13999,7 +14037,7 @@ const I18N = {
     c3dHint: 'Arrastra gira · clic der. mueve · rueda o +/− zoom · flechas giran · R centra',
     rain: '¡EMPIEZA A LLOVER! — el asfalto resbala',
     rainWet: 'LLUVIA EN ASFALTO', rainWetSub: 'Se recomienda montar neumáticos de lluvia — entra en boxes',
-    wetOn: 'Neumáticos de lluvia',
+    wetOn: 'Neumáticos de lluvia', coldTires: '¡Gomas frías! Agarre bajo unas curvas',
     rainDry: 'ASFALTO SECO', rainDrySub: 'Se recomienda montar neumáticos de seco — entra en boxes',
     dryOn: 'Neumáticos de seco',
     koCpu: '¡RIVAL ELIMINADO!', koOut: 'ELIMINADO',
@@ -14127,7 +14165,7 @@ const I18N = {
     c3dHint: 'Drag rotates · right-drag moves · wheel or +/− zoom · arrows rotate · R resets',
     rain: 'RAIN! — the track is slippery',
     rainWet: 'RAIN ON TRACK', rainWetSub: 'Wet tyres recommended — get into the pits',
-    wetOn: 'Wet tyres',
+    wetOn: 'Wet tyres', coldTires: 'Cold tires! Low grip for a few corners',
     rainDry: 'DRY TRACK', rainDrySub: 'Dry tyres recommended — get into the pits',
     dryOn: 'Dry tyres',
     koCpu: 'RIVAL ELIMINATED!', koOut: 'ELIMINATED',
@@ -15494,7 +15532,7 @@ function pucDraw() {
       const W = 1140, H = 200;
       c.clearRect(0, 0, W, H);
       const avgV = N ? tele.reduce((a, d) => a + d.v, 0) / N : 0;
-      const tmp = w => 62 + twW[w] * 0.55 + avgV * 0.07;         // °F estimadas
+      const tmp = w => 42 + tireWarm * 26 + twW[w] * 0.48 + avgV * 0.07;   // °F: frías tras boxes
       const tcol = t => t < 72 ? '#2f6fff' : t < 84 ? '#2fc8ff' : t < 96 ? '#39d95e'
         : t < 108 ? '#ffd34d' : t < 118 ? '#ff8c3a' : '#ff4a3a';
       const pair = (x0, label, wa, wb) => {
