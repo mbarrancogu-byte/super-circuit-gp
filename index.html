@@ -6416,7 +6416,7 @@ function buildWorld() {
           { geo: _bod, m: new THREE.Matrix4().makeTranslation(0, -0.05, 0) },
           { geo: _hed, m: new THREE.Matrix4().makeTranslation(0, 0.48, 0) }]);
         const pplMat = new THREE.MeshStandardMaterial({ roughness: 0.9 });
-        const ppl = new THREE.InstancedMesh(pplGeo, pplMat, segs.length * ROWS * 6);
+        const ppl = new THREE.InstancedMesh(pplGeo, pplMat, segs.length * ROWS * 7);
         const pc = new THREE.Color();
         let n2 = 0;
         for (const i of segs) {
@@ -6425,8 +6425,8 @@ function buildWorld() {
           for (let r = 0; r < ROWS; r++) {
             const off = D0 + 2.2 + r * STEP + STEP / 2 - 0.35;
             const y = by + 1.5 + r * RISE + RISE + 0.42;
-            for (let lx = -2.2; lx <= 2.2; lx += 1.12) {
-              if (rnd(0, 1) < 0.22) continue;                    // asiento vacío
+            for (let lx = -2.7; lx <= 2.7; lx += 0.9) {
+              if (rnd(0, 1) < 0.05) continue;                    // grada llena: solo ~5% de huecos
               const w2 = gPos(i, lx + rnd(-0.15, 0.15), off);
               pm2.makeRotationY(Math.atan2(-s.tz, s.tx) + rnd(-0.4, 0.4));
               pm2.setPosition(w2.x, y + rnd(-0.04, 0.06), w2.z);
@@ -10202,7 +10202,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 721;
+const BUILD_NO = 722;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
