@@ -932,6 +932,8 @@
     background:
       repeating-linear-gradient(0deg, rgba(120,170,255,0.055) 0 1px, transparent 1px 36px),
       repeating-linear-gradient(90deg, rgba(120,170,255,0.055) 0 1px, transparent 1px 36px),
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.018) 0 2px, transparent 2px 7px),
+      repeating-linear-gradient(-45deg, rgba(0,0,0,0.14) 0 2px, transparent 2px 7px),
       radial-gradient(ellipse 55% 40% at 8% 12%, rgba(70,140,255,0.18), transparent 70%),
       radial-gradient(ellipse 60% 45% at 92% 88%, rgba(60,150,255,0.15), transparent 70%); }
   .ciFx { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
@@ -954,27 +956,52 @@
     font-size: clamp(18px, 3.4vw, 30px); font-weight: 700; letter-spacing: 6px;
     color: #d8b45a; text-shadow: 0 1px 0 rgba(0,0,0,0.6), 0 0 16px rgba(120,170,255,0.35);
     margin: 2px 0 8px; text-transform: uppercase; }
+  #ciTitle span { background: linear-gradient(180deg, #fff6d8 6%, #f0cd6e 30%,
+      #96702a 50%, #ffdf80 62%, #b8902e 94%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 1px 0 rgba(0,0,0,0.8)) drop-shadow(0 0 14px rgba(255,200,90,0.28)); }
   #ciTitle small { display: block; font-size: .48em; letter-spacing: 8px; color: #8fa4c8;
-    font-family: inherit; }
+    font-family: inherit; text-shadow: 0 1px 0 rgba(0,0,0,0.6); }
+  /* Piano de circuito real: bloques rojo/blanco con bisel 3D en la ficha */
+  #carinfo .stripe { width: min(430px, 94vw); height: 12px; border-radius: 3px;
+    transform: none; flex-shrink: 0;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.06) 42%,
+        rgba(0,0,0,0.28) 68%, rgba(0,0,0,0.62) 100%),
+      repeating-linear-gradient(90deg, #e42a1e 0 26px, #f4f4f2 26px 52px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.45),
+      inset 0 -1px 0 rgba(0,0,0,0.5); }
   #ciGrid { display: flex; flex-direction: column; gap: 10px; width: min(500px, 94vw); }
   #ciStage { position: relative; height: clamp(200px, 36vh, 320px); border-radius: 16px;
-    overflow: hidden; border: 1px solid rgba(140,180,255,0.28);
-    background: linear-gradient(180deg, #18305e 0%, #0e1f42 55%, #081226 100%);
-    box-shadow: 0 12px 30px rgba(2,6,16,0.55), inset 0 1px 0 rgba(160,200,255,0.22); }
+    overflow: hidden; border: 1px solid rgba(140,180,255,0.34);
+    background: radial-gradient(ellipse 90% 70% at 50% 30%, rgba(70,130,255,0.16), transparent 65%),
+      linear-gradient(180deg, #18305e 0%, #0e1f42 55%, #081226 100%);
+    box-shadow: 0 12px 30px rgba(2,6,16,0.55), inset 0 1px 0 rgba(160,200,255,0.22),
+      0 0 18px rgba(90,160,255,0.10); }
   #ciCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #ciNum { position: absolute; left: 10px; top: 8px; font-size: 11px; font-weight: 800;
     letter-spacing: 2px; color: #e8d9a8; background: rgba(20,24,32,0.85);
     border-radius: 8px; padding: 3px 9px; }
+  /* Flechas de cristal ahumado translúcido (glassmorphism) */
   .ciNav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
-    width: 38px; height: 52px; border-radius: 10px; cursor: pointer; font-size: 18px;
-    color: #f0ead6; background: rgba(24,28,36,0.85); border: 1px solid rgba(255,255,255,0.18); }
-  .ciNav:hover { background: rgba(50,56,70,0.9); }
+    width: 42px; height: 56px; border-radius: 12px; cursor: pointer; font-size: 18px;
+    color: #f0ead6; background: rgba(200,220,255,0.10);
+    backdrop-filter: blur(9px) saturate(1.35); -webkit-backdrop-filter: blur(9px) saturate(1.35);
+    border: 1px solid rgba(210,230,255,0.38);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -8px 14px rgba(0,0,0,0.25),
+      0 6px 18px rgba(0,0,0,0.5);
+    transition: filter .15s, background .15s; }
+  .ciNav:hover { background: rgba(210,230,255,0.2); filter: brightness(1.2); }
+  .ciNav:active { transform: translateY(-50%) scale(0.94); }
   #ciPrev { left: 8px; } #ciNext { right: 8px; }
+  /* Paneles translúcidos oscuros con filo de neón sutil (PRESTACIONES / ESPECIFICACIONES) */
   .ciCard { display: flex; flex-direction: column; gap: 6px; padding: 10px 14px 12px;
     border-radius: 16px; text-align: left;
-    background: linear-gradient(180deg, #1a305e, #0c1a36);
-    border: 1px solid rgba(140,180,255,0.3);
-    box-shadow: 0 8px 22px rgba(2,6,16,0.55), inset 0 1px 0 rgba(160,200,255,0.2); }
+    background: linear-gradient(180deg, rgba(22,38,72,0.62), rgba(8,15,32,0.74));
+    backdrop-filter: blur(10px) saturate(1.25); -webkit-backdrop-filter: blur(10px) saturate(1.25);
+    border: 1px solid rgba(110,190,255,0.38);
+    box-shadow: 0 8px 22px rgba(2,6,16,0.55), inset 0 1px 0 rgba(160,200,255,0.2),
+      0 0 16px rgba(80,160,255,0.12); }
   .ciSec { font-size: 11px; font-weight: 900; letter-spacing: 3px; color: #9fb8e8;
     border-bottom: 1px solid rgba(140,170,230,0.25); padding-bottom: 4px; }
   .ciStat { display: grid; grid-template-columns: 132px 1fr 70px; gap: 8px;
@@ -991,6 +1018,7 @@
       0 1px 0 rgba(255,255,255,0.06); }
   .ciBar i { display: block; height: 100%; border-radius: 5px; position: relative;
     background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.30) 0 1.5px, transparent 1.5px 6px),
       linear-gradient(180deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.12) 30%,
         rgba(0,0,0,0.10) 58%, rgba(0,0,0,0.52) 100%),
       linear-gradient(90deg, #3fd0ff, #ffd040);
@@ -1001,10 +1029,14 @@
     background: linear-gradient(90deg, transparent, rgba(0,0,0,0.55));
     border-radius: 0 5px 5px 0; }
   .ciRow { display: flex; justify-content: space-between; align-items: center;
-    font-size: 11.5px; padding: 5px 2px; border-bottom: 1px solid rgba(140,170,230,0.18); }
+    font-size: 11.5px; padding: 5px 8px; margin: 0 -6px; border-radius: 7px;
+    border-bottom: 1px solid rgba(140,170,230,0.18); }
+  .ciRow:nth-child(even) { background: rgba(110,165,255,0.08); }
   .ciRow:last-child { border-bottom: none; }
   .ciRow span { color: #a8bcdf; font-weight: 800; letter-spacing: 1px; }
   .ciRow b { color: #ffd870; font-size: 12.5px; text-shadow: 0 1px 2px rgba(0,0,0,0.7); }
+  /* VOLVER de la ficha: cápsula metálica — el icono #i-back ya da la flecha */
+  #carinfo .backWrap .mbtn { letter-spacing: 4px; }
   #car3dWrap { cursor: pointer; }
   #car3dInfo { position: absolute; right: 8px; bottom: 7px; z-index: 4; cursor: pointer;
     font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: #ffe9b0;
@@ -10120,7 +10152,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 719;
+const BUILD_NO = 720;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -15341,6 +15373,25 @@ function ci3dInit() {
   const ring = new THREE.Mesh(new THREE.TorusGeometry(6.9, 0.10, 8, 60),
     new THREE.MeshBasicMaterial({ color: 0xffc860 }));
   ring.rotation.x = Math.PI / 2; ring.position.y = 0.03; ci3d.scene.add(ring);
+  // Halo de neón alrededor del anillo + segundo anillo interior azul
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(6.9, 0.34, 10, 60),
+    new THREE.MeshBasicMaterial({ color: 0xffa030, transparent: true, opacity: 0.30,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+  halo.rotation.x = Math.PI / 2; halo.position.y = 0.03; ci3d.scene.add(halo);
+  const ringIn = new THREE.Mesh(new THREE.TorusGeometry(5.6, 0.045, 8, 60),
+    new THREE.MeshBasicMaterial({ color: 0x50b8ff, transparent: true, opacity: 0.85 }));
+  ringIn.rotation.x = Math.PI / 2; ringIn.position.y = 0.035; ci3d.scene.add(ringIn);
+  // Sombra de contacto suave bajo las ruedas (textura radial generada)
+  const shCv = document.createElement('canvas'); shCv.width = shCv.height = 128;
+  const sg = shCv.getContext('2d');
+  const grd = sg.createRadialGradient(64, 64, 8, 64, 64, 62);
+  grd.addColorStop(0, 'rgba(0,0,0,0.55)'); grd.addColorStop(0.6, 'rgba(0,0,0,0.28)');
+  grd.addColorStop(1, 'rgba(0,0,0,0)');
+  sg.fillStyle = grd; sg.fillRect(0, 0, 128, 128);
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(11, 7),
+    new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shCv),
+      transparent: true, depthWrite: false }));
+  shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02; ci3d.scene.add(shadow);
   // Arrastre: gira el coche en todas direcciones
   const stage = document.getElementById('ciStage');
   stage.addEventListener('pointerdown', e => { ci3d.drag = { x: e.clientX, y: e.clientY }; stage.setPointerCapture(e.pointerId); });
