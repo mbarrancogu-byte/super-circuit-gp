@@ -1971,6 +1971,100 @@
     #optsGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .optGrp.wide { grid-column: auto; }
   }
+
+  /* ============ MENÚ PREMIUM: fibra de carbono + metal + neón ============ */
+  /* Fondo: fibra de carbono oscura con foco de luz cenital en el centro */
+  #menu { background:
+      radial-gradient(ellipse 110% 55% at 50% 18%, rgba(70,110,190,0.20), transparent 60%),
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.018) 0 2px, transparent 2px 8px),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,0.018) 0 2px, transparent 2px 8px),
+      linear-gradient(180deg, #0c1322 0%, #070b14 45%, #04070d 100%); }
+  /* Subtítulo nítido y centrado */
+  #menu .subtitle { color: #c4d4f2; letter-spacing: 6px; font-weight: 700;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8), 0 0 16px rgba(120,170,255,0.3); }
+  /* Banderas del menú: marco metálico redondeado con leve relieve */
+  #menu .langF { padding: 5px 8px;
+    background: linear-gradient(180deg, rgba(52,62,84,0.9), rgba(14,20,34,0.9));
+    border: 1.5px solid rgba(170,185,210,0.45); border-radius: 10px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 4px 12px rgba(0,0,0,0.5); }
+  #menu .langF.on { border-color: #ffd060; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2),
+      0 0 12px rgba(255,200,80,0.45), 0 4px 12px rgba(0,0,0,0.5); }
+  /* Flechas de los carruseles: marco metálico */
+  #menu .selArr { background: linear-gradient(180deg, rgba(46,56,78,0.9), rgba(12,18,30,0.9));
+    border: 1.5px solid rgba(160,175,205,0.4);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 6px 14px rgba(0,0,0,0.5); }
+  /* Tarjetas de coche y circuito: cristal/metal oscuro, selección dorada incandescente */
+  #menu .carCard, #menu .circCard {
+    background:
+      linear-gradient(180deg, rgba(30,40,62,0.75), rgba(9,13,24,0.9)),
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 7px);
+    border: 1.5px solid rgba(130,160,210,0.28);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 8px 18px rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  #menu .carCard.sel, #menu .circCard.on {
+    border-color: #ffce5e;
+    box-shadow: 0 0 18px rgba(255,200,80,0.55), 0 0 42px rgba(255,180,60,0.25),
+      inset 0 1px 0 rgba(255,235,180,0.25), 0 8px 20px rgba(0,0,0,0.55); }
+  /* Visor 3D del coche: marco metálico con foco interior */
+  #menu #car3dWrap {
+    background:
+      radial-gradient(circle at 50% 38%, rgba(90,130,200,0.35), rgba(8,12,24,0.85) 72%),
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 8px);
+    border: 1.5px solid rgba(170,190,225,0.42);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -8px 18px rgba(0,0,0,0.45),
+      0 10px 26px rgba(0,0,0,0.55); }
+  /* FICHA: esquina inferior derecha con borde brillante y alta legibilidad */
+  #menu #car3dInfo { border: 1.5px solid rgba(255,205,95,0.75); font-weight: 800;
+    letter-spacing: 1.5px; color: #ffe6b0;
+    box-shadow: 0 0 12px rgba(255,190,80,0.35), inset 0 1px 0 rgba(255,255,255,0.15); }
+  /* Hora del día: iconos luminosos cuando están activos */
+  #menu .todB { background: linear-gradient(180deg, rgba(30,40,62,0.8), rgba(9,13,24,0.9));
+    border: 1.5px solid rgba(130,160,210,0.3); min-height: 34px; }
+  #menu .todB.sel { border-color: #ffce5e; color: #ffe8b0;
+    box-shadow: 0 0 14px rgba(255,200,80,0.5), inset 0 0 10px rgba(255,190,80,0.15);
+    text-shadow: 0 0 10px rgba(255,210,120,0.7); }
+  /* NICK: cristal/metal con casco nítido a la izquierda */
+  #menu #nickRow { background: linear-gradient(180deg, rgba(34,44,66,0.75), rgba(10,15,27,0.9));
+    border: 1.5px solid rgba(160,175,205,0.4); min-height: 44px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 16px rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  #menu #nickIn { font-weight: 800; letter-spacing: 2px; color: #eef4ff; }
+  /* Botón principal: grande, carbono, borde dorado incandescente */
+  #menu #playBtn {
+    background:
+      radial-gradient(ellipse at 50% 16%, rgba(140,170,230,0.35), transparent 55%),
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.045) 0 2px, transparent 2px 7px),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,0.045) 0 2px, transparent 2px 7px),
+      linear-gradient(180deg, #232c40 0%, #0e1424 60%, #070b15 100%);
+    border: 2px solid rgba(255,205,95,0.95); color: #ffd870; font-size: 21px;
+    padding: 15px 52px; margin-top: 16px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.75), 0 0 18px rgba(255,190,80,0.5);
+    box-shadow: 0 0 24px rgba(255,190,80,0.35), inset 0 1px 2px rgba(255,255,255,0.25),
+      inset 0 -3px 8px rgba(0,0,0,0.55), 0 7px 0 #1a1204, 0 16px 28px rgba(0,0,0,0.65); }
+  /* Botones del grid: fondo texturizado oscuro + glow LED del color de cada modo */
+  #menuGrid .mbtn {
+    background:
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 8px),
+      linear-gradient(180deg, rgba(30,40,60,0.92), rgba(10,15,27,0.94));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 16px rgba(0,0,0,0.5); }
+  #menuGrid #versusBtn { box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 16px rgba(0,0,0,0.5), 0 0 10px rgba(255,80,70,0.25); }
+  #menuGrid #champBtn { box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 16px rgba(0,0,0,0.5), 0 0 10px rgba(255,215,80,0.25); }
+  #menuGrid #ttBtn { box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 16px rgba(0,0,0,0.5), 0 0 10px rgba(160,140,255,0.25); }
+  #menuGrid #koBtn { box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 16px rgba(0,0,0,0.5), 0 0 10px rgba(255,90,90,0.25); }
+  #menuGrid #demoBtn { box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 16px rgba(0,0,0,0.5), 0 0 10px rgba(140,255,220,0.22); }
+  #menuGrid #panBtn { box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 16px rgba(0,0,0,0.5), 0 0 10px rgba(90,220,255,0.22); }
+  #menuGrid #manuBtn { box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 16px rgba(0,0,0,0.5), 0 0 10px rgba(120,190,255,0.22); }
+  #menuGrid #powBtn { box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 16px rgba(0,0,0,0.5), 0 0 10px rgba(255,140,60,0.25); }
+  #menuGrid #optsBtn { box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 16px rgba(0,0,0,0.5), 0 0 10px rgba(190,150,255,0.25); }
+  /* VOLVER: píldora metálica ovalada con flecha clara a la izquierda */
+  #menu .backWrap .mbtn {
+    background: linear-gradient(180deg, rgba(60,70,94,0.95), rgba(16,22,36,0.95));
+    border: 1.5px solid rgba(170,185,210,0.55); color: #d8e4f8;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 6px 14px rgba(0,0,0,0.55); }
+  #menu .backWrap .mbtn::before { content: '◀'; font-size: 13px; margin-right: 2px;
+    color: #9fb8e8; }
+  /* Líneas de info: legibles en pantalla pequeña */
+  #menu #bestLine, #menu #ptsLine, #menu .hint { text-shadow: 0 2px 6px rgba(0,0,0,0.85); }
 </style>
 </head>
 <body>
@@ -10026,7 +10120,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 714;
+const BUILD_NO = 715;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
