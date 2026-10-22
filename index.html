@@ -5621,6 +5621,56 @@ function buildWorld() {
     const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 6),
       new THREE.MeshBasicMaterial({ color: 0xff3020 }));
     beacon.position.set(BL / 2 - 8, BH + 12.2, -BD / 4); pit.add(beacon);
+    // --- TORRE DE CONTROL en la boca de ENTRADA a boxes (extremo −lx), junto
+    // al edificio: zapata + basamento + fuste cónico + cabina acristalada 360°
+    // con balconada + cubierta, antena y baliza roja ---
+    {
+      const TX = -BL / 2 - 15, TZ = 2;                     // pegada al extremo de entrada
+      const pad = new THREE.Mesh(new THREE.BoxGeometry(11, 0.2, 11), concMat);
+      pad.position.set(TX, 0.1, TZ); pit.add(pad);
+      const base = new THREE.Mesh(new THREE.BoxGeometry(6.4, 2.4, 6.4), concMat);
+      base.position.set(TX, 1.4, TZ); pit.add(base);
+      // Fuste octogonal que se afina hacia arriba — hormigón como el edificio
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 3.0, 13.5, 8), concMat);
+      shaft.position.set(TX, 9.35, TZ); pit.add(shaft);
+      // Vuelo de la cabina: disco de transición que abre hacia el aro ancho
+      const flare = new THREE.Mesh(new THREE.CylinderGeometry(4.4, 2.6, 1.5, 8), concMat);
+      flare.position.set(TX, 16.85, TZ); pit.add(flare);
+      // Cabina acristalada 360°: vidrio azulado con montantes verticales — luce
+      // suave de noche como los ventanales del edificio
+      const twCv = document.createElement('canvas'); twCv.width = 256; twCv.height = 64;
+      const twg = twCv.getContext('2d');
+      twg.fillStyle = '#10161f'; twg.fillRect(0, 0, 256, 64);
+      for (let wx = 0; wx < 256; wx += 16) {
+        const lit = (wx / 16) % 3 !== 1;
+        const gg = twg.createLinearGradient(0, 0, 0, 64);
+        gg.addColorStop(0, lit ? '#9ec8ee' : '#4a6f96');
+        gg.addColorStop(0.55, lit ? '#6ea4d4' : '#33495f');
+        gg.addColorStop(1, lit ? '#33506e' : '#20303f');
+        twg.fillStyle = gg; twg.fillRect(wx + 1.5, 3, 13, 58);
+      }
+      const twTex = tex3(twCv);
+      const glassMat = new THREE.MeshStandardMaterial({ map: twTex,
+        roughness: 0.25, metalness: 0.4,
+        emissive: 0x9ec8ee, emissiveMap: twTex, emissiveIntensity: 0.5 });
+      const deck = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 4.5, 2.9, 8), glassMat);
+      deck.position.set(TX, 19.05, TZ); pit.add(deck);
+      // Balconada: aro bajo la cabina + antepecho
+      const rim2 = new THREE.Mesh(new THREE.TorusGeometry(4.55, 0.14, 6, 24), roofMat);
+      rim2.rotation.x = Math.PI / 2; rim2.position.set(TX, 17.72, TZ); pit.add(rim2);
+      // Cubierta plana + antena con baliza roja de aviación
+      const roofT = new THREE.Mesh(new THREE.CylinderGeometry(4.9, 4.9, 0.7, 8), roofMat);
+      roofT.position.set(TX, 20.85, TZ); pit.add(roofT);
+      const tAnt = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.12, 5.4, 6), colMat);
+      tAnt.position.set(TX, 24, TZ); pit.add(tAnt);
+      const tBc = new THREE.Mesh(new THREE.SphereGeometry(0.42, 8, 6),
+        new THREE.MeshBasicMaterial({ color: 0xff3020 }));
+      tBc.position.set(TX, 26.9, TZ); pit.add(tBc);
+      const tGl = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: tex3(makeGlowTex(255, 90, 60, 0.9)), color: 0xff5040,
+        transparent: true, opacity: 0.55, depthWrite: false, fog: false }));
+      tGl.scale.set(2.6, 2.6, 1); tGl.position.set(TX, 26.9, TZ); pit.add(tGl);
+    }
     // Murete de boxes: tramo central — extremos abiertos para la entrada/salida
     const wallLen = BL - 68;
     const wall = new THREE.Mesh(new THREE.BoxGeometry(wallLen, 1.35, 0.9),
@@ -10152,7 +10202,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 720;
+const BUILD_NO = 721;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
