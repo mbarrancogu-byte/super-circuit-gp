@@ -10120,7 +10120,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 715;
+const BUILD_NO = 716;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -15121,12 +15121,14 @@ async function c3dModel(def) {
     mdl = buildF1Pro(def.tint, def.liv);
     mdl.userData.pro = true;
   } else {
-    // De momento TODOS montan el chasis real r26.glb; cada nombre va
-    // repintado con su color de equipo (el R26 conserva su librea)
+    // GLB r26 con límite de 4 s: si tarda o falla, F1 procedural — nunca
+    // queda un visor vacío ni un coche que no sea F1
     try {
-      mdl = c3dTintR26(await c3dR26(), def.tint);
-      mdl.userData.r26 = true;
-    } catch (e) { mdl = buildCar(def.tint, false); }
+      mdl = await Promise.race([
+        c3dR26().then(base => { const m = c3dTintR26(base, def.tint); m.userData.r26 = true; return m; }),
+        new Promise(r => setTimeout(() => r(null), 4000))]);
+      if (!mdl) { mdl = buildF1Pro(def.tint, null); mdl.userData.pro = true; }
+    } catch (e) { mdl = buildF1Pro(def.tint, null); mdl.userData.pro = true; }
   }
   mdl.traverse(o => {
     if (o.isSpotLight || o.isSprite || (o.geometry && o.geometry.type === 'ConeGeometry') || o.userData.isHeadlight) o.visible = false;
