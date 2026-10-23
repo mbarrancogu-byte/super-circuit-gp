@@ -11990,12 +11990,8 @@ function startLights() {
 }
 function update(dt) {
   const go = performance.now() >= t0;
-  // FALSA SALIDA: alguien se mueve antes de apagarse las luces
-  if (!fsState && !go && !dragMode) {
-    if (!demoMode && !mpMode && Math.hypot(car.x - fsX, car.z - fsZ) > 3.0) falseStart('p');
-    else for (const c of cpus) if (c && !c.elim &&
-        (p2Mode ? Math.hypot(c.x - c.x0, c.z - c.z0) > 3.0 : c.v > 2.5)) { falseStart(c); break; }
-  }
+  // FALSA SALIDA: desactivada — el coche no puede moverse antes del "¡YA!" de todas
+  // formas (el gas no empuja hasta entonces), así que el sensor queda apagado.
   // PHOTO FINISH en curso: tiempo a cámara lenta mientras la rendija captura al rival
   if (pfSlowT > 0) {
     pfSlowT -= dt; dt *= 0.32;
