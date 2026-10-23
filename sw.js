@@ -1,8 +1,8 @@
 // Service worker: actualiza primero por red y guarda copia para offline (PWA)
-const CACHE = 'scgp-v368';
+const CACHE = 'scgp-v369';
 const ASSETS = [
   './', 'index.html', 'circuitos.js', 'fondo.jpg', 'fondo2.jpg', 'portada.jpg',
-  'fondo_pw.png', 'fondo_card.jpg', 'fondo_manual.jpg', 'f1.png', 'f1sel.png', 'f1_r26.png', 'f1_scarlet.png', 'f1_verde.png', 'f1_amarillo.png', 'f1_negro.png', 'f1_rosa.png', 'f1_naranja.png', 'volante.webp', 'volante_giro.webp', 'volante_fijo.webp', 'cockpit_car.webp', 'stick_dpad.webp', 'logo_gp.webp', 'trofeo.webp', 'logo_shape.js', 'RADIO.mp3', 'three.min.js', 'postprocessing.min.js', 'peerjs.min.js',
+  'fondo_pw.png', 'fondo_card.jpg', 'fondo_manual.jpg', 'f1.png', 'f1sel.png', 'f1_r26.png', 'f1_scarlet.png', 'f1_verde.png', 'f1_amarillo.png', 'f1_negro.png', 'f1_rosa.png', 'f1_naranja.png', 'volante.webp', 'volante_giro.webp', 'volante_fijo.webp', 'cockpit_car.webp', 'stick_dpad.webp', 'fpv_tire.webp', 'logo_gp.webp', 'trofeo.webp', 'logo_shape.js', 'RADIO.mp3', 'three.min.js', 'postprocessing.min.js', 'peerjs.min.js',
   'cockpit.webp', 'icon-192.png', 'icon-512.png', 'manifest.json', 'scar.glb', 'heli.glb', 'gltfloader.js',
   'circ1_day.jpg', 'circ1_dusk.jpg', 'circ1_night.jpg', 'circ2_day.jpg', 'circ2_dusk.jpg', 'circ2_night.jpg',
   'ctl_girar.webp', 'ctl_acelerar.webp', 'ctl_frenar.webp', 'ctl_derrape.webp', 'ctl_nitro.webp', 'ctl_boxes.webp', 'ctl_zoom.webp'

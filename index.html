@@ -348,15 +348,14 @@
   #cenBtn.on { background: rgba(120,255,160,0.38); border-color: #7dffa8; }
   /* Ruedas delanteras en 1ª persona: asoman por las esquinas del cockpit
      como en una onboard real y basculan con la dirección */
-  .fpvWh { display: none; position: fixed; bottom: -5%; width: 7.5%; aspect-ratio: 0.62;
-    z-index: 21; border-radius: 50%; transform-origin: 50% 50%;
-    background: radial-gradient(ellipse at 42% 36%, #4a5058 0 8%, #262b32 30%, #101318 62%, #05070a 100%);
-    box-shadow: inset 0 -4px 12px rgba(0,0,0,.9), inset 0 3px 8px rgba(160,180,210,.28),
-      0 5px 14px rgba(0,0,0,.6); }
-  .fpvWh::after { content: ''; position: absolute; inset: 24% 33%; border-radius: 50%;
-    background: radial-gradient(circle at 40% 32%, #e8edf2, #7d8794 48%, #2a2f36 85%);
-    box-shadow: 0 0 6px rgba(0,0,0,.7); }
-  .fpvWhL { left: 23.5%; } .fpvWhR { right: 23.5%; }
+  .fpvWh { display: none; position: fixed; bottom: -6%; width: 13%; z-index: 7;
+    pointer-events: none; transform-origin: 50% 50%;
+    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.55)); }
+  .fpvWh img { width: 100%; display: block; }
+  .fpvWhL { left: 12.5%; } .fpvWhR { right: 12.5%; }
+  .fpvWhR img { transform: scaleX(-1); }
+  /* En pantallas anchas las ruedas se abren un poco más (como una onboard real) */
+  @media (min-aspect-ratio: 16/10) { .fpvWhL { left: 19%; } .fpvWhR { right: 19%; } }
   /* Velocímetro vivo sobre la pantallita horneada del volante */
   #whDash { position: absolute; left: 50%; top: 7.5%; transform: translateX(-50%);
     display: flex; align-items: baseline; gap: 0.35em; z-index: 3;
@@ -2653,9 +2652,6 @@
     <div id="speedBox"><div id="speedNum">0<small> km/h</small></div><div id="gearNum">MARCHA 1</div><div id="rpmWrap"><div id="rpmBar"></div></div></div>
     <div id="gearBig"></div>
   </div>
-  <!-- Ruedas delanteras de la vista 1P: asoman a los lados del monocasco -->
-  <div class="fpvWh fpvWhL" id="fpvWL"></div>
-  <div class="fpvWh fpvWhR" id="fpvWR"></div>
   <!-- Ventana 3D de boxes: servicios durante la parada -->
   <div id="pitMenu">
     <div id="pmHead"><svg class="ic"><use href="#i-wrench"/></svg><span id="pmTitle">PARADA EN BOXES</span></div>
@@ -2695,6 +2691,10 @@
     <div id="gateErr"></div>
   </div>
 </div>
+<!-- Ruedas delanteras de la vista 1P: a nivel body para que el fixed sea el
+     viewport real (dentro de un contenedor transformado el fixed se mide mal) -->
+<div class="fpvWh fpvWhL" id="fpvWL"><img src="fpv_tire.webp" alt=""></div>
+<div class="fpvWh fpvWhR" id="fpvWR"><img src="fpv_tire.webp" alt=""></div>
 <div id="splash"><img src="portada.jpg" alt="">
   <div id="splashLogo3D"></div>
   <div id="splashWheels"><i></i><i></i></div>
@@ -10667,7 +10667,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 803;
+const BUILD_NO = 804;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -13264,44 +13264,17 @@ function mkDrone() {
 // Vista en primera persona: cámara en la cabeza del piloto — la carrocería del
 // coche propio se oculta (las luces NO: de noche siguen iluminando la pista)
 // y la cabina/halo de carbono queda a pantalla completa
-// Ruedas delanteras propias para la vista 1P: el GLB no las trae separables,
-// así que van dos pivotes que DIRECCIONAN con el volante y ruedan — el plano
-// onboard real enseña los neumáticos a los lados del morro
-function fpvWheels() {
-  if (carGrp.userData._fpvW) return carGrp.userData._fpvW;
-  // carGrp lleva la escala del GLB (~0.3): compensamos posiciones y radios
-  const ks = 1 / (carGrp.getWorldScale(new THREE.Vector3()).x || 1);
-  const wg = new THREE.Group();
-  const tireG = new THREE.CylinderGeometry(0.38 * ks, 0.38 * ks, 0.45 * ks, 18); tireG.rotateZ(Math.PI / 2);
-  const tM = new THREE.MeshStandardMaterial({ color: 0x0c0d10, roughness: 0.9 });
-  const rimM = new THREE.MeshStandardMaterial({ color: 0x9aa0a8, roughness: 0.35, metalness: 0.75 });
-  wg.userData.pivs = [];
-  for (const s of [-1, 1]) {
-    const piv = new THREE.Group(); piv.position.set(s * 1.0 * ks, 0.38 * ks, 4.3 * ks);
-    const spin = new THREE.Group();
-    spin.add(new THREE.Mesh(tireG, tM));
-    const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.2 * ks, 0.2 * ks, 0.48 * ks, 12), rimM);
-    rim.rotation.z = Math.PI / 2; spin.add(rim);
-    piv.add(spin); piv.userData.spin = spin;
-    wg.add(piv); wg.userData.pivs.push(piv);
-  }
-  wg.visible = false; carGrp.add(wg);
-  carGrp.userData._fpvW = wg;
-  return wg;
-}
 function fpvHideCar() {
   if (!carGrp || carGrp.userData._fpvHid) return;
-  const wg = fpvWheels();                                  // nacen ocultas con el resto
   const tgt = carGrp.userData.spot && carGrp.userData.spot.target;
   const hid = [];
   for (const ch of carGrp.children)
-    if (ch.visible && !ch.isLight && ch !== tgt && ch !== wg && !wheelF.includes(ch)) { ch.visible = false; hid.push(ch); }
+    if (ch.visible && !ch.isLight && ch !== tgt && !wheelF.includes(ch)) { ch.visible = false; hid.push(ch); }
   carGrp.userData._fpvHid = hid;
 }
 function fpvShowCar() {
   const hid = carGrp && carGrp.userData._fpvHid;
   if (hid) { for (const ch of hid) ch.visible = true; carGrp.userData._fpvHid = null; }
-  if (carGrp && carGrp.userData._fpvW) carGrp.userData._fpvW.visible = false;
 }
 function setCen(on) {
   if (on === cenOn) return;
@@ -14029,14 +14002,6 @@ function draw(now) {
   // la capa DOM de la cabina/halo hace de carrocería y gira con la dirección
   if (fpvOn && !replaying) {
     fpvHideCar();
-    const fpw = carGrp.userData._fpvW;                    // delanteras: direccionan y ruedan
-    if (fpw) {
-      fpw.visible = true;
-      for (const piv of fpw.userData.pivs) {
-        piv.rotation.y = inSteer * 0.4;
-        piv.userData.spin.rotation.x -= spd * dt * 1.25;
-      }
-    }
     cam3.position.set(car.x + cf * 0.55, 1.72, car.z + sf * 0.55);
     cam3.up.set(0, 1, 0);
     cam3.lookAt(car.x + cf * 30, 0.6, car.z + sf * 30);    // algo picada: las ruedas asoman
