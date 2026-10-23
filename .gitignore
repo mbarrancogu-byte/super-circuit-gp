@@ -48,3 +48,8 @@ mk_*.py
 neonwall_view*.png
 wheel_prev*.png
 heli72/
+_node/
+.vercel
+
+.vercel
+.env*

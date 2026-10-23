@@ -1,0 +1,30 @@
+# Solo el juego web se publica — excluir todo lo demás
+android/
+_node/
+SuperCircuitGP-1.0.apk
+*.zip
+RESTORE_POINT_*/
+_glb/
+node_modules/
+capturas/
+_*.png
+_*.jpg
+_*.py
+_*.txt
+_*.html
+chk_*
+mk_*.py
+*.pyc
+MEZENAS REGALOS/
+WEB/
+pitch/
+_vid/
+_shots/
+cloudflared.exe
+*.mp4
+*.webp.orig
+*-pasted.*
+heli72/
+_orig.html
+_alljs.js
+git
