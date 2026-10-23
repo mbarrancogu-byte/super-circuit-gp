@@ -44,3 +44,9 @@ cp "SuperCircuitGP-1.0.apk" "/d/Super Circuit GP/"
 cp "SuperCircuitGP-1.0.apk" "/e/GP SUPER CIRCUIT/"
 cp "SuperCircuitGP-1.0.apk" "/g/GP SUPER CIRCUIT/" 2>/dev/null
 ```
+
+## Despliegue web (GitHub → Vercel/Netlify)
+- Repo: `https://github.com/mbarrancogu-byte/super-circuit-gp` (rama `main`, remoto `origin`).
+- **Flujo por cambio**: `git add -A && git commit -m "Build NNN: ..." && git push origin main`.
+- Cada push a `main` redespliega el juego publicado automáticamente (sitio estático, sin build).
+- Puerta de acceso: `GAME_PIN` al final de `index.html` (persistente vía localStorage `scgAuth`).
