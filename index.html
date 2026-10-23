@@ -8499,15 +8499,8 @@ function buildWorld() {
     }
   }
 
-  // --- Montañas lejanas + cielo estrellado + luna (solo de noche) ---
+  // --- Cielo estrellado + luna (solo de noche) ---
   if (!traced) {
-    for (let i = 0; i < 16; i++) {
-      const a = i / 16 * Math.PI * 2 + rnd(-0.1, 0.1), r = rnd(1050, 1250);
-      const m = new THREE.Mesh(new THREE.ConeGeometry(rnd(160, 300), rnd(140, 260), 6),
-        new THREE.MeshStandardMaterial({ color: 0x111a2c, roughness: 1, flatShading: true }));
-      m.position.set(Math.cos(a) * r, hAt(Math.cos(a) * r, Math.sin(a) * r) - 3, Math.sin(a) * r);
-      world.add(m);
-    }
     // Cielo: se crean los DOS sets (noche = estrellas+luna, día = sol+halo) y
     // applyTOD() decide cuál se ve según la hora elegida en el menú
     const sky = { night: [], sun: [] };
@@ -10652,7 +10645,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 827;
+const BUILD_NO = 828;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
