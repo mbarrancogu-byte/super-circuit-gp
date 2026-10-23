@@ -7500,9 +7500,20 @@ function buildWorld() {
   };
   const terGeo = new THREE.PlaneGeometry(2600, 2600, 56, 56);
   if (!traced) {
-    // Desplazar vértices: la z local del plano se convierte en altura del mundo
+    // Desplazar vértices: la z local del plano se convierte en altura del mundo.
+    // Excepción: la huella del complejo de boxes queda LLANA — la losa y la
+    // calle de boxes van siempre por encima de la hierba, nunca sepultadas
     const tp = terGeo.attributes.position;
-    for (let i = 0; i < tp.count; i++) tp.setZ(i, hAt(tp.getX(i), -tp.getY(i)));
+    const pitFlat = (x, z) => {
+      const pe = window._pitExcl;
+      if (!pe) return 1;
+      const dx = x - pe.x, dz = z - pe.z;
+      const m = Math.max(Math.abs(dx * pe.tx + dz * pe.tz) - pe.hx,
+                         Math.abs(-dx * pe.tz + dz * pe.tx) - pe.hz);
+      return clamp(m / 8, 0, 1);          // 0 dentro → llano; fundido de 8u al salir
+    };
+    for (let i = 0; i < tp.count; i++)
+      tp.setZ(i, hAt(tp.getX(i), -tp.getY(i)) * pitFlat(tp.getX(i), -tp.getY(i)));
     terGeo.computeVertexNormals();
   }
   const ter = new THREE.Mesh(terGeo, new THREE.MeshStandardMaterial({ roughness: 1 }));
@@ -10641,7 +10652,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 826;
+const BUILD_NO = 827;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
