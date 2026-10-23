@@ -3149,7 +3149,7 @@
 <div id="pip"><div id="pipLbl"><span class="pipDot"></span><span id="pipNm">TV · CPU 1</span></div>
   <canvas id="pipCv"></canvas><div id="pipSub"></div></div>
 <div id="pip2"><div id="pipLbl"><span class="pipDot"></span><span id="pip2Nm">1P</span></div>
-  <canvas id="pip2Cv"></canvas><div id="pip2Sub"></div></div>
+  <canvas id="pip2Cv"></canvas></div>
 
 <div class="screen" id="recScr">
   <div class="stripe"></div>
@@ -10630,7 +10630,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 818;
+const BUILD_NO = 819;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -11817,7 +11817,6 @@ function pipTick(dt) {
   el('pipNm').textContent = '🛸 ' + T('drone') + ' · P' + pos + ' · ' + nmT;
   pip2Show();
   el('pip2Nm').textContent = '🏎️ 1P · P' + pos + ' · ' + nmT;
-  el('pip2Sub').textContent = T('onb');
 }
 // ===== FALSA SALIDA =====
 // Alguien se adelanta al semáforo → letrero + alarma → el grupo da una vuelta
