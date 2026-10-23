@@ -13986,7 +13986,9 @@ function draw(now) {
   // (sin vibración de imagen: la cámara nunca tiembla — ni a alta velocidad,
   //  ni por baches, ni frenando; el coche sí rebota visualmente sobre el relieve)
   // Volante de cabina: aparece al acercar la cámara, gira con la dirección del coche
-  const wOp = fpvOn ? 0.96 : cenOn ? 0 : clamp((1 - camZoom) * 1.8 - 0.35, 0, 0.96);
+  const wOp = droneOn ? clamp((1 - camZoom) * 1.8 - 0.35, 0, 0.96) : 0.96;
+  // Cabina SIEMPRE visible en todas las vistas (persecución, cenital, 1P) como
+  // en primera persona — solo el modo dron FPV conserva su comportamiento
   wheelDegS += ((car.steer || 0) * 24 - wheelDegS) * Math.min(1, dt * 3.6);   // giro suave y corto
   car.wheelVib = Math.max(0, (car.wheelVib || 0) - dt * 2.4);
   const wTf = `rotate(${wheelDegS.toFixed(1)}deg)`;
