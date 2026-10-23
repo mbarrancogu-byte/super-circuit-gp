@@ -614,10 +614,9 @@
             drop-shadow(0 14px 26px rgba(0,0,0,0.6))
             brightness(0.96); transition: opacity .2s; }
   #wheelImg { transition: opacity .2s; }   /* capa fija: solo funde, no gira */
-  /* Sin volante pequeño superpuesto ni sus botones: queda solo la vista de
-     cabina fija (hueco central transparente → se ve la pista) */
-  #wheelGiro, #wheelLayer, #whDash, #wheelUI,
-  #wheelWrap #boxexBtn, #wheelWrap #lightsBtn { display: none !important; }
+  /* Nuestro volante (wheelGiro) va sobre el cockpitCar; los botones que iban
+     sobre su cara quedan fuera — sus funciones viven en la columna derecha */
+  #wheelUI, #wheelWrap #boxexBtn, #wheelWrap #lightsBtn { display: none !important; }
   /* Cockpit del coche (halo de carbono + pontones + retrovisores): capa de
      fondo de la cabina — el volante se monta dentro de la bañera */
   #cockpitCar { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0;
@@ -10642,7 +10641,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 825;
+const BUILD_NO = 826;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
