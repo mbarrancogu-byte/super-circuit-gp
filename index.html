@@ -183,7 +183,9 @@
     border-color: rgba(255,80,60,0.6); color: #ffb0a0;
     font-size: 13px; font-size: max(9px, 2cqw); }
   #wheelWrap #gasBtn.on, #wheelWrap #brkBtn.on { border-radius: 24%; }
-  #wheelWrap #nitroBtn { left: 46.5%; top: 72%; width: 9%; aspect-ratio: 1/1; }
+  #wheelWrap #nitroBtn { left: 81.5%; top: 71%; width: 6.4%; aspect-ratio: 1/1;
+    border-radius: 22%; opacity: .9; }
+  #wheelWrap #nitroBtn .tIc, #wheelWrap #nitroBtn .tLb { display: block; }
   /* Hitboxes funcionales resaltadas: aro luminoso pulsante sobre el icono
      horneado — BOXES, HB y ACTIVATE se ven como botones reales */
   #wheelWrap .tbtn.hl::before { content: ''; position: absolute; inset: -7%;
@@ -402,7 +404,7 @@
   body.lefty #stPad { left: auto; right: 14px; }
   body.lefty #gasBtn { right: auto; left: 14px; }
   body.lefty #brkBtn { right: auto; left: 121px; }
-  body.lefty #nitroBtn { right: auto; left: 14px; }
+  body.lefty #nitroBtn { right: auto; left: 16px; top: 71%; }
   body.lefty #pitBtn { left: calc(50% - 32px); }
   body.lefty #boxexBtn { left: 16px; top: 58%; }
   body.lefty #lightsBtn { right: auto; left: 16px; }
@@ -2644,10 +2646,10 @@
       <div class="tbtn hl" id="hbBtn"><img class="tIc" src="ctl_derrape.webp" alt=""><span class="tLb">HB</span></div>
       <div class="tbtn" id="gasBtn"><img class="tIc" src="ctl_acelerar.webp" alt=""><span class="tLb">GAS</span></div>
       <div class="tbtn" id="brkBtn"><img class="tIc" src="ctl_frenar.webp" alt=""><span class="tLb">FRENO</span></div>
-      <div class="tbtn hl" id="nitroBtn"><img class="tIc" src="ctl_nitro.webp" alt=""><span class="tLb">NITRO</span></div>
     </div>
-    <!-- BOXES y faros van sobre los pods fijos: no giran con el volante -->
+    <!-- BOXES, NITRO y faros van sobre los pods fijos: no giran con el volante -->
     <div class="tbtn" id="boxexBtn"><img class="tIc" src="ctl_boxes.webp" alt=""><span class="tLb">BOXES</span></div>
+    <div class="tbtn hl" id="nitroBtn"><img class="tIc" src="ctl_nitro.webp" alt=""><span class="tLb">NITRO</span></div>
     <div class="tbtn" id="lightsBtn"><svg class="ic" style="margin:0"><use href="#i-light"/></svg></div>
     <div id="speedBox"><div id="speedNum">0<small> km/h</small></div><div id="gearNum">MARCHA 1</div><div id="rpmWrap"><div id="rpmBar"></div></div></div>
     <div id="gearBig"></div>
