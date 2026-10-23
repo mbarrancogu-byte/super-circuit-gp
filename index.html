@@ -10668,7 +10668,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 829;
+const BUILD_NO = 830;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -13383,7 +13383,7 @@ function droneTick(dt, now) {
     const gp = pad._gp;                                   // mando libre: la IA lleva el coche
     if (gp && gp.connected) {
       const dz2 = v => Math.abs(v) > 0.16 ? v : 0;
-      str += dz2(gp.axes[0] || 0); fwd -= dz2(gp.axes[1] || 0);
+      str -= dz2(gp.axes[0] || 0); fwd -= dz2(gp.axes[1] || 0);   // izq/der invertidas en el dron
       rot += dz2(gp.axes[2] || 0);
       lift += (gp.buttons[7] ? gp.buttons[7].value : 0) - (gp.buttons[6] ? gp.buttons[6].value : 0);
     }

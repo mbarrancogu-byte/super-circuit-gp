@@ -1,5 +1,5 @@
 // Service worker: actualiza primero por red y guarda copia para offline (PWA)
-const CACHE = 'scgp-v394';
+const CACHE = 'scgp-v395';
 const ASSETS = [
   './', 'index.html', 'circuitos.js', 'fondo.jpg', 'fondo2.jpg', 'portada.jpg',
   'fondo_pw.png', 'fondo_card.jpg', 'fondo_manual.jpg', 'f1.png', 'f1sel.png', 'f1_r26.png', 'f1_scarlet.png', 'f1_verde.png', 'f1_amarillo.png', 'f1_negro.png', 'f1_rosa.png', 'f1_naranja.png', 'volante.webp', 'volante_giro.webp', 'volante_fijo.webp', 'cockpit_car.webp', 'stick_dpad.webp', 'fpv_tire.webp', 'logo_gp.webp', 'trofeo.webp', 'logo_shape.js', 'RADIO.mp3', 'three.min.js', 'postprocessing.min.js', 'peerjs.min.js',
