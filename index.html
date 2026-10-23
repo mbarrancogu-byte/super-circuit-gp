@@ -227,6 +227,14 @@
   #stStick.on { transform: scale(0.94);
     filter: drop-shadow(0 10px 18px rgba(0,0,0,0.6))
             drop-shadow(0 0 16px rgba(120,200,255,0.55)) brightness(1.15); }
+  /* Aro fino naranja neón en el borde del stick */
+  #stStick::after { content: ''; position: absolute; inset: 0; border-radius: 50%;
+    border: 2px solid rgba(255,140,30,0.95); pointer-events: none;
+    box-shadow: 0 0 10px rgba(255,140,30,0.75), inset 0 0 10px rgba(255,140,30,0.4);
+    animation: stRingGlow 2.2s ease-in-out infinite; }
+  @keyframes stRingGlow {
+    0%, 100% { box-shadow: 0 0 10px rgba(255,140,30,0.75), inset 0 0 10px rgba(255,140,30,0.4); }
+    50%      { box-shadow: 0 0 20px rgba(255,160,50,1),    inset 0 0 16px rgba(255,160,50,0.6); } }
   /* Las flechas van horneadas en el propio pad (cruceta de carbono) */
   #stStick .stkAr { display: none; }
   #stKnob2 { display: none; }
@@ -10630,7 +10638,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 819;
+const BUILD_NO = 820;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
