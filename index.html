@@ -10598,6 +10598,7 @@ function skidMark(x, z, a, k = 1, pi) {
 
 /* ================== LÓGICA ================== */
 let skidT = 0, skidD = 0, lockD = 0, dustT = 0, cutMax = null, slowT = 0;
+let exhT = 0, gasWas = false;                            // escape: cadencia de la estela + flanco del gas
 let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, ondas y derrape por agua
 // Refs DOM cacheadas: getElementById por frame obliga al navegador a buscar en el árbol
 const _els = {};
@@ -11449,9 +11450,9 @@ function cpuDrive(c, dt) {
                      -cf3 * c.v * 0.25, -sf3 * c.v * 0.25,
                      Math.random() < 0.45 ? 0x18181b : 0xf4f4f4,
                      rnd(1.5, 2.4), rnd(2.6, 4.2), launch ? 0.6 : 0.4);
-          if (Math.random() < 0.3)                          // bocanada negra del escape
+          if (Math.random() < 0.5)                          // bocanada blanca del escape
             dustPuff(c.x - cf3 * 2.8, c.z - sf3 * 2.8, -cf3 * c.v * 0.1, -sf3 * c.v * 0.1,
-                     0x121215, rnd(1.1, 1.6), rnd(2.6, 4.2), 0.5);
+                     0xf0f3f6, rnd(0.5, 0.8), rnd(1.6, 2.8), 0.5);
         }
       }
     }
@@ -12141,6 +12142,25 @@ function update(dt) {
   goWas = go;
 
   const cf = Math.cos(car.a), sf = Math.sin(car.a);
+  // ESCAPE: cada vez que se pisa el gas sale una bocanada blanca del tubo
+  // trasero; con el pedal a fondo queda una estela continua de humo claro
+  exhT -= dt;
+  const espd = Math.hypot(car.vx, car.vz);
+  if (go && gas > 0) {
+    const ex = car.x - cf * 4.3, ez = car.z - sf * 4.3;      // boca del escape, en la zaga
+    if (!gasWas) {                                          // flanco: bocanada al pisar
+      for (let k = 0; k < 5; k++)
+        dustPuff(ex - cf * rnd(0, 1.5) - sf * rnd(-0.5, 0.5), ez - sf * rnd(0, 1.5) + cf * rnd(-0.5, 0.5),
+                 -cf * espd * 0.25, -sf * espd * 0.25, 0xf4f6f8, rnd(0.6, 1.0), rnd(2.6, 3.8), 0.72);
+    }
+    if (exhT <= 0) {                                        // estela continua mientras acelera
+      dustPuff(ex - sf * rnd(-0.4, 0.4), ez + cf * rnd(-0.4, 0.4),
+               -cf * espd * 0.3 + rnd(-1, 1), -sf * espd * 0.3 + rnd(-1, 1),
+               0xf4f6f8, rnd(0.4, 0.7), rnd(1.9, 3.0), 0.55);
+      exhT = 0.05;
+    }
+  }
+  gasWas = gas > 0;
   // Velocidad descompuesta en adelante / lateral (modelo arcade de derrape)
   let vf = car.vx * cf + car.vz * sf;
   let vl = -car.vx * sf + car.vz * cf;
