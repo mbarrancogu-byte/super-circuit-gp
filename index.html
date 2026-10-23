@@ -4406,24 +4406,24 @@ function makeGroundTex(neon) {
       t.fillRect(0, y + 90, 512, 12);
     }
     t.globalCompositeOperation = 'source-over';
-    // Calvas de hierba seca: parches ocres/tostados difusos que rompen el verde
-    // uniforme — el campo reseco que se ve alrededor de los circuitos reales
+    // Calvas de hierba: parches de verdes distintos que rompen la uniformidad
+    // — el campo vivo que se ve alrededor de los circuitos reales
     for (let i = 0; i < 62; i++) {
       const x = Math.random() * 512, y = Math.random() * 512, r = 18 + Math.random() * 80;
       const a = 0.09 + Math.random() * 0.16, warm = Math.random() < 0.62;
       wrap(x, y, r, (X, Y) => {
         const g = t.createRadialGradient(X, Y, 0, X, Y, r);
-        g.addColorStop(0, warm ? `rgba(150,124,58,${a})` : `rgba(98,90,44,${a * 0.8})`);
-        g.addColorStop(0.62, warm ? `rgba(142,116,52,${a * 0.5})` : `rgba(92,84,40,${a * 0.4})`);
+        g.addColorStop(0, warm ? `rgba(96,132,52,${a})` : `rgba(56,84,34,${a * 0.8})`);
+        g.addColorStop(0.62, warm ? `rgba(88,120,46,${a * 0.5})` : `rgba(50,76,30,${a * 0.4})`);
         g.addColorStop(1, 'rgba(0,0,0,0)');
         t.fillStyle = g;
         t.save(); t.translate(X, Y); t.rotate(Math.random() * 3.14);
         t.beginPath(); t.ellipse(0, 0, r, r * (0.45 + Math.random() * 0.5), 0, 0, 7); t.fill(); t.restore();
       });
     }
-    for (let i = 0; i < 2400; i++) {                     // motas secas sueltas
+    for (let i = 0; i < 2400; i++) {                     // motas de hierba sueltas
       const x = Math.random() * 512, y = Math.random() * 512;
-      t.fillStyle = `rgba(${148 + Math.random() * 42},${122 + Math.random() * 34},${58 + Math.random() * 30},${0.04 + Math.random() * 0.09})`;
+      t.fillStyle = `rgba(${70 + Math.random() * 46},${112 + Math.random() * 52},${38 + Math.random() * 30},${0.04 + Math.random() * 0.09})`;
       wrap(x, y, 2, (X, Y) => t.fillRect(X, Y, 1 + Math.random() * 2, 1));
     }
   }
@@ -5091,16 +5091,16 @@ function buildWorld() {
         lgws.instanceColor.needsUpdate = true;
         window._edgeLeds = { lm: leds, gm: lgws, np: lpos.length / 2, step: 2.4 };
       }
-      // Lechos de grava en el EXTERIOR de las curvas: la escapatoria tostada
+      // Lechos de césped en el EXTERIOR de las curvas: la escapatoria verde
       // que se ve desde el aire justo donde un coche lanzado se iría largo
       {
         if (!window._gravTex) {
           const gc = document.createElement('canvas'); gc.width = gc.height = 128;
           const gt = gc.getContext('2d');
-          gt.fillStyle = '#8a7a58'; gt.fillRect(0, 0, 128, 128);
+          gt.fillStyle = '#2e4d1c'; gt.fillRect(0, 0, 128, 128);
           for (let k = 0; k < 2600; k++) {
             const v = Math.random();
-            gt.fillStyle = `rgba(${118 + v * 72},${102 + v * 62},${68 + v * 46},${0.25 + v * 0.42})`;
+            gt.fillStyle = `rgba(${34 + v * 34},${82 + v * 58},${26 + v * 26},${0.25 + v * 0.42})`;
             gt.fillRect(Math.random() * 128, Math.random() * 128, 1 + Math.random() * 2.2, 1 + Math.random() * 1.6);
           }
           window._gravTex = tex3(gc);
@@ -10642,7 +10642,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 824;
+const BUILD_NO = 825;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
