@@ -348,6 +348,14 @@
   /* Vista cenital: bajo el botón de 1P */
   #cenBtn { right: 12px; top: 320px; width: 52px; }
   #cenBtn.on { background: rgba(120,255,160,0.38); border-color: #7dffa8; }
+  /* Acciones de carrera: PIT · HB · NITRO en la esquina derecha, bajo TOP */
+  #pitBtn   { right: 12px; top: 378px; width: 52px; height: 52px; }
+  #hbBtn    { right: 12px; top: 442px; width: 52px; height: 52px; }
+  #nitroBtn { right: 12px; top: 506px; width: 52px; height: 52px; }
+  #pitBtn.on  { background: rgba(255,200,80,0.38); border-color: #ffd060; }
+  #hbBtn.on   { background: rgba(255,120,60,0.38); border-color: #ff9060; }
+  #nitroBtn.on{ background: rgba(255,60,60,0.4); border-color: #ff7060;
+    box-shadow: 0 0 16px rgba(255,80,60,0.6); }
   /* Ruedas delanteras en 1ª persona: asoman por las esquinas del cockpit
      como en una onboard real y basculan con la dirección */
   .fpvWh { display: none; position: fixed; bottom: -6%; width: 13%; z-index: 7;
@@ -404,11 +412,9 @@
   body.lefty #stPad { left: auto; right: 14px; }
   body.lefty #gasBtn { right: auto; left: 14px; }
   body.lefty #brkBtn { right: auto; left: 121px; }
-  body.lefty #nitroBtn { right: auto; left: 16px; top: 82%; }
-  body.lefty #pitBtn { left: calc(50% - 32px); }
+  body.lefty #pitBtn, body.lefty #hbBtn, body.lefty #nitroBtn { right: auto; left: 12px; }
   body.lefty #boxexBtn { left: 16px; top: 58%; }
   body.lefty #lightsBtn { right: auto; left: 16px; }
-  body.lefty #hbBtn { left: calc(42% - 32px); }
   /* ---------- Tres zonas de la pantalla de juego ---------- */
   /* Zona superior: ventana de telemetría — chips, crono, minimapa */
   #zoneTop { position: absolute; top: 0; left: 0; right: 0; height: 78px; pointer-events: none;
@@ -2642,14 +2648,11 @@
     </div>
     <div class="tbtn" id="stPad"><span class="stAr u">▲</span><span class="stAr r">▶</span><span class="stAr d">▼</span><span class="stAr l">◀</span><span class="stKnob" id="stKnob"></span><span class="stA" id="stA_L"></span><span class="stA" id="stA_R"></span></div>
     <div id="wheelUI" style="position:absolute;inset:0;transform-origin:50% 50%;pointer-events:none">
-      <div class="tbtn hl" id="pitBtn"><img class="tIc" src="ctl_boxes.webp" alt=""><span class="tLb">PIT</span></div>
-      <div class="tbtn hl" id="hbBtn"><img class="tIc" src="ctl_derrape.webp" alt=""><span class="tLb">HB</span></div>
       <div class="tbtn" id="gasBtn"><img class="tIc" src="ctl_acelerar.webp" alt=""><span class="tLb">GAS</span></div>
       <div class="tbtn" id="brkBtn"><img class="tIc" src="ctl_frenar.webp" alt=""><span class="tLb">FRENO</span></div>
     </div>
-    <!-- BOXES, NITRO y faros van sobre los pods fijos: no giran con el volante -->
+    <!-- BOXES y faros van sobre los pods fijos: no giran con el volante -->
     <div class="tbtn" id="boxexBtn"><img class="tIc" src="ctl_boxes.webp" alt=""><span class="tLb">BOXES</span></div>
-    <div class="tbtn hl" id="nitroBtn"><img class="tIc" src="ctl_nitro.webp" alt=""><span class="tLb">NITRO</span></div>
     <div class="tbtn" id="lightsBtn"><svg class="ic" style="margin:0"><use href="#i-light"/></svg></div>
     <div id="speedBox"><div id="speedNum">0<small> km/h</small></div><div id="gearNum">MARCHA 1</div><div id="rpmWrap"><div id="rpmBar"></div></div></div>
     <div id="gearBig"></div>
@@ -2674,6 +2677,12 @@
 <div class="zbtn" id="droneBtn"><span class="zLb" style="font-size:11px;font-weight:900;letter-spacing:.5px">DRON</span></div>
 <div class="zbtn" id="fpvBtn" style="display:none"><span class="zLb" style="font-size:12px;font-weight:900;letter-spacing:.5px">1P</span></div>
 <div class="zbtn" id="cenBtn" style="display:none"><span class="zLb" style="font-size:10px;font-weight:900;letter-spacing:.5px">TOP</span></div>
+<!-- Acciones de carrera en la esquina derecha, bajo TOP -->
+<div id="actBtns" style="display:none">
+  <div class="zbtn" id="pitBtn"><img class="zIc" src="ctl_boxes.webp" alt=""><span class="tLb">PIT</span></div>
+  <div class="zbtn" id="hbBtn"><img class="zIc" src="ctl_derrape.webp" alt=""><span class="tLb">HB</span></div>
+  <div class="zbtn" id="nitroBtn"><img class="zIc" src="ctl_nitro.webp" alt=""><span class="tLb">NITRO</span></div>
+</div>
 <div class="dbtn" id="drUpBtn">▲</div>
 <div class="dbtn" id="drDnBtn">▼</div>
 <div id="droneHud"></div>
@@ -10606,7 +10615,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 815;
+const BUILD_NO = 816;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -11647,6 +11656,7 @@ function exitToMenu() {
   document.getElementById('droneBtn').style.display = 'none';
   document.getElementById('fpvBtn').style.display = 'none';
   document.getElementById('cenBtn').style.display = 'none';
+  document.getElementById('actBtns').style.display = 'none';
   document.getElementById('hud').style.display = 'none';
   document.getElementById('speedBox').style.display = 'none';
   for (const id of TOUCH_IDS) document.getElementById(id).style.display = 'none';
@@ -13268,6 +13278,7 @@ function setDrone(on) {
     hud.style.display = 'block';
     if (OPTS.touchUi) { el('drUpBtn').style.display = 'flex'; el('drDnBtn').style.display = 'flex'; }
     el('wheelUI').style.display = 'none';            // pedales muertos: la IA lleva el coche
+    el('actBtns').style.display = 'none';
     showToast('🛸 ' + T('droneOn')); buzz(40);
   } else {
     if (drone) drone.grp.visible = false;
@@ -13275,6 +13286,7 @@ function setDrone(on) {
     hud.style.display = 'none';
     el('drUpBtn').style.display = 'none'; el('drDnBtn').style.display = 'none';
     el('wheelUI').style.display = '';
+    el('actBtns').style.display = 'block';
   }
 }
 // Colisión del dron con el escenario: los obstáculos son círculos 2D — se
@@ -14978,7 +14990,6 @@ function startStage(n, seed, mp, mode) {
   document.getElementById('tireChip')._w = -1;
   document.getElementById('koChip').style.display = koMode ? 'block' : 'none';
   document.getElementById('koChip')._t = -1;
-  document.getElementById('nitroBtn').style.display = (!demoMode && OPTS.touchUi) ? 'flex' : 'none';
   // MODO DRAG: arriba solo el marcador (vsChip); abajo solo GAS y FRENO
   document.getElementById('hudTop').style.display = dragMode ? 'none' : '';
   document.getElementById('hud').classList.toggle('drag', !!dragMode);
@@ -14991,11 +15002,13 @@ function startStage(n, seed, mp, mode) {
         (id === 'gasBtn' || id === 'shiftBtn' ||
          (!p2Mode && id === 'brkBtn') ||
          (p2Mode && id === 'gas2Btn'))) ? 'flex' : 'none';
+    el('actBtns').style.display = 'none';
   }
   playing = true;
   document.getElementById('droneBtn').style.display = droneOk() ? 'flex' : 'none';
   document.getElementById('fpvBtn').style.display = 'flex';
   document.getElementById('cenBtn').style.display = 'flex';
+  document.getElementById('actBtns').style.display = 'block';
   // Ningún control del menú/HUD conserva el foco: Enter/Espacio lo re-dispararían
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   // Semáforo F1: 5 luces se encienden en serie y al apagarse → ¡GO!
