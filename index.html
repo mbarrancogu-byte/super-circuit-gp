@@ -155,22 +155,83 @@
     background: linear-gradient(180deg, rgba(28,36,60,0.96), rgba(8,12,26,0.98));
     box-shadow: 0 2px 0 rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.5),
       inset 0 4px 10px rgba(0,0,0,0.65), inset 0 -1px 2px rgba(255,255,255,0.12); }
-  /* Zona izquierda: pad de dirección ancho tipo cruceta deslizante */
-  #stPad { left: 14px; bottom: 40px; width: 150px; height: 66px; border-radius: 33px;
+  /* ===== Controles integrados EN el volante =====
+     Hitboxes transparentes sobre los iconos horneados del propio volante —
+     posiciones en % del volante: escalan con cualquier resolución */
+  #wheelWrap .tbtn { pointer-events: auto; touch-action: none; width: auto; height: auto;
+    background: transparent; border: none; box-shadow: none; backdrop-filter: none; }
+  #wheelWrap .tbtn .tIc, #wheelWrap .tbtn .tLb { display: none; }
+  #wheelWrap .tbtn.on { transform: scale(0.9); border-radius: 50%;
+    background: rgba(120,200,255,0.14);
+    box-shadow: 0 0 0 3px rgba(140,220,255,0.9), 0 0 22px rgba(120,200,255,0.75),
+      inset 0 0 16px rgba(140,220,255,0.35); }
+  /* Joystick: franja invisible sobre los agarres — arrastrar a los lados gira;
+     las flechas ←→ ya vienen horneadas en el volante */
+  #wheelWrap #stPad { left: 4%; top: 26%; width: 92%; height: 62%; border-radius: 18px;
     flex-direction: row; padding: 0; overflow: hidden; }
+  #wheelWrap #stPad .stAr, #wheelWrap #stPad .stKnob { display: none; }
   .stA { flex: 1; height: 100%; display: flex; align-items: center; justify-content: center;
-    font-size: 26px; transition: background .1s; }
-  .stA:first-child { border-right: 1px solid rgba(255,200,80,0.35); }
-  .stA.on { background: rgba(255,190,60,0.35); }
-  /* Zona derecha: pedales grandes + nitro/pit al alcance del pulgar */
-  #gasBtn { right: 14px; bottom: 40px; width: 74px; height: 74px; border-color: rgba(80,255,120,0.6); color: #b0ffc0; font-size: 13px; }
-  #brkBtn { right: 121px; bottom: 40px; width: 74px; height: 74px; border-color: rgba(255,80,60,0.6); color: #ffb0a0; font-size: 13px; }
-  #nitroBtn { right: 14px; bottom: 224px; width: 70px; height: 70px; font-size: 26px; }
-  #pitBtn { right: 126px; bottom: 144px; width: 64px; height: 64px; font-size: 13px;
+    font-size: 0; transition: background .1s; z-index: 1; }
+  .stA.on { background: rgba(140,180,255,0.10); }
+  /* Hitboxes sobre los iconos horneados: BOXES PIT · DERRAPE HB · +A · -F · ACTIVATE */
+  #wheelWrap #pitBtn { left: 38.2%; top: 38%; width: 11.6%; aspect-ratio: 1/1; }
+  #wheelWrap #hbBtn { left: 50.2%; top: 38%; width: 11.6%; aspect-ratio: 1/1; }
+  #wheelWrap #gasBtn { left: 37.2%; top: 76.3%; width: 5.6%; aspect-ratio: 1/1;
+    border-color: rgba(80,255,120,0.6); color: #b0ffc0;
+    font-size: 13px; font-size: max(9px, 2cqw); }
+  #wheelWrap #brkBtn { left: 57.2%; top: 76.3%; width: 5.6%; aspect-ratio: 1/1;
+    border-color: rgba(255,80,60,0.6); color: #ffb0a0;
+    font-size: 13px; font-size: max(9px, 2cqw); }
+  #wheelWrap #gasBtn.on, #wheelWrap #brkBtn.on { border-radius: 24%; }
+  #wheelWrap #nitroBtn { left: 46.5%; top: 72%; width: 9%; aspect-ratio: 1/1; }
+  /* Hitboxes funcionales resaltadas: aro luminoso pulsante sobre el icono
+     horneado — BOXES, HB y ACTIVATE se ven como botones reales */
+  #wheelWrap .tbtn.hl::before { content: ''; position: absolute; inset: -7%;
+    border-radius: 50%; pointer-events: none;
+    border: 2px solid rgba(125,215,255,0.8);
+    box-shadow: 0 0 12px rgba(110,200,255,0.5), inset 0 0 10px rgba(110,200,255,0.3);
+    animation: hlPulse 1.5s ease-in-out infinite; }
+  #wheelWrap .tbtn.hl.on::before { border-color: rgba(255,230,130,0.95);
+    box-shadow: 0 0 16px rgba(255,220,110,0.7), inset 0 0 12px rgba(255,220,110,0.4);
+    animation: none; }
+  #wheelWrap.bare .tbtn.hl::before { display: none; }
+  @keyframes hlPulse { 50% { opacity: 0.3; } }
+  /* BOXES y faros no traen icono horneado: mantienen los suyos, a los lados */
+  #wheelWrap #pitBtn { font-size: 13px; font-size: max(9px, 2cqw);
     border-color: rgba(255,230,140,0.7); color: #ffe8b0; }
+  #wheelWrap #boxexBtn { left: 12.5%; top: 45%; width: 6.4%; aspect-ratio: 1/1;
+    border-radius: 22%; opacity: .9; }
+  #wheelWrap #boxexBtn .tIc, #wheelWrap #boxexBtn .tLb { display: block; }
+  #wheelWrap #lightsBtn { left: 81.5%; top: 46%; width: 5.8%; aspect-ratio: 1/1;
+    font-size: 0; border: 2px solid rgba(255,235,150,0.45); background: rgba(20,26,44,0.55);
+    color: #8a8f9c; }
+  #wheelWrap #lightsBtn svg { display: block; width: 62%; height: 62%; margin: auto; }
+  #wheelWrap #lightsBtn.on { color: #ffe878; border-color: rgba(255,230,120,0.95);
+    background: rgba(96,74,18,0.85); box-shadow: 0 0 14px rgba(255,222,90,0.55); transform: none; }
+  /* Cámara lejos / sin volante: los controles vuelven a ser botones sólidos */
+  #wheelWrap.bare .tbtn { font-size: 11px; font-size: max(9px, 1.7cqw);
+    background: linear-gradient(180deg, rgba(62,76,112,0.92), rgba(14,20,40,0.96));
+    border: 2px solid rgba(200,220,255,0.5);
+    box-shadow: 0 6px 0 rgba(0,0,0,0.5), 0 12px 20px rgba(0,0,0,0.55); }
+  #wheelWrap.bare .tbtn .tIc, #wheelWrap.bare .tbtn .tLb { display: block; }
+  /* ===== Stick de dirección físico: a la izquierda del volante, pulgar izquierdo =====
+     Anillo de carbono + pomo metálico que se desliza con el arrastre (analógico) */
+  #stStick { position: absolute; z-index: 21; left: 3.5%; bottom: max(4px, env(safe-area-inset-bottom));
+    width: min(38vw, 172px); aspect-ratio: 1/1; border-radius: 50%;
+    pointer-events: auto; touch-action: none; display: none;
+    background: url(stick_dpad.webp) center / cover no-repeat;
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,0.6));
+    transition: filter .12s, transform .12s; }
+  #stStick.on { transform: scale(0.94);
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,0.6))
+            drop-shadow(0 0 16px rgba(120,200,255,0.55)) brightness(1.15); }
+  /* Las flechas van horneadas en el propio pad (cruceta de carbono) */
+  #stStick .stkAr { display: none; }
+  #stKnob2 { display: none; }
+  body.lefty #stStick { left: auto; right: 3.5%; }
   /* BOXEX: botón cuadrado 3D con degradado radial rojo — autopiloto al box propio.
      Encima del GAS, en su misma columna (el NITRO sube para dejarle hueco) */
-  #boxexBtn { right: 14px; bottom: 146px; width: 66px; height: 66px; border-radius: 16px;
+  #boxexBtn { border-radius: 16px;
     flex-direction: column; gap: 1px; font-size: 9px; letter-spacing: 1px; color: #fff;
     text-shadow: 0 1px 3px rgba(0,0,0,0.8);
     border: 1px solid rgba(255,150,120,0.85);
@@ -255,11 +316,19 @@
   #pmGo:active { transform: translateY(2px); }
   @media (max-width: 700px) { .pmOpt { width: 96px; padding: 9px 4px 8px; }
     #pitMenu { bottom: 118px; padding: 10px; } }
-  /* Pulsador pequeño de faros, encima del PIT */
-  #lightsBtn { right: 137px; bottom: 216px; width: 42px; height: 42px; font-size: 17px;
-    border-color: rgba(255,235,150,0.45); color: #8a8f9c; }
-  #lightsBtn.on { color: #ffe878; border-color: rgba(255,230,120,0.95);
-    background: rgba(96,74,18,0.85); box-shadow: 0 0 14px rgba(255,222,90,0.55); transform: none; }
+  /* Iconos 3D de los controles (los mismos de Opciones > COCHES), a tamaño botón */
+  .tbtn { overflow: hidden; }
+  .zbtn { overflow: hidden; }
+  .tIc, .zIc { position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; object-position: center 30%; border-radius: inherit;
+    pointer-events: none; }
+  .tLb { position: absolute; left: 0; right: 0; bottom: 4px; z-index: 2;
+    text-align: center; font-size: 9px; font-weight: 900; letter-spacing: 1px;
+    color: #fff; text-shadow: 0 1px 3px #000, 0 0 8px #000; pointer-events: none; }
+  .zLb { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center;
+    justify-content: center; font-size: 22px; color: #eaf6ff;
+    text-shadow: 0 1px 4px #000, 0 0 8px #000; pointer-events: none; }
+  .stA { position: relative; z-index: 2; }
   .zbtn { position: absolute; z-index: 20; width: 44px; height: 40px; border-radius: 10px;
     background: rgba(10,18,38,0.6); border: 2px solid rgba(120,200,255,0.6);
     color: #a0d8ff; font-size: 26px; font-weight: 900; display: none;
@@ -268,6 +337,56 @@
   .zbtn:active { background: rgba(80,180,255,0.35); transform: scale(0.92); }
   #zoomIn  { right: 60px; top: 108px; }
   #zoomOut { right: 12px; top: 108px; }
+  /* Botón del dron FPV: columna derecha bajo los controles de carrera */
+  #droneBtn { right: 12px; top: 204px; width: 52px; }
+  #droneBtn.on { background: rgba(80,180,255,0.38); border-color: #8fd8ff; }
+  /* Vista en primera persona: bajo el botón del dron */
+  #fpvBtn { right: 12px; top: 262px; width: 52px; }
+  #fpvBtn.on { background: rgba(255,200,80,0.38); border-color: #ffd060; }
+  /* Vista cenital: bajo el botón de 1P */
+  #cenBtn { right: 12px; top: 320px; width: 52px; }
+  #cenBtn.on { background: rgba(120,255,160,0.38); border-color: #7dffa8; }
+  /* Ruedas delanteras en 1ª persona: asoman por las esquinas del cockpit
+     como en una onboard real y basculan con la dirección */
+  .fpvWh { display: none; position: fixed; bottom: -5%; width: 7.5%; aspect-ratio: 0.62;
+    z-index: 21; border-radius: 50%; transform-origin: 50% 50%;
+    background: radial-gradient(ellipse at 42% 36%, #4a5058 0 8%, #262b32 30%, #101318 62%, #05070a 100%);
+    box-shadow: inset 0 -4px 12px rgba(0,0,0,.9), inset 0 3px 8px rgba(160,180,210,.28),
+      0 5px 14px rgba(0,0,0,.6); }
+  .fpvWh::after { content: ''; position: absolute; inset: 24% 33%; border-radius: 50%;
+    background: radial-gradient(circle at 40% 32%, #e8edf2, #7d8794 48%, #2a2f36 85%);
+    box-shadow: 0 0 6px rgba(0,0,0,.7); }
+  .fpvWhL { left: 23.5%; } .fpvWhR { right: 23.5%; }
+  /* Velocímetro vivo sobre la pantallita horneada del volante */
+  #whDash { position: absolute; left: 50%; top: 7.5%; transform: translateX(-50%);
+    display: flex; align-items: baseline; gap: 0.35em; z-index: 3;
+    padding: 0.18em 0.6em; border-radius: 8px; pointer-events: none;
+    background: rgba(4,7,12,0.88); border: 1px solid rgba(90,140,110,0.35);
+    font: 700 15px 'Cascadia Code', Consolas, monospace; color: #d8f0e0;
+    opacity: 0; }
+  #whDash b { font-size: 1.55em; color: #fff; font-weight: 900; }
+  #whDash span { font-size: 0.72em; color: #9ec8ae; }
+  #whDash i { font-style: normal; margin-left: 0.5em; padding: 0.1em 0.5em;
+    border-radius: 999px; font-size: 0.72em; font-weight: 900; letter-spacing: 0.5px;
+    color: #04140a; background: #3fd06a; border: 2px solid rgba(120,255,170,0.5); }
+  body.fpv .fpvWh { display: block; }
+  /* Altitud del dron (táctil): subir/bajar en el lateral derecho */
+  .dbtn { position: absolute; z-index: 20; width: 56px; height: 56px; border-radius: 50%;
+    background: rgba(10,18,38,0.6); border: 2px solid rgba(120,200,255,0.6);
+    color: #a0d8ff; font-size: 22px; font-weight: 900; display: none;
+    align-items: center; justify-content: center; pointer-events: auto;
+    touch-action: none; backdrop-filter: blur(2px); }
+  .dbtn:active, .dbtn.on { background: rgba(80,180,255,0.35); }
+  #drUpBtn { right: 16px; top: 42%; }
+  #drDnBtn { right: 16px; top: 56%; }
+  /* Consola del dron: telemetría + ayuda de controles bajo el encuadre */
+  #droneHud { position: absolute; left: 50%; top: 76px;
+    transform: translateX(-50%); z-index: 8; text-align: center;
+    background: rgba(8,14,30,0.72); border: 1px solid rgba(120,200,255,0.5);
+    border-radius: 999px; padding: 6px 18px; color: #bfe4ff;
+    font-size: 11px; font-weight: 800; letter-spacing: 1px; line-height: 1.5;
+    display: none; pointer-events: none; backdrop-filter: blur(3px); white-space: nowrap; }
+  #droneHud b { color: #7fe0ff; }
   /* Zoom del radar: +/− pegados a su esquina inferior derecha */
   .mmz { position: absolute; z-index: 20; width: 24px; height: 24px; border-radius: 7px;
     background: rgba(10,16,28,0.72); border: 1.5px solid rgba(120,200,255,0.55);
@@ -285,9 +404,10 @@
   body.lefty #gasBtn { right: auto; left: 14px; }
   body.lefty #brkBtn { right: auto; left: 121px; }
   body.lefty #nitroBtn { right: auto; left: 14px; }
-  body.lefty #pitBtn { right: auto; left: 126px; }
-  body.lefty #boxexBtn { right: auto; left: 14px; }
-  body.lefty #lightsBtn { right: auto; left: 137px; }
+  body.lefty #pitBtn { left: calc(50% - 32px); }
+  body.lefty #boxexBtn { left: calc(58% - 33px); }
+  body.lefty #lightsBtn { right: auto; left: 16px; }
+  body.lefty #hbBtn { left: calc(42% - 32px); }
   /* ---------- Tres zonas de la pantalla de juego ---------- */
   /* Zona superior: ventana de telemetría — chips, crono, minimapa */
   #zoneTop { position: absolute; top: 0; left: 0; right: 0; height: 78px; pointer-events: none;
@@ -382,16 +502,20 @@
     font: 800 14px/1 'Consolas', monospace; color: #8effb0; text-align: center;
     background: rgba(8,14,26,0.62); border: 1px solid rgba(120,255,170,0.3);
     border-radius: 9px; pointer-events: none; display: none; }
-  /* ---------- Velocímetro/marchas: centrado sobre el pad de dirección ---------- */
-  #speedBox { position: absolute; left: 66px; transform: translateX(-50%); bottom: 138px;
-    text-align: center; display: none; pointer-events: none; }
-  body.lefty #speedBox { left: auto; right: 66px; transform: translateX(50%); }
-  #speedNum { font-size: 46px; font-weight: 900; color: #fff; text-shadow: 0 0 14px rgba(255,200,80,0.7); line-height: 1; }
-  #speedNum small { font-size: 14px; color: #c8b088; }
+  /* ---------- Velocímetro/marchas: flotante sobre el halo, dentro del volante ---------- */
+  #speedBox { position: absolute; left: 50%; transform: translateX(-50%); top: 9%;
+    text-align: center; display: none; pointer-events: none; white-space: nowrap; }
+  body.lefty #speedBox { left: 50%; right: auto; transform: translateX(-50%); }
+  #speedNum { display: none;                         /* km/h ocultos — solo marcha + RPM */
+    font-size: 46px; font-size: max(20px, 7.2cqw);
+    font-weight: 900; color: #fff; text-shadow: 0 0 14px rgba(255,200,80,0.7); line-height: 1; }
+  #speedNum small { font-size: 14px; font-size: max(8px, 2.2cqw); color: #c8b088; }
   /* Indicador de marcha: insignia circular con anillo (como el aro de un volante F1) */
-  #gearNum { display: inline-flex; align-items: center; justify-content: center;
-    width: 58px; height: 58px; margin-top: 6px; border-radius: 50%;
-    font-size: 9px; color: var(--gc, #ff8060); font-weight: 800; letter-spacing: 1px;
+  #gearNum { display: none;                          /* insignia de marcha oculta */
+    width: 58px; width: max(28px, 9.1cqw); height: 58px; height: max(28px, 9.1cqw);
+    margin: 0 0 0 12px; margin-left: max(6px, 1.9cqw); border-radius: 50%;
+    font-size: 9px; font-size: max(6px, 1.4cqw);
+    color: var(--gc, #ff8060); font-weight: 800; letter-spacing: 1px;
     border: 2px solid var(--gc, rgba(255,128,96,0.85));
     background: radial-gradient(circle, rgba(30,12,8,0.75) 55%, rgba(10,6,4,0.6));
     box-shadow: 0 0 12px color-mix(in srgb, var(--gc, #ff6e46) 45%, transparent),
@@ -400,13 +524,14 @@
   /* Al cambiar de marcha: el aro parpadea muy rápido con neón del color de la marcha */
   #gearNum.gearFlash { animation: gearBlink .11s steps(2) infinite; }
   /* Número de marcha ENORME en neón: aparece un instante al cambiar, junto al aro */
-  #gearBig { position: absolute; left: 128px; bottom: 118px; display: none;
-    font-size: 92px; font-weight: 900; font-style: italic; line-height: 1;
+  #gearBig { position: absolute; left: 63%; top: 5%; display: none;
+    font-size: 92px; font-size: max(40px, 14.4cqw);
+    font-weight: 900; font-style: italic; line-height: 1;
     color: var(--gc, #ff8060); pointer-events: none; letter-spacing: -2px;
     text-shadow: 0 0 8px var(--gc, #ff8060), 0 0 26px var(--gc, #ff8060),
       0 0 58px color-mix(in srgb, var(--gc, #ff8060) 80%, transparent),
       0 3px 4px rgba(0,0,0,0.7); }
-  body.lefty #gearBig { left: auto; right: 128px; }
+  body.lefty #gearBig { left: auto; right: 63%; }
   #gearBig.pop { display: block; animation: gearPop .55s ease-out forwards; }
   @keyframes gearPop {
     0%   { opacity: 0; transform: scale(1.7); }
@@ -425,7 +550,7 @@
   /* 2 JUGADORES: J1 a la izquierda (GAS + ▲MARCHA), J2 a la derecha */
   #gas2Btn  { right: 14px; bottom: 40px; width: 98px; height: 98px; font-size: 15px;
     border-color: rgba(130,160,255,0.65); color: #b8ccff; }
-  #hud.p2 #gasBtn { right: auto; left: 14px; }
+  #hud.p2 #gasBtn { left: 20%; }
   #hud.p2 #shiftBtn { bottom: 146px; }
   #shiftBtn { left: 14px; bottom: 40px; width: 88px; height: 88px;
     border-color: rgba(255,210,80,0.65); color: #ffe9a0; font-size: 15px; line-height: 1.1; }
@@ -440,8 +565,8 @@
   #rivNum { font-size: clamp(42px, 11vw, 66px); font-weight: 900; font-style: italic; color: #fff;
     min-width: 90px; text-align: center; text-shadow: 0 4px 18px rgba(255,180,40,0.6); }
   body.lefty #shiftBtn { left: auto; right: 14px; }
-  #hud.drag #speedBox { left: 66px; right: auto; transform: none; bottom: 56px; text-align: left; }
-  body.lefty #hud.drag #speedBox { left: auto; right: 66px; }
+  #hud.drag #speedBox { left: 30%; transform: none; top: 6%; text-align: left; }
+  body.lefty #hud.drag #speedBox { left: auto; right: 30%; }
   #hud.drag #gearNum { font-size: 15px; }
   #gearNum.shiftNow { color: #7dffb0; text-shadow: 0 0 10px rgba(120,255,160,0.8); }
   /* Tacómetro estilo Drag Racing: barra con zona verde de cambio perfecto y corte en rojo */
@@ -456,14 +581,28 @@
   #rpmBar { height: 100%; width: 0; border-radius: 999px;
     background: linear-gradient(90deg, #30c060, #ffd040 78%, #ff3a20); }
   #rpmBar.hot { filter: brightness(1.7) saturate(1.5); }
-  /* Volante de cabina: centrado abajo, solo con la cámara cerca — gira con la dirección */
-  #wheelWrap { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%);
-    height: min(22vh, 175px); aspect-ratio: 880/579; pointer-events: none; z-index: 6; }
-  #wheelImg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0;
+  /* Volante de cabina: centrado, subido por encima de la fila BOXES·PIT·DERRAPE */
+  /* Volante de cabina personalizado (carbono + halo): centrado abajo — gira con
+     la dirección y lleva los controles táctiles integrados sobre sus iconos */
+  #wheelWrap { position: absolute; left: 50%; transform: translateX(-50%);
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    width: min(96vw, 90vh, 880px); aspect-ratio: 1024/428; pointer-events: none; z-index: 6;
+    container-type: inline-size; }
+  /* Móvil estrecho en vertical: el volante desborda un poco por los lados para
+     que sus controles sigan siendo táctiles (todo queda dentro menos el aro) */
+  @media (orientation: portrait) and (max-width: 700px) {
+    #wheelWrap { width: min(118vw, 58vh); }
+  }
+  #wheelImg, #wheelGiro { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0;
     transform-origin: 50% 50%;
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.85))
             drop-shadow(0 14px 26px rgba(0,0,0,0.6))
             brightness(0.96); transition: opacity .2s; }
+  #wheelImg { transition: opacity .2s; }   /* capa fija: solo funde, no gira */
+  /* Cockpit del coche (halo de carbono + pontones + retrovisores): capa de
+     fondo de la cabina — el volante se monta dentro de la bañera */
+  #cockpitCar { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0;
+    transition: opacity .2s; pointer-events: none; }
   /* LEDs del volante: barra RPM progresiva + fijos con destello */
   .wled { position: absolute; width: 2.1%; height: 2.4%; border-radius: 2px; opacity: 0; }
   .wled.blink { animation: wLedBlink .34s steps(2) infinite; }
@@ -473,11 +612,13 @@
   /* Grados de giro: texto naranja muy pequeño sobre el centro del volante */
   #wheelDeg { position: absolute; left: 50%; top: 57.5%; transform: translate(-50%, -50%);
     z-index: 7; pointer-events: none; opacity: 1;
-    color: #ff9838; font-size: 11px; font-weight: 800; letter-spacing: 1px;
+    color: #ff9838; font-size: 11px; font-size: max(8px, 1.7cqw);
+    font-weight: 800; letter-spacing: 1px;
     text-shadow: 0 0 6px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.9); }
   /* Barra horizontal de RPM en la parte SUPERIOR del volante (tras los botones) */
-  #wheelBar { position: absolute; left: 31%; top: 9.3%; width: 38%; height: 3.8%;
-    display: flex; gap: 1.7%; padding: 0.8%; border-radius: 7px; z-index: 6;
+  #wheelBar { position: absolute; left: 40.5%; top: 32%; width: 18%; height: 3.4%;
+    display: flex; gap: 1.7%; padding: 0.8%; border-radius: 7px;
+    border-radius: 1.1cqw; z-index: 6;
     background: linear-gradient(180deg, #04060b, #0d1119 55%, #04060b);
     border: 1px solid rgba(140,170,255,0.22);
     box-shadow: inset 0 2px 7px rgba(0,0,0,0.95), 0 1px 0 rgba(255,255,255,0.07); }
@@ -597,13 +738,35 @@
   #optsGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px 16px; width: 100%; flex: 1 1 auto; align-self: stretch; align-content: stretch; }
   .optGrp { height: 100%; box-sizing: border-box; }
-  /* Paneles de cristal flotantes — separan las secciones del fondo y dan profundidad */
+  /* Paneles carbono azul oscuro + borde metálico con resplandor neón cian */
   .optGrp { min-width: 0; border-radius: 14px; padding: 2px 12px 9px;
-    background: rgba(10,16,36,0.55); backdrop-filter: blur(7px) saturate(1.1);
+    background:
+      linear-gradient(180deg, rgba(22,34,58,0.86), rgba(8,14,26,0.93)),
+      repeating-linear-gradient(45deg, rgba(190,220,255,0.05) 0 2px, transparent 2px 7px),
+      repeating-linear-gradient(-45deg, rgba(190,220,255,0.05) 0 2px, transparent 2px 7px);
+    backdrop-filter: blur(7px) saturate(1.1);
     -webkit-backdrop-filter: blur(7px);
-    border: 1px solid rgba(140,170,255,0.16);
-    box-shadow: 0 14px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07); }
+    border: 1px solid rgba(110,190,255,0.48);
+    box-shadow: 0 0 22px rgba(70,160,255,0.20), 0 14px 30px rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 34px rgba(0,0,0,0.42); }
   .optGrp.wide { grid-column: 1 / -1; }
+  /* 3 columnas en escritorio: SONIDO/GFX · CONTROLES · MANDO, COCHES a todo lo ancho */
+  @media (min-width: 1100px) { #optsGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  /* Estado del mando + captura de binding */
+  .padDev { font-size: 10px; font-weight: 800; letter-spacing: .4px; color: #7fe8b8;
+    max-width: 58%; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .padDev.no { color: #e88a7a; }
+  .padB { min-width: 96px; }
+  /* Asignaciones del mando en rejilla de 2 columnas */
+  #padGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 6px; margin-top: 4px; }
+  .padRow { display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    padding: 4px 8px; border-radius: 10px;
+    background: linear-gradient(180deg, rgba(52,64,88,0.5), rgba(18,26,42,0.9));
+    border: 1px solid rgba(130,165,220,0.28); }
+  .padRow span { font-size: 9.5px; font-weight: 800; letter-spacing: .6px; color: #b9c8e8; }
+  .padRow .padB { min-width: 72px; padding: 5px 7px; font-size: 9px; }
+  .padB.cap { border-color: rgba(255,215,120,0.9); color: #ffe9b0; animation: padCap .55s steps(2) infinite; }
+  @keyframes padCap { 50% { opacity: .5; } }
   /* OPCIONES sin scroll: todo cabe porque las filas se comprimen según la altura */
   #optsGrid { min-height: 0; }
   .optGrp { min-height: 0; overflow: hidden; }
@@ -1117,15 +1280,16 @@
       radial-gradient(ellipse at 50% 35%, #131c3e 0%, #04060c 75%); }
   .optRow { display: flex; align-items: center; justify-content: space-between;
     width: 100%; padding: 5px 13px; margin-top: 4px; border-radius: 12px;
-    background: linear-gradient(160deg, rgba(30,42,78,0.55), rgba(10,16,32,0.78));
-    border: 1px solid rgba(140,170,255,0.22);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 6px 16px rgba(0,0,0,0.35);
+    background: linear-gradient(180deg, rgba(52,64,88,0.55), rgba(18,26,42,0.92) 55%, rgba(9,13,22,0.95));
+    border: 1px solid rgba(130,165,220,0.30);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.45),
+      0 5px 14px rgba(0,0,0,0.45);
     backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
     transition: transform .15s, border-color .15s, box-shadow .15s; }
   .optRow:hover { transform: translateY(-1px);
-    border-color: rgba(255,200,90,0.45);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), 0 8px 20px rgba(0,0,0,0.45),
-      0 0 14px rgba(255,190,70,0.10); }
+    border-color: rgba(120,200,255,0.55);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.11), 0 8px 20px rgba(0,0,0,0.45),
+      0 0 14px rgba(90,180,255,0.16); }
   .optRow .lbl { font-size: 12px; font-weight: 700; letter-spacing: 1px; margin-right: 8px;
     background: linear-gradient(180deg, #f0f4ff, #aabce8);
     -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -1145,22 +1309,22 @@
   /* Interruptor deslizante — LED verde ON / gris OFF (knob a la derecha = activo) */
   .optT.sw { width: 92px; min-width: 92px; padding: 7px 34px 7px 9px; text-align: center;
     font-size: 9px; letter-spacing: 1.5px; position: relative;
-    background: linear-gradient(180deg, rgba(18,58,38,0.9), rgba(8,26,18,0.95));
-    border-color: rgba(90,255,170,0.6); color: #8fffc8;
-    box-shadow: inset 0 0 14px rgba(40,255,140,0.14), inset 0 1px 0 rgba(255,255,255,0.08),
-      0 0 12px rgba(60,255,150,0.20); }
+    background: linear-gradient(180deg, rgba(30,150,80,0.95), rgba(10,80,42,0.95));
+    border-color: rgba(110,255,180,0.75); color: #d8ffe8;
+    box-shadow: inset 0 0 14px rgba(80,255,160,0.30), inset 0 1px 0 rgba(255,255,255,0.22),
+      0 0 16px rgba(60,255,150,0.45); }
   .optT.sw::after { content: ''; position: absolute; top: 4px; left: calc(100% - 25px);
     width: 20px; height: 20px; border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #dcffea, #3ce88f 45%, #0f8a4a);
-    box-shadow: 0 0 11px rgba(70,255,150,0.85), inset 0 1px 1px rgba(255,255,255,0.6);
+    background: radial-gradient(circle at 35% 30%, #ffffff, #b6ffd4 45%, #2ecf7c);
+    box-shadow: 0 0 13px rgba(110,255,180,0.95), inset 0 1px 1px rgba(255,255,255,0.8);
     transition: left .18s ease, background .18s, box-shadow .18s; }
   .optT.sw.off { padding: 7px 9px 7px 34px;
-    background: linear-gradient(180deg, rgba(42,48,60,0.9), rgba(16,20,28,0.95));
-    border-color: rgba(140,150,170,0.42); color: #8b95a8; text-shadow: none;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05); }
+    background: linear-gradient(180deg, rgba(58,66,80,0.95), rgba(20,24,32,0.95));
+    border-color: rgba(150,160,180,0.45); color: #8b95a8; text-shadow: none;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07); }
   .optT.sw.off::after { left: 5px;
-    background: radial-gradient(circle at 35% 30%, #ccd0d8, #5c6470 55%, #2a303a);
-    box-shadow: 0 0 6px rgba(0,0,0,0.65), inset 0 1px 1px rgba(255,255,255,0.28); }
+    background: radial-gradient(circle at 35% 30%, #e8ecf2, #7c8594 55%, #363e4a);
+    box-shadow: 0 0 6px rgba(0,0,0,0.65), inset 0 1px 1px rgba(255,255,255,0.4); }
   /* Botones de valor / acción — metálico-neón cian */
   .optT.val, .optT.val.off { border-color: rgba(120,200,255,0.6); color: #cfe8ff;
     background: linear-gradient(180deg, rgba(36,60,100,0.95), rgba(14,26,48,0.95));
@@ -1175,9 +1339,9 @@
     font: 800 10px 'Cascadia Code', Consolas, monospace; letter-spacing: 0.8px;
     transition: color .15s, background .15s, box-shadow .15s; }
   .segB:hover { color: #c8d8f5; }
-  .segB.on { color: #04121f; background: linear-gradient(180deg, #a8e4ff, #58b0ff);
-    border-color: rgba(190,235,255,0.85);
-    box-shadow: 0 0 12px rgba(90,180,255,0.55), inset 0 1px 0 rgba(255,255,255,0.65); }
+  .segB.on { color: #fff; background: linear-gradient(180deg, #7ed0ff, #2f8fe8);
+    border-color: rgba(200,240,255,0.9); text-shadow: 0 1px 2px rgba(0,30,70,0.55);
+    box-shadow: 0 0 16px rgba(90,180,255,0.7), inset 0 1px 0 rgba(255,255,255,0.7); }
   /* Idioma: botones con bandera integrada */
   .langSel { min-width: 118px; display: inline-flex; align-items: center;
     justify-content: center; gap: 8px; padding: 8px 14px; }
@@ -1194,18 +1358,19 @@
     background: linear-gradient(180deg, #3c4a68, #1a2236);
     border: 1px solid rgba(160,190,255,0.38); border-bottom-width: 2.5px;
     box-shadow: 0 2px 0 rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.2); }
-  /* VOLVER de opciones — píldora metálica-neón */
+  /* VOLVER de opciones — óvalo azul metálico con resplandor neón cian */
   #optBack { display: block; margin: 14px auto 0; padding: 11px 46px;
     font: 900 13px 'Cascadia Code', Consolas, monospace; letter-spacing: 5px;
-    color: #cfe8ff; background: linear-gradient(180deg, #24344f, #0e1830);
-    border: 1.5px solid rgba(110,190,255,0.55); border-radius: 999px;
-    box-shadow: 0 0 20px rgba(70,160,255,0.28), inset 0 1px 0 rgba(255,255,255,0.16),
-      0 8px 20px rgba(0,0,0,0.6);
+    color: #eaf4ff; text-shadow: 0 1px 2px rgba(0,30,70,0.6);
+    background: linear-gradient(180deg, #3d5a8a, #1a2c4c 55%, #0d1830);
+    border: 1.5px solid rgba(140,215,255,0.8); border-radius: 999px;
+    box-shadow: 0 0 26px rgba(80,175,255,0.42), inset 0 1px 0 rgba(255,255,255,0.28),
+      inset 0 -8px 14px rgba(0,0,0,0.35), 0 8px 20px rgba(0,0,0,0.6);
     transition: box-shadow .2s, border-color .2s, color .2s, transform .15s; }
-  #optBack:hover { color: #fff; border-color: rgba(160,220,255,0.95);
+  #optBack:hover { color: #fff; border-color: rgba(190,235,255,1);
     transform: translateY(-1px);
-    box-shadow: 0 0 34px rgba(90,180,255,0.5), inset 0 1px 0 rgba(255,255,255,0.22),
-      0 10px 24px rgba(0,0,0,0.65); }
+    box-shadow: 0 0 40px rgba(100,195,255,0.6), inset 0 1px 0 rgba(255,255,255,0.32),
+      inset 0 -8px 14px rgba(0,0,0,0.32), 0 10px 24px rgba(0,0,0,0.65); }
   /* Apartado COCHES: fichas con los controles del coche — ocupan TODO el
      espacio de su panel (crecen en ancho y alto hasta llenar la ventana) */
   .optGrp.wide { display: flex; flex-direction: column; min-height: clamp(150px, 30vh, 300px); }
@@ -1213,19 +1378,20 @@
     gap: 8px; flex: 1 1 auto; min-height: 0; padding: 4px 2px 8px;
     align-content: stretch; scrollbar-width: none; }
   #ctlStrip::-webkit-scrollbar { display: none; }
-  .ctlChip { position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 10px;
-    flex: 1 1 auto; justify-content: center; min-width: 0; min-height: clamp(110px, 22vh, 230px); align-self: stretch;
+  .ctlChip { position: relative; display: flex; align-items: center; gap: 8px; padding: 4px;
+    flex: 1 1 auto; justify-content: center; min-width: 0; min-height: clamp(110px, 24vh, 260px); align-self: stretch;
     overflow: hidden;
-    border-radius: 12px; background: rgba(10,16,32,0.7); border: 1px solid rgba(120,160,255,0.25); }
-  /* El icono llena TODA la ficha de fondo; los textos van por delante destacados */
-  .ctlIc { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    color: #9fd2ff;
-    background: linear-gradient(160deg, rgba(255,200,80,0.14), rgba(120,170,255,0.22)); }
-  .ctlIc svg { width: 72%; height: 72%; opacity: 0.85;
-    filter: drop-shadow(0 0 12px rgba(140,200,255,0.75)) drop-shadow(0 2px 3px rgba(0,0,0,0.6)); }
-  .ctlChip > div { position: relative; z-index: 1; text-align: center;
-    background: linear-gradient(180deg, rgba(8,12,26,0.55), rgba(8,12,26,0.32));
-    border-radius: 8px; padding: 4px 10px; }
+    border-radius: 12px;
+    background:
+      linear-gradient(180deg, rgba(16,26,44,0.9), rgba(7,12,22,0.95)),
+      repeating-linear-gradient(45deg, rgba(190,220,255,0.05) 0 2px, transparent 2px 7px),
+      repeating-linear-gradient(-45deg, rgba(190,220,255,0.05) 0 2px, transparent 2px 7px);
+    border: 1.5px solid rgba(110,190,255,0.55);
+    box-shadow: 0 0 16px rgba(70,160,255,0.25), inset 0 0 22px rgba(0,0,0,0.5); }
+  /* El icono 3D llena la ficha (texto y teclas vienen integrados en el arte) */
+  .ctlIc { position: absolute; left: 3px; top: 3px; width: calc(100% - 6px); height: calc(100% - 6px);
+    object-fit: contain; border-radius: 9px; display: block; }
+  .ctlChip > div { display: none; }
   .ctlChip b { display: block; font-size: clamp(13px, 2.1vh, 19px); letter-spacing: 1px; color: #ffd870; line-height: 1.1;
     text-shadow: 0 0 10px rgba(255,190,60,0.6), 0 2px 4px rgba(0,0,0,0.9); }
   .ctlChip i { display: block; font-style: normal; font-size: clamp(9.5px, 1.6vh, 13px); letter-spacing: 0.4px;
@@ -1293,10 +1459,11 @@
     text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
   .optSec { position: relative; width: 100%; margin-top: 6px; padding-bottom: 3px;
     font-size: 11px; font-weight: 900; letter-spacing: 3px; text-align: left;
-    background: linear-gradient(90deg, #ffd060, #ff9a40);
-    -webkit-background-clip: text; background-clip: text; color: transparent; }
+    background: linear-gradient(90deg, #e8f2ff, #8fc2ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 0 12px rgba(110,190,255,0.30); }
   .optSec::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
-    background: linear-gradient(90deg, rgba(255,200,90,0.65), rgba(255,200,90,0.12) 60%, transparent); }
+    background: linear-gradient(90deg, rgba(120,200,255,0.7), rgba(120,200,255,0.14) 60%, transparent); }
   /* entrada escalonada de las filas al abrir OPCIONES (delay asignado por JS) */
   #opts.play .optSec, #opts.play .optRow, #opts.play .mbtn {
     animation: optIn .38s cubic-bezier(.2,.8,.25,1) backwards; }
@@ -1386,35 +1553,16 @@
     #timeChip { font-size: 13px; min-width: 78px; }
     #vsChip { right: 106px; top: 38px; }
     #wrongWay { font-size: 12px; top: 52px; }
-    #speedBox { left: 56px; right: auto; bottom: 118px; }
-    #speedNum { font-size: 34px; }
-    #speedNum small { font-size: 11px; }
-    #gearNum { font-size: 11px; }
-    /* Controles táctiles escalados */
     .tbtn { width: 72px; height: 72px; font-size: 24px; }
-    #stPad { left: 10px; bottom: 36px; width: 128px; height: 56px; border-radius: 28px; }
-    .stA { font-size: 22px; }
-    #gasBtn { width: 62px; height: 62px; font-size: 11px; right: 10px; bottom: 36px; }
+    #stStick { width: min(38vw, 150px); bottom: max(4px, env(safe-area-inset-bottom)); }
     #shiftBtn { width: 76px; height: 76px; font-size: 12px; left: 10px; bottom: 36px; }
     #gas2Btn { width: 84px; height: 84px; font-size: 13px; right: 10px; bottom: 36px; }
-    #hud.p2 #gasBtn { left: 10px; }
     #hud.p2 #shiftBtn { bottom: 124px; }
-    #hud.drag #speedBox { left: 58px; bottom: 48px; }
-    body.lefty #hud.drag #speedBox { left: auto; right: 58px; }
-    #brkBtn { right: 99px; bottom: 36px; width: 62px; height: 62px; font-size: 11px; }
-    #nitroBtn { width: 58px; height: 58px; font-size: 20px; right: 10px; bottom: 184px; }
-    #pitBtn { width: 56px; height: 56px; font-size: 11px; right: 102px; bottom: 122px; }
-    #boxexBtn { width: 52px; height: 52px; font-size: 8px; right: 10px; bottom: 122px; border-radius: 13px; }
-    #boxexBtn svg { width: 18px; height: 18px; }
-    #lightsBtn { width: 36px; height: 36px; font-size: 14px; right: 112px; bottom: 186px; }
-    body.lefty #stPad { left: auto; right: 10px; }
-    body.lefty #speedBox { left: auto; right: 56px; }
-    body.lefty #gasBtn { left: 10px; }
-    body.lefty #brkBtn { left: 99px; }
-    body.lefty #nitroBtn { left: 10px; }
-    body.lefty #pitBtn { left: 102px; }
-    body.lefty #boxexBtn { left: 10px; }
-    body.lefty #lightsBtn { left: 112px; }
+    #hud.drag #speedBox { left: 24%; top: 4%; }
+    body.lefty #hud.drag #speedBox { left: auto; right: 24%; }
+    /* Modo zurdo: los iconos del volante no se voltean — solo espejamos las zonas
+       de los agarres para girar con el pulgar del otro lado */
+    body.lefty #stPad { left: 6%; }
     .zbtn { width: 38px; height: 34px; font-size: 22px; }
     #zoomIn { right: 52px; top: 100px; }
     #zoomOut { right: 10px; top: 100px; }
@@ -1443,27 +1591,13 @@
     .circCard img, .circCard canvas { width: 90px; height: 58px; }
     .circCard .cn { min-height: 26px; padding: 4px 3px; }
     .chip { font-size: 11px; padding: 3px 9px; }
-    #speedNum { font-size: 32px; }
+    #stStick { width: min(30vw, 122px); bottom: max(4px, env(safe-area-inset-bottom)); }
     .tbtn { width: 64px; height: 64px; font-size: 22px; }
-    #gasBtn { width: 56px; height: 56px; font-size: 11px; bottom: 30px; }
-    #brkBtn { width: 56px; height: 56px; right: 92px; bottom: 30px; }
-    #stPad { width: 120px; height: 50px; bottom: 28px; }
-    #speedBox { left: 56px; bottom: 98px; }
-    body.lefty #speedBox { left: auto; right: 56px; }
-    #nitroBtn { width: 52px; height: 52px; bottom: 162px; right: 14px; }
-    #pitBtn { width: 48px; height: 48px; bottom: 108px; right: 96px; font-size: 10px; }
-    #boxexBtn { width: 46px; height: 46px; bottom: 108px; right: 14px; font-size: 8px; border-radius: 11px; }
-    #boxexBtn svg { width: 16px; height: 16px; }
-    #lightsBtn { width: 32px; height: 32px; font-size: 12px; right: 104px; bottom: 164px; }
+    body.lefty #stPad { left: 6%; }
     /* fila superior compacta: sin hueco vertical, los controles de abajo empiezan ~156px */
     .zbtn { width: 34px; height: 30px; }
     #zoomIn { right: 48px; top: 56px; } #zoomOut { right: 10px; top: 56px; }
     #rstBtn { right: 48px; top: 94px; } #exitBtn { right: 10px; top: 94px; } #pauseBtn { right: 86px; top: 94px; }
-    body.lefty #pitBtn { left: 96px; }
-    body.lefty #boxexBtn { left: 14px; }
-    body.lefty #lightsBtn { left: 104px; }
-    body.lefty #brkBtn { left: 92px; }
-    body.lefty #nitroBtn { left: 14px; }
     #resTime { margin: 8px 0; }
   }
   /* Selector de F1: scroll horizontal en el menú */
@@ -1870,19 +2004,22 @@
     margin-top: 9px; letter-spacing: 1.5px; }
   /* TV PIP: cámara de retransmisión con zoom sobre un rival durante la carrera */
   #pip { display: none; position: fixed; left: 14px; bottom: 178px; z-index: 45;
-    width: min(28vw, 216px); pointer-events: none; }
+    width: min(28vw, 216px); pointer-events: auto; cursor: pointer; }
   #pipLbl { display: flex; align-items: center; gap: 6px; font-size: 10px;
     font-weight: 900; letter-spacing: 1.6px; color: #ffd060; margin-bottom: 4px;
     text-shadow: 0 1px 6px rgba(0,0,0,0.9); }
   .pipDot { width: 7px; height: 7px; border-radius: 50%; background: #ff3b30;
     box-shadow: 0 0 8px #ff3b30; animation: pipBlink 1.1s infinite; }
   @keyframes pipBlink { 50% { opacity: 0.25; } }
-  #pipCv { width: 100%; height: auto; display: block; border-radius: 10px;
+  #pipCv, #pip2Cv { width: 100%; height: auto; display: block; border-radius: 10px;
     border: 2px solid rgba(255,210,90,0.55);
     box-shadow: 0 12px 30px rgba(0,0,0,0.65), 0 0 18px rgba(255,190,60,0.12);
     background: #060a14; }
-  #pipSub { font-size: 9px; color: #9db2d8; letter-spacing: 1.2px; margin-top: 3px;
+  #pipSub, #pip2Sub { font-size: 9px; color: #9db2d8; letter-spacing: 1.2px; margin-top: 3px;
     text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
+  /* Segunda ventana TV: onboard del líder, a la derecha a la misma altura */
+  #pip2 { display: none; position: fixed; right: 14px; bottom: 178px; z-index: 45;
+    width: min(28vw, 216px); pointer-events: auto; cursor: pointer; }
   #pfLbl { font-size: 12px; font-weight: 800; letter-spacing: 3px; color: #ffd060;
     margin-bottom: 7px; text-shadow: 0 0 14px rgba(255,190,60,0.4); }
   /* Selector de hora del día: píldoras bajo el carrusel de circuitos */
@@ -1926,6 +2063,13 @@
     #teleGrid { grid-template-columns: repeat(2, minmax(0, 1fr));
       max-height: calc(100vh - 150px); }
     .tpT { padding: 4px 8px 2px; font-size: 8.5px; }
+    /* Los paneles crecen con su contenido y la pantalla hace scroll: nada queda cortado */
+    #optsGrid { flex: 0 0 auto; align-content: start; grid-auto-rows: max-content; }
+    #padGrid { grid-template-columns: 1fr; }
+    /* COCHES: fichas retrato como en el mockup; el panel hace scroll propio */
+    #ctlStrip { grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
+    .ctlChip { aspect-ratio: 0.66; min-height: 0; align-self: start; }
+    .optGrp.wide { overflow-y: auto; }
   }
   /* Móvil apaisado (pantalla muy baja): compresión agresiva de menús */
   @media (max-height: 500px) {
@@ -1984,10 +2128,12 @@
     .optRow { padding: 1px 6px; margin-top: 1px; }
     .optRow .lbl { font-size: 8.5px; }
     .optT { padding: 2px 6px; font-size: 8.5px; min-width: 54px; }
-    .ctlChip { padding: 0 5px; min-height: 40px; }
+    .ctlChip { padding: 0 5px; min-height: 0; aspect-ratio: 0.68; align-self: start; }
     .ctlIc svg { width: 54%; height: 54%; }
     .ctlChip b { font-size: 8px; }
     .ctlChip i { font-size: 6.5px; }
+    #ctlStrip { grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
+    .optGrp.wide { overflow-y: auto; }
     /* VERSUS compacto */
     .vsHead { margin: 0; gap: 10px; }
     .vsHead svg { width: 30px; height: 30px; }
@@ -2135,6 +2281,26 @@
     color: #9fb8e8; }
   /* Líneas de info: legibles en pantalla pequeña */
   #menu #bestLine, #menu #ptsLine, #menu .hint { text-shadow: 0 2px 6px rgba(0,0,0,0.85); }
+  /* Puerta de acceso PIN: pantalla completa por encima de todo hasta validar */
+  #gate { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 50% 35%, #16202e 0%, #070a10 70%);
+    transition: opacity .45s; }
+  #gate.off { opacity: 0; pointer-events: none; }
+  #gateBox { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 36px 44px;
+    background: rgba(10,14,20,0.88); border: 1px solid rgba(255,190,60,0.35); border-radius: 18px;
+    box-shadow: 0 18px 60px rgba(0,0,0,0.7); }
+  #gateTitle { font: 900 22px 'Segoe UI', sans-serif; letter-spacing: 3px; color: #ffd35e; }
+  #gateSub { font: 600 12px 'Segoe UI', sans-serif; letter-spacing: 1.5px; color: #9fb4c8; }
+  #gatePin { width: 190px; padding: 10px 14px; text-align: center; font: 800 22px 'Cascadia Code', Consolas, monospace;
+    letter-spacing: 8px; color: #fff; background: rgba(0,0,0,0.55); border: 1.5px solid rgba(140,170,200,0.4);
+    border-radius: 10px; outline: none; }
+  #gatePin:focus { border-color: #ffd35e; }
+  #gateGo { padding: 11px 36px; font: 900 14px 'Segoe UI', sans-serif; letter-spacing: 2px; color: #14100a;
+    background: linear-gradient(#ffd35e, #e8a820); border: 0; border-radius: 10px; cursor: pointer; }
+  #gateGo:active { transform: scale(0.95); }
+  #gateErr { min-height: 16px; font: 700 12px 'Segoe UI', sans-serif; color: #ff6a5e; }
+  @keyframes gateShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-9px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(4px)} }
+  #gateBox.shake { animation: gateShake .35s; }
 </style>
 </head>
 <body>
@@ -2450,29 +2616,46 @@
     <div id="dsSpecs"></div>
   </div>
   <div class="chip" id="vsChip"><svg class="ic"><use href="#i-vs"/></svg>P1</div>
-  <div id="speedBox"><div id="speedNum">0<small> km/h</small></div><div id="gearNum">MARCHA 1</div><div id="rpmWrap"><div id="rpmBar"></div></div></div>
-  <div id="gearBig"></div>
   <div id="wheelWrap">
-    <img id="wheelImg" src="volante.webp" alt="">
+    <img id="cockpitCar" src="cockpit_car.webp" alt="">
+    <img id="wheelGiro" src="volante_giro.webp" alt="">
+    <div id="whDash"><b id="whSpd">0</b><span>km/h</span><i id="whGear">M1</i></div>
+    <img id="wheelImg" src="volante_fijo.webp" alt="">
     <div id="wheelLayer" style="position:absolute;inset:0;transform-origin:50% 50%;opacity:0;transition:opacity .2s">
-      <i class="wled" style="left:33.8%;top:14.2%;background:#34e060;box-shadow:0 0 4px #34e060"></i>
-      <i class="wled" style="left:37.5%;top:14.2%;background:#34e060;box-shadow:0 0 4px #34e060"></i>
-      <i class="wled" style="left:41.3%;top:14.2%;background:#34e060;box-shadow:0 0 4px #34e060"></i>
-      <i class="wled blink" style="left:45.8%;top:14.2%;background:#ff3020;box-shadow:0 0 4px #ff3020"></i>
-      <i class="wled blink" style="left:49.6%;top:14.2%;background:#ff3020;box-shadow:0 0 4px #ff3020"></i>
-      <i class="wled blink" style="left:53.3%;top:14.2%;background:#ff3020;box-shadow:0 0 4px #ff3020"></i>
-      <i class="wled blink" style="left:57.8%;top:14.2%;background:#3080ff;box-shadow:0 0 4px #3080ff;animation-duration:.24s"></i>
-      <i class="wled blink" style="left:61.5%;top:14.2%;background:#3080ff;box-shadow:0 0 4px #3080ff;animation-duration:.24s"></i>
-      <i class="wled glint" style="left:29.2%;top:23.0%;background:#ff3020;box-shadow:0 0 5px #ff3020"></i>
-      <i class="wled glint" style="left:29.2%;top:45.5%;background:#ffb020;box-shadow:0 0 5px #ffb020;animation-delay:.8s"></i>
-      <i class="wled glint" style="left:69.5%;top:23.0%;background:#fff;box-shadow:0 0 5px #fff;animation-delay:1.4s"></i>
-      <i class="wled glint" style="left:69.5%;top:45.5%;background:#b040ff;box-shadow:0 0 5px #b040ff;animation-delay:1.9s"></i>
+      <i class="wled" style="left:40.8%;top:32.5%;background:#34e060;box-shadow:0 0 4px #34e060"></i>
+      <i class="wled" style="left:43.1%;top:32.5%;background:#34e060;box-shadow:0 0 4px #34e060"></i>
+      <i class="wled" style="left:45.4%;top:32.5%;background:#34e060;box-shadow:0 0 4px #34e060"></i>
+      <i class="wled blink" style="left:47.7%;top:32.5%;background:#ff3020;box-shadow:0 0 4px #ff3020"></i>
+      <i class="wled blink" style="left:50.0%;top:32.5%;background:#ff3020;box-shadow:0 0 4px #ff3020"></i>
+      <i class="wled blink" style="left:52.3%;top:32.5%;background:#ff3020;box-shadow:0 0 4px #ff3020"></i>
+      <i class="wled blink" style="left:54.6%;top:32.5%;background:#3080ff;box-shadow:0 0 4px #3080ff;animation-duration:.24s"></i>
+      <i class="wled blink" style="left:56.9%;top:32.5%;background:#3080ff;box-shadow:0 0 4px #3080ff;animation-duration:.24s"></i>
+      <i class="wled glint" style="left:36.5%;top:48%;background:#ff3020;box-shadow:0 0 5px #ff3020"></i>
+      <i class="wled glint" style="left:36.5%;top:68%;background:#ffb020;box-shadow:0 0 5px #ffb020;animation-delay:.8s"></i>
+      <i class="wled glint" style="left:61.5%;top:48%;background:#fff;box-shadow:0 0 5px #fff;animation-delay:1.4s"></i>
+      <i class="wled glint" style="left:61.5%;top:68%;background:#b040ff;box-shadow:0 0 5px #b040ff;animation-delay:1.9s"></i>
       <div id="wheelDeg">0°</div>
       <canvas id="wheelRadar" width="110" height="82"
-        style="position:absolute;left:51.4%;top:30.4%;width:14.6%;height:16.4%;opacity:1;border-radius:6px"></canvas>
+        style="position:absolute;left:48%;top:68%;width:7%;height:13%;opacity:1;border-radius:6px"></canvas>
       <div id="wheelBar"></div>
     </div>
+    <div class="tbtn" id="stPad"><span class="stAr u">▲</span><span class="stAr r">▶</span><span class="stAr d">▼</span><span class="stAr l">◀</span><span class="stKnob" id="stKnob"></span><span class="stA" id="stA_L"></span><span class="stA" id="stA_R"></span></div>
+    <div id="wheelUI" style="position:absolute;inset:0;transform-origin:50% 50%;pointer-events:none">
+      <div class="tbtn hl" id="pitBtn"><img class="tIc" src="ctl_boxes.webp" alt=""><span class="tLb">PIT</span></div>
+      <div class="tbtn hl" id="hbBtn"><img class="tIc" src="ctl_derrape.webp" alt=""><span class="tLb">HB</span></div>
+      <div class="tbtn" id="gasBtn"><img class="tIc" src="ctl_acelerar.webp" alt=""><span class="tLb">GAS</span></div>
+      <div class="tbtn" id="brkBtn"><img class="tIc" src="ctl_frenar.webp" alt=""><span class="tLb">FRENO</span></div>
+      <div class="tbtn hl" id="nitroBtn"><img class="tIc" src="ctl_nitro.webp" alt=""><span class="tLb">NITRO</span></div>
+    </div>
+    <!-- BOXES y faros van sobre los pods fijos: no giran con el volante -->
+    <div class="tbtn" id="boxexBtn"><img class="tIc" src="ctl_boxes.webp" alt=""><span class="tLb">BOXES</span></div>
+    <div class="tbtn" id="lightsBtn"><svg class="ic" style="margin:0"><use href="#i-light"/></svg></div>
+    <div id="speedBox"><div id="speedNum">0<small> km/h</small></div><div id="gearNum">MARCHA 1</div><div id="rpmWrap"><div id="rpmBar"></div></div></div>
+    <div id="gearBig"></div>
   </div>
+  <!-- Ruedas delanteras de la vista 1P: asoman a los lados del monocasco -->
+  <div class="fpvWh fpvWhL" id="fpvWL"></div>
+  <div class="fpvWh fpvWhR" id="fpvWR"></div>
   <!-- Ventana 3D de boxes: servicios durante la parada -->
   <div id="pitMenu">
     <div id="pmHead"><svg class="ic"><use href="#i-wrench"/></svg><span id="pmTitle">PARADA EN BOXES</span></div>
@@ -2485,23 +2668,33 @@
   </div>
 </div>
 
-<div class="tbtn" id="stPad"><span class="stA" id="stA_L">◀</span><span class="stA" id="stA_R">▶</span></div>
-<div class="tbtn" id="gasBtn">GAS</div>
-<div class="tbtn" id="brkBtn">FRENO</div>
 <div class="tbtn" id="shiftBtn" style="display:none">▲<br><span style="font-size:10px">MARCHA</span></div>
 <div class="tbtn" id="gas2Btn" style="display:none">GAS<br><span style="font-size:10px">J2</span></div>
-<div class="tbtn" id="pitBtn">PIT</div>
-<div class="tbtn" id="boxexBtn"><svg class="ic"><use href="#i-wrench"/></svg><span>BOXES</span></div>
-<div class="tbtn" id="lightsBtn"><svg class="ic" style="width:26px;height:26px;margin:0"><use href="#i-light"/></svg></div>
-<div class="tbtn" id="nitroBtn" style="border-color:rgba(80,200,255,0.7);color:#80d8ff">⚡</div>
-<div class="zbtn" id="zoomIn">+</div>
-<div class="zbtn" id="zoomOut">−</div>
+<div id="stStick"><span class="stkAr u">▲</span><span class="stkAr d">▼</span><span class="stkAr l">◀</span><span class="stkAr r">▶</span><span class="stkAr ul">◀</span><span class="stkAr ur">◀</span><span class="stkAr dr">◀</span><span class="stkAr dl">◀</span><span id="stKnob2"></span></div>
+<div class="zbtn" id="zoomIn"><img class="zIc" src="ctl_zoom.webp" alt=""><span class="zLb">+</span></div>
+<div class="zbtn" id="zoomOut"><img class="zIc" src="ctl_zoom.webp" alt=""><span class="zLb">−</span></div>
+<div class="zbtn" id="droneBtn"><span class="zLb" style="font-size:11px;font-weight:900;letter-spacing:.5px">DRON</span></div>
+<div class="zbtn" id="fpvBtn" style="display:none"><span class="zLb" style="font-size:12px;font-weight:900;letter-spacing:.5px">1P</span></div>
+<div class="zbtn" id="cenBtn" style="display:none"><span class="zLb" style="font-size:10px;font-weight:900;letter-spacing:.5px">TOP</span></div>
+<div class="dbtn" id="drUpBtn">▲</div>
+<div class="dbtn" id="drDnBtn">▼</div>
+<div id="droneHud"></div>
 <div class="mmz" id="mmZoomIn">+</div>
 <div class="mmz" id="mmZoomOut">−</div>
 <div class="mmz" id="mmGrowIn">⤢</div>
 <div class="mmz" id="mmGrowOut">⤡</div>
 <div id="fpsBox">-- FPS</div>
 
+<!-- Puerta de acceso: pide el PIN antes de mostrar siquiera la portada -->
+<div id="gate">
+  <div id="gateBox">
+    <div id="gateTitle">SUPER CIRCUIT GP</div>
+    <div id="gateSub"></div>
+    <input id="gatePin" type="password" inputmode="numeric" maxlength="10" placeholder="PIN" autocomplete="off">
+    <button id="gateGo"></button>
+    <div id="gateErr"></div>
+  </div>
+</div>
 <div id="splash"><img src="portada.jpg" alt="">
   <div id="splashLogo3D"></div>
   <div id="splashWheels"><i></i><i></i></div>
@@ -2858,16 +3051,32 @@
       <div class="optRow"><div class="lbl" id="lbAch">LOGROS</div><button class="optT val" id="achBtn">VER ▶</button></div>
       <div class="optRow"><div class="lbl">CARS 3D</div><button class="optT val" id="cars3dBtn">VER MODELOS ▶</button></div>
     </div>
+    <div class="optGrp">
+      <div class="optSec" id="secPad">🎮 MANDO</div>
+      <div class="optRow"><div class="lbl" id="lbPad">MANDO XBOX</div><button class="optT sw" id="optPad">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbPadDev">DISPOSITIVO</div><div class="padDev no" id="padDev">—</div></div>
+      <div id="padGrid">
+        <div class="padRow"><span id="lbPbSteer">GIRAR</span><button class="optT val padB" data-act="steer">STICK ◀▶</button></div>
+        <div class="padRow"><span id="lbPbGas">ACELERAR</span><button class="optT val padB" data-act="gas">RT</button></div>
+        <div class="padRow"><span id="lbPbBrake">FRENAR</span><button class="optT val padB" data-act="brake">LT</button></div>
+        <div class="padRow"><span id="lbPbHb">DERRAPE</span><button class="optT val padB" data-act="hb">B</button></div>
+        <div class="padRow"><span id="lbPbNitro">NITRO</span><button class="optT val padB" data-act="nitro">A</button></div>
+        <div class="padRow"><span id="lbPbPit">BOXES</span><button class="optT val padB" data-act="pit">X</button></div>
+        <div class="padRow"><span id="lbPbShift">CAMBIO</span><button class="optT val padB" data-act="shift">RB</button></div>
+        <div class="padRow"><span id="lbPbPause">PAUSA</span><button class="optT val padB" data-act="pause">START</button></div>
+      </div>
+      <div class="optRow"><div class="lbl" id="lbPadMap">MAPEO</div><button class="optT off" id="padRst">RESTABLECER</button></div>
+    </div>
     <div class="optGrp wide">
       <div class="optSec" id="secCar">🏎️ COCHES</div>
       <div id="ctlStrip">
-        <div class="ctlChip"><span class="ctlIc" id="ciSteer"></span><div><b id="ctSteer">GIRAR</b><div class="keys"><kbd>A</kbd><kbd>D</kbd><kbd>←</kbd><kbd>→</kbd></div></div></div>
-        <div class="ctlChip"><span class="ctlIc" id="ciGas"></span><div><b id="ctGas">GAS</b><div class="keys"><kbd>W</kbd><kbd>↑</kbd></div></div></div>
-        <div class="ctlChip"><span class="ctlIc" id="ciBrake"></span><div><b id="ctBrake">FRENO</b><div class="keys"><kbd>S</kbd><kbd>↓</kbd></div></div></div>
-        <div class="ctlChip"><span class="ctlIc" id="ciHb"></span><div><b id="ctHb">DERRAPE</b><div class="keys"><kbd>ESPACIO</kbd></div></div></div>
-        <div class="ctlChip"><span class="ctlIc" id="ciNitro"></span><div><b>NITRO</b><div class="keys"><kbd>SHIFT</kbd><kbd>N</kbd></div></div></div>
-        <div class="ctlChip"><span class="ctlIc" id="ciPit"></span><div><b id="ctPit">Boxes</b><div class="keys"><kbd>P</kbd></div></div></div>
-        <div class="ctlChip"><span class="ctlIc" id="ciZoom"></span><div><b>ZOOM</b><div class="keys"><kbd>+</kbd><kbd>−</kbd></div></div></div>
+        <div class="ctlChip"><img class="ctlIc" src="ctl_girar.webp" alt="GIRAR"><div><b id="ctSteer">GIRAR</b><div class="keys"><kbd>A</kbd><kbd>D</kbd><kbd>←</kbd><kbd>→</kbd></div></div></div>
+        <div class="ctlChip"><img class="ctlIc" src="ctl_acelerar.webp" alt="ACELERAR"><div><b id="ctGas">GAS</b><div class="keys"><kbd>W</kbd><kbd>↑</kbd></div></div></div>
+        <div class="ctlChip"><img class="ctlIc" src="ctl_frenar.webp" alt="FRENAR"><div><b id="ctBrake">FRENO</b><div class="keys"><kbd>S</kbd><kbd>↓</kbd></div></div></div>
+        <div class="ctlChip"><img class="ctlIc" src="ctl_derrape.webp" alt="DERRAPE"><div><b id="ctHb">DERRAPE</b><div class="keys"><kbd>ESPACIO</kbd></div></div></div>
+        <div class="ctlChip"><img class="ctlIc" src="ctl_nitro.webp" alt="NITRO"><div><b>NITRO</b><div class="keys"><kbd>SHIFT</kbd><kbd>N</kbd></div></div></div>
+        <div class="ctlChip"><img class="ctlIc" src="ctl_boxes.webp" alt="BOXES"><div><b id="ctPit">Boxes</b><div class="keys"><kbd>P</kbd></div></div></div>
+        <div class="ctlChip"><img class="ctlIc" src="ctl_zoom.webp" alt="ZOOM"><div><b>ZOOM</b><div class="keys"><kbd>+</kbd><kbd>−</kbd></div></div></div>
       </div>
     </div>
   </div>
@@ -2913,6 +3122,8 @@
 
 <div id="pip"><div id="pipLbl"><span class="pipDot"></span><span id="pipNm">TV · CPU 1</span></div>
   <canvas id="pipCv"></canvas><div id="pipSub"></div></div>
+<div id="pip2"><div id="pipLbl"><span class="pipDot"></span><span id="pip2Nm">1P</span></div>
+  <canvas id="pip2Cv"></canvas><div id="pip2Sub"></div></div>
 
 <div class="screen" id="recScr">
   <div class="stripe"></div>
@@ -3299,8 +3510,11 @@ const PF_W = 760, PF_H = 240;
 let obstacles = [], offroad = 0, wrongWay = 0, wwBack = 0, wwAlarmT = 0, wheelDegS = 0, wheelLeds = null, wheelSegs = null;
 let lakeWaterTex = null, lakeSurf = null;   // agua del lago: textura y capa de oleaje
 let flags3 = [];                            // banderas ondeantes de la tribuna
+let crowdPpl = null, crowdBase = null, crowdMat = null;   // público animado (ola)
 // TV PIP: cámara de retransmisión que enfoca a un rival durante la carrera
 let pipR = null, pipCam = null, pipTgt = null, pipT = 8, pipOnT = 0, pipCvEl = null, pipN = 0;
+let pip2R = null, pip2Cam = null, pip2CvEl = null;   // ventana onboard (derecha)
+let pipDrone = null;                                     // dron TV autónomo (modelo real)
 let noFog = false;                          // NEÓN: niebla desactivada — solo el sol
 let nightK = 0;                             // 0 día → 1 noche: cuánto se cierra la niebla
 let oilSpots = [], oilT = 0;            // manchas de aceite + temporizador de patinazo
@@ -3383,6 +3597,8 @@ function measureTrackW(circ) {
 /* ================== THREE ================== */
 let world = null;
 let camZoom = 1;                                   // 0 = pegado al coche · 1 = circuito entero
+let fpvOn = false;                                 // vista en primera persona (tecla V / botón 1P)
+let cenOn = false;                                 // vista cenital (tecla T / botón TOP) — por defecto activa
 let launchArm = false, launchZ = 0, launchSeen = false;  // zoom de salida: cámara cerrada hasta el final del túnel
 let camLeadX = 0, camLeadZ = 0;                    // look-ahead suavizado (sin sacudida en choques)
 let camHS = 62;                                    // altura de cámara suavizada
@@ -3964,34 +4180,44 @@ function makeFoliageTex() {
   // las uniones del repeat desaparezcan — las manchas rompen el patrón
   const c = document.createElement('canvas'); c.width = c.height = 256;
   const t = c.getContext('2d');
-  t.fillStyle = '#49682f'; t.fillRect(0, 0, 256, 256);
+  t.fillStyle = '#38531f'; t.fillRect(0, 0, 256, 256);            // base verde bosque
   const OFF = [0, -256, 256];
-  for (let i = 0; i < 3000; i++) {
-    const x = Math.random() * 256, y = Math.random() * 256, a = Math.random() * 6.28, l = 3 + Math.random() * 7;
-    const g = 62 + Math.random() * 110 | 0;
-    t.strokeStyle = `rgba(${g * 0.55 | 0},${g},${g * 0.4 | 0},${0.45 + Math.random() * 0.5})`;
-    t.lineWidth = 1 + Math.random() * 1.7;
+  // Masas de hojas: grumos redondeados en verdes profundos — la copa se lee
+  // como follaje denso, no como ruido de agujas
+  for (let i = 0; i < 320; i++) {
+    const x = Math.random() * 256, y = Math.random() * 256, r = 5 + Math.random() * 16;
+    const g = ri(70, 135), gr = t.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, `rgba(${g * 0.5 | 0},${g},${g * 0.42 | 0},${0.5 + Math.random() * 0.4})`);
+    gr.addColorStop(1, `rgba(${g * 0.4 | 0},${g * 0.8 | 0},${g * 0.34 | 0},0)`);
+    for (const ox of OFF) for (const oy of OFF) {
+      t.fillStyle = gr; t.beginPath(); t.arc(x + ox, y + oy, r, 0, 7); t.fill();
+    }
+  }
+  // Agujas/hojas sueltas por encima: textura fina sobre las masas
+  for (let i = 0; i < 4200; i++) {
+    const x = Math.random() * 256, y = Math.random() * 256, a = Math.random() * 6.28, l = 2 + Math.random() * 5;
+    const g = 55 + Math.random() * 95 | 0;
+    t.strokeStyle = `rgba(${g * 0.52 | 0},${g},${g * 0.4 | 0},${0.4 + Math.random() * 0.5})`;
+    t.lineWidth = 1 + Math.random() * 1.5;
     const x2 = x + Math.cos(a) * l, y2 = y + Math.sin(a) * l;
     for (const ox of OFF) for (const oy of OFF) {
       t.beginPath(); t.moveTo(x + ox, y + oy); t.lineTo(x2 + ox, y2 + oy); t.stroke();
     }
   }
-  for (let i = 0; i < 170; i++) {                                 // sombras entre las hojas
-    const x = Math.random() * 256, y = Math.random() * 256, r = 4 + Math.random() * 15;
+  for (let i = 0; i < 220; i++) {                                 // sombras entre las hojas
+    const x = Math.random() * 256, y = Math.random() * 256, r = 3 + Math.random() * 13;
     for (const ox of OFF) for (const oy of OFF) {
       const g = t.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r);
-      g.addColorStop(0, 'rgba(14,28,12,0.55)'); g.addColorStop(1, 'rgba(14,28,12,0)');
+      g.addColorStop(0, 'rgba(10,24,10,0.6)'); g.addColorStop(1, 'rgba(10,24,10,0)');
       t.fillStyle = g; t.beginPath(); t.arc(x + ox, y + oy, r, 0, 7); t.fill();
     }
   }
-  // Manchas de musgo/rama seca envueltas: rompen la periodicidad del tile
-  for (let i = 0; i < 40; i++) {
-    const x = Math.random() * 256, y = Math.random() * 256, r = 8 + Math.random() * 20;
+  // Toques de sol: pocas motas verde-amarillo suaves (nunca blancas)
+  for (let i = 0; i < 90; i++) {
+    const x = Math.random() * 256, y = Math.random() * 256, r = 1.5 + Math.random() * 3.5;
     for (const ox of OFF) for (const oy of OFF) {
-      const g = t.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r);
-      g.addColorStop(0, `rgba(${ri(64, 96)},${ri(96, 128)},${ri(40, 60)},0.22)`);
-      g.addColorStop(1, 'rgba(70,100,50,0)');
-      t.fillStyle = g; t.beginPath(); t.arc(x + ox, y + oy, r, 0, 7); t.fill();
+      t.fillStyle = `rgba(${ri(120, 160)},${ri(165, 205)},${ri(70, 105)},${rnd(0.15, 0.35)})`;
+      t.beginPath(); t.arc(x + ox, y + oy, r, 0, 7); t.fill();
     }
   }
   const tx = new THREE.CanvasTexture(c);
@@ -4430,7 +4656,7 @@ function makeSkyTex(kind) {
 
 function buildWorld() {
   if (world) scene3.remove(world);
-  world = new THREE.Group(); obstacles = []; gateMeshes = []; lakeSurf = null; window._lakeExcl = null; window._shieldExcl = null; flags3 = []; window._gridMarks = []; pitCrew = null; window._finFlag = null;
+  world = new THREE.Group(); obstacles = []; gateMeshes = []; lakeSurf = null; window._lakeExcl = null; window._shieldExcl = null; flags3 = []; window._gridMarks = []; pitCrew = null; window._finFlag = null; crowdPpl = null; crowdBase = null; crowdMat = null;
   window._pitBoxes = null; window._pitWalk = null;     // marcas y mecánicos: se regeneran abajo si hay pit lane
   window._pitLamps = null;                            // luces del pit: idem
   tunI0 = tunI1 = -1; tunA = 0; tunIn = 0;
@@ -6032,18 +6258,34 @@ function buildWorld() {
       // cerca de la punta — si se evalúa por vértice y la curva dobla, la cinta
       // se retuerce a mitad de recorrido y aparecen losas solapadas
       const flip = evn(tipAt1 ? 0.95 : 0.05)[1] > 0;
+      // El borde de la cuña que mira a la pista SIGUE la línea de borde de la
+      // calzada: proyecta cada vértice sobre su punto de pista más cercano y
+      // se clava en la arista exterior +8 cm — la unión sale como un filete
+      // continuo, sin losa solapada por encima ni hueco por debajo
+      const trackEdge = (x, z) => {
+        let bi = 0, bd = 1e9;
+        for (let i = 0; i < pathLen; i++) {
+          const p = path[i], d = (x - p.x) * (x - p.x) + (z - p.z) * (z - p.z);
+          if (d < bd) { bd = d; bi = i; }
+        }
+        const p = path[bi], hw = (trackHW ? trackHW[bi] : RW / 2) + 0.08;
+        const sgn = ((x - p.x) * -p.tz + (z - p.z) * p.tx) >= 0 ? 1 : -1;
+        return [p.x - p.tz * sgn * hw, p.z + p.tx * sgn * hw];
+      };
       for (let k = 0; k <= N; k++) {
         const t = k / N, [x, z] = ev(t), [nx, nz] = evn(t);
         const tip = tipAt1 ? t : 1 - t;               // 1 en el extremo que toca la pista
-        const wIn = 3.75 + tip * 1.7;                 // lado pista: entra bajo el asfalto
         const wOut = Math.max(0.3, 3.75 * (1 - tip * tip * 1.12)); // exterior: aguja al borde
-        const wA = flip ? wOut : wIn;                 // lado +normal = exterior (lejos del centro)
-        const wB = flip ? wIn : wOut;
+        const [ex, ez] = trackEdge(x, z);             // lado pista = borde de la calzada
         // Cinta casi plana a 0.058: 3 mm sobre el apron (0.055) y 2 mm BAJO la
         // calzada (0.06) — la punta queda escondida bajo el borde de la pista y
         // la junta no dibuja ningún canto ni losa levantada
         const yy = 0.058;
-        pos.push(x - nx * wB, yy, z - nz * wB, x + nx * wA, yy, z + nz * wA);
+        if (flip) pos.push(ex, yy, ez, x + nx * wOut, yy, z + nz * wOut);   // +n = exterior
+        else pos.push(x - nx * wOut, yy, z - nz * wOut, ex, yy, ez);        // +n = pista
+        // Ancho efectivo del lado de pista para la línea blanca de borde
+        const wIn = Math.hypot(ex - x, ez - z);
+        const wA = flip ? wOut : wIn, wB = flip ? wIn : wOut;
         // Franja limpia del asfalto de pista (u 0.45-0.58, entre las bandas de
         // goma y los bordes aclarados): mismo tono que la calzada — sin parche
         uv.push(0.45, cum[k] / 12, 0.58, cum[k] / 12);
@@ -6552,6 +6794,17 @@ function buildWorld() {
         if (ppl.instanceColor) ppl.instanceColor.needsUpdate = true;
         ppl.frustumCulled = false;
         world.add(ppl);
+        // Animación de la ola: guardamos la malla, la posición x/z de cada
+        // espectador y una fase — al pasar el coche cerca saltan y se agitan
+        crowdPpl = ppl;
+        crowdMat = ppl.instanceMatrix.array.slice();
+        crowdBase = new Float32Array(n2 * 3);
+        const _ia = ppl.instanceMatrix.array;
+        for (let i = 0; i < n2; i++) {
+          crowdBase[i * 3] = _ia[i * 16 + 12];          // x
+          crowdBase[i * 3 + 1] = _ia[i * 16 + 14];      // z
+          crowdBase[i * 3 + 2] = rnd(0, 6.28);          // fase del salto
+        }
       }
       window._standExcl = null;                    // la exclusión usa _standPts (curva)
     }
@@ -6644,10 +6897,13 @@ function buildWorld() {
       color: 0xd8ecff, transparent: true, opacity: 0.28, side: THREE.DoubleSide })));
   }
 
-  // Zona roja/negra en el exterior de las curvas, pegada al borde del circuito
+  // Zona roja/negra en el exterior de las curvas, pegada al borde del circuito:
+  // bandas transversales finas (~1.2m) intercaladas — estilo rumble de escapatoria
   {
     const rPos = [], rIdx = [], bPos = [], bIdx = [];
-    const W2 = 2.8, LOOK = 6;
+    const W2 = 2.8, LOOK = 6, BAND = 1.2;
+    const lp = (a, b, f) => a + (b - a) * f;
+    let band = 0;                                          // alterna sin cortes entre tramos
     for (let i = 0; i < pathLen; i++) {
       const p = path[i], pn = path[(i + 1) % pathLen];
       const pa = path[(i + LOOK) % pathLen];
@@ -6661,12 +6917,24 @@ function buildWorld() {
       const hw0 = neon ? RW / 2 + 0.95 : ((trackHW && trackHW[i]) || RW / 2) + 0.15;
       const hw1 = neon ? RW / 2 + 0.95 : ((trackHW && trackHW[(i + 1) % pathLen]) || RW / 2) + 0.15;
       const nx = -p.tz * s, nz = p.tx * s, nx2 = -pn.tz * s, nz2 = pn.tx * s;
-      const dst = i % 2 ? bPos : rPos, dstI = i % 2 ? bIdx : rIdx, qb = dst.length / 3;
-      dst.push(p.x + nx * hw0, 0.09 + bankYAt(i, s * hw0), p.z + nz * hw0,
-               p.x + nx * (hw0 + W2), 0.09 + bankYAt(i, s * (hw0 + W2)), p.z + nz * (hw0 + W2),
-               pn.x + nx2 * (hw1 + W2), 0.09 + bankYAt(i + 1, s * (hw1 + W2)), pn.z + nz2 * (hw1 + W2),
-               pn.x + nx2 * hw1, 0.09 + bankYAt(i + 1, s * hw1), pn.z + nz2 * hw1);
-      dstI.push(qb, qb + 1, qb + 2, qb, qb + 2, qb + 3);
+      const yA0 = bankYAt(i, s * hw0), yA1 = bankYAt(i + 1, s * hw1);
+      const yB0 = bankYAt(i, s * (hw0 + W2)), yB1 = bankYAt(i + 1, s * (hw1 + W2));
+      const segLen = Math.hypot(pn.x - p.x, pn.z - p.z) || 1;
+      const nSub = Math.max(1, Math.round(segLen / BAND));
+      for (let k = 0; k < nSub; k++, band++) {
+        const f0 = k / nSub, f1 = (k + 1) / nSub;
+        const nxA = lp(nx, nx2, f0), nzA = lp(nz, nz2, f0);
+        const nxB = lp(nx, nx2, f1), nzB = lp(nz, nz2, f1);
+        const hwA = lp(hw0, hw1, f0), hwB = lp(hw0, hw1, f1);
+        const xA = lp(p.x, pn.x, f0), zA = lp(p.z, pn.z, f0);
+        const xB = lp(p.x, pn.x, f1), zB = lp(p.z, pn.z, f1);
+        const dst = band % 2 ? bPos : rPos, dstI = band % 2 ? bIdx : rIdx, qb = dst.length / 3;
+        dst.push(xA + nxA * hwA, 0.09 + lp(yA0, yA1, f0), zA + nzA * hwA,
+                 xA + nxA * (hwA + W2), 0.09 + lp(yB0, yB1, f0), zA + nzA * (hwA + W2),
+                 xB + nxB * (hwB + W2), 0.09 + lp(yB0, yB1, f1), zB + nzB * (hwB + W2),
+                 xB + nxB * hwB, 0.09 + lp(yA0, yA1, f1), zB + nzB * hwB);
+        dstI.push(qb, qb + 1, qb + 2, qb, qb + 2, qb + 3);
+      }
     }
     for (const [pp, ii, col] of [[rPos, rIdx, 0xd8202c], [bPos, bIdx, 0x0c0e12]]) {
       if (!pp.length) continue;
@@ -6956,49 +7224,39 @@ function buildWorld() {
     const hb = new THREE.Group();
     const hMat = new THREE.MeshPhysicalMaterial({ color: 0xf2c410, roughness: 0.28,
       metalness: 0.72, clearcoat: 0.8, clearcoatRoughness: 0.2 });   // amarillo, laca
-    const hAcc = new THREE.MeshPhysicalMaterial({ color: 0x14294e, roughness: 0.32,
-      metalness: 0.8, clearcoat: 0.5, clearcoatRoughness: 0.25 });  // azul oscuro, laca
-    // Librea procedural realista de heli de TV: bandas azul/rojo, líneas de
-    // panelado, puertas, remaches, matrícula y suciedad de uso en el vientre
+    const hAcc = new THREE.MeshPhysicalMaterial({ color: 0x2a4a8e, roughness: 0.32,
+      metalness: 0.8, clearcoat: 0.5, clearcoatRoughness: 0.25 });  // azul de la aleta
+    const hWhite = new THREE.MeshPhysicalMaterial({ color: 0xe8ecf0, roughness: 0.35,
+      metalness: 0.5, clearcoat: 0.6, clearcoatRoughness: 0.25 });  // blanco del motor/aleta
+    // Librea como la maqueta: TODO amarillo limpio — solo líneas de panel
+    // sutiles, remaches, "GPT" en el morro y algo de suciedad en el vientre
     const liveryTex = (() => {
       const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 512;
       const x = cv.getContext('2d');
       const g = x.createLinearGradient(0, 0, 0, 512);
-      g.addColorStop(0, '#ffe23c'); g.addColorStop(0.5, '#f2c410'); g.addColorStop(1, '#b98d00');
-      x.fillStyle = g; x.fillRect(0, 0, 1024, 512);                // amarillo con luz cenital
-      const gb = x.createLinearGradient(0, 296, 0, 374);           // banda azul oscuro
-      gb.addColorStop(0, '#2a3f6e'); gb.addColorStop(0.45, '#14294e');
-      gb.addColorStop(0.55, '#0e1e3e'); gb.addColorStop(1, '#22365f');
-      x.fillStyle = gb; x.fillRect(0, 296, 1024, 78);
-      x.fillStyle = '#dfe4e9'; x.fillRect(0, 284, 1024, 10);       // filete blanco metálico
-      x.fillStyle = '#aeb6be'; x.fillRect(0, 374, 1024, 8);        // filete plata bajo la banda
-      x.strokeStyle = 'rgba(40,50,60,0.45)'; x.lineWidth = 2;      // líneas de panel
+      g.addColorStop(0, '#ffdf2e'); g.addColorStop(0.5, '#f2c410'); g.addColorStop(1, '#c99a00');
+      x.fillStyle = g; x.fillRect(0, 0, 1024, 512);                // amarillo uniforme
+      x.strokeStyle = 'rgba(90,75,20,0.35)'; x.lineWidth = 2;      // líneas de panel discretas
       for (const px of [150, 330, 540, 700, 880]) {
         x.beginPath(); x.moveTo(px, 70); x.lineTo(px, 420); x.stroke();
       }
+      x.beginPath(); x.moveTo(0, 210); x.lineTo(1024, 210); x.stroke();   // junta del capó
       for (const dx of [256, 768]) {                               // puertas (ambos lados)
         x.strokeRect(dx - 75, 150, 140, 205);
-        x.strokeRect(dx + 85, 168, 105, 175);
-        x.fillStyle = 'rgba(30,38,46,0.75)';                       // tiradores
-        x.fillRect(dx + 55, 240, 12, 5); x.fillRect(dx + 95, 245, 12, 5);
+        x.fillStyle = 'rgba(60,55,30,0.6)';
+        x.fillRect(dx + 55, 240, 12, 5); x.fillRect(dx + 95, 245, 12, 5);   // tiradores
       }
-      x.fillStyle = 'rgba(60,70,80,0.5)';                          // filas de remaches
+      x.fillStyle = 'rgba(90,75,20,0.4)';                          // filas de remaches
       for (let px = 0; px < 1024; px += 17) {
-        x.fillRect(px, 281, 2, 2); x.fillRect(px, 379, 2, 2); x.fillRect(px, 88, 2, 2);
+        x.fillRect(px, 206, 2, 2); x.fillRect(px, 418, 2, 2); x.fillRect(px, 88, 2, 2);
       }
       x.textAlign = 'center';
       for (const dx of [256, 768]) {
-        x.fillStyle = '#f2f5f8'; x.font = 'bold 58px Arial';       // logo sobre la banda
-        x.fillText('SCGP·TV', dx + 10, 352);
-        x.fillStyle = '#20262c'; x.font = 'bold 30px Arial';       // matrícula
-        x.fillText('EC-GP1', dx - 20, 118);
+        x.fillStyle = '#3a3420'; x.font = 'bold 44px Arial';       // "GPT" en el morro
+        x.save(); x.translate(dx + 30, 318); x.rotate(-0.06);
+        x.fillText('GPT', 0, 0); x.restore();
       }
-      x.fillStyle = 'rgba(30,36,42,0.85)';                         // escapes del motor
-      x.fillRect(150, 55, 70, 22); x.fillRect(804, 55, 70, 22);
-      x.fillStyle = 'rgba(30,36,42,0.30)';                         // rejillas de admisión
-      for (let px = 130; px < 240; px += 12) x.fillRect(px, 40, 5, 36);
-      for (let px = 794; px < 904; px += 12) x.fillRect(px, 40, 5, 36);
-      x.fillStyle = 'rgba(70,62,48,0.12)';                         // suciedad de uso abajo
+      x.fillStyle = 'rgba(70,62,48,0.14)';                         // suciedad de uso abajo
       for (let i = 0; i < 70; i++) {
         const sx = Math.random() * 1024, sy = 395 + Math.random() * 110;
         x.beginPath(); x.ellipse(sx, sy, 6 + Math.random() * 24, 3 + Math.random() * 6, 0, 0, 7); x.fill();
@@ -7006,15 +7264,13 @@ function buildWorld() {
       const t = tex3(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
     })();
     const hLivery = hMat.clone(); hLivery.map = liveryTex;         // fuselaje con librea
-    const boomTex = (() => {                                       // botalón: anillos + filetes
+    const boomTex = (() => {                                       // botalón amarillo como el de la foto
       const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64;
       const x = cv.getContext('2d');
       const g = x.createLinearGradient(0, 0, 0, 64);
-      g.addColorStop(0, '#2a3f6e'); g.addColorStop(1, '#0e1e3e');
+      g.addColorStop(0, '#e8bc10'); g.addColorStop(1, '#b8900a');
       x.fillStyle = g; x.fillRect(0, 0, 256, 64);
-      x.fillStyle = '#e8b51e';                                     // filetes amarillos
-      x.fillRect(56, 0, 8, 64); x.fillRect(184, 0, 8, 64);
-      x.strokeStyle = 'rgba(40,50,60,0.4)'; x.lineWidth = 2;       // anillos de sección
+      x.strokeStyle = 'rgba(90,75,20,0.35)'; x.lineWidth = 2;      // anillos de sección
       for (const py of [14, 30, 46]) { x.beginPath(); x.moveTo(0, py); x.lineTo(256, py); x.stroke(); }
       x.fillStyle = 'rgba(70,62,48,0.15)';                         // hollín del escape
       x.fillRect(0, 0, 60, 64);
@@ -7022,29 +7278,42 @@ function buildWorld() {
     })();
     const hBoom = hMat.clone(); hBoom.map = boomTex;
     const cab = new THREE.Mesh(new THREE.SphereGeometry(1.6, 20, 14), hLivery);
-    cab.scale.set(1.55, 0.9, 0.95); hb.add(cab);
-    const glassH = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 12),
-      new THREE.MeshPhysicalMaterial({ color: 0x0a1420, roughness: 0.1, metalness: 0.9, transparent: true, opacity: 0.72 }));
-    glassH.position.set(1.35, 0.18, 0); glassH.scale.set(1, 0.75, 0.85); hb.add(glassH);
-    const boom = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.42, 5.4, 12), hBoom);
-    boom.rotation.z = Math.PI / 2; boom.position.set(-3.4, 0.25, 0); hb.add(boom);
-    // Cubierta del motor entre cabina y mástil — panel oscuro con escapes
-    const deck = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.34, 1.15),
-      new THREE.MeshStandardMaterial({ color: 0x272d33, roughness: 0.55, metalness: 0.6 }));
-    deck.position.set(-0.55, 1.18, 0); hb.add(deck);
+    cab.scale.set(1.55, 0.95, 1.0); hb.add(cab);
+    // Visera oscura de doble ventana como la de la foto: dos panas tintadas
+    // separadas por el pilar central amarillo
+    const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x0c1622, roughness: 0.12,
+      metalness: 0.85, transparent: true, opacity: 0.85, clearcoat: 0.8 });
+    for (const s of [-1, 1]) {
+      const pane = new THREE.Mesh(new THREE.SphereGeometry(0.9, 14, 10), glassMat);
+      pane.position.set(1.72, 0.05, s * 0.52); pane.scale.set(1.05, 0.6, 0.62);
+      hb.add(pane);
+    }
+    const pillar = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.85, 0.18), hMat);
+    pillar.position.set(1.72, 0.05, 0); hb.add(pillar);            // pilar central amarillo
+    const boom = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.34, 5.4, 12), hBoom);
+    boom.rotation.z = Math.PI / 2; boom.position.set(-3.4, 0.22, 0); hb.add(boom);
+    // Cubierta del motor BLANCA sobre el lomo, delante del mástil (como la maqueta):
+    // asoma por encima de la cúpula del fuselaje y del velo del rotor
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.26, 1.25), hWhite);
+    deck.position.set(-0.7, 1.45, 0); hb.add(deck);
     const intake = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.5, 8),
       new THREE.MeshStandardMaterial({ color: 0x1a1f24, roughness: 0.4, metalness: 0.8 }));
-    intake.rotation.z = Math.PI / 2; intake.position.set(0.35, 1.16, 0); hb.add(intake);
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.3, 0.7), hAcc);
-    fin.position.set(-6.1, 0.6, 0); hb.add(fin);
-    const stripe = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.3, 1.9), hAcc);
-    stripe.position.y = -0.25; hb.add(stripe);                     // franja bajo la cabina
-    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.5, 6), hMat);
-    mast.position.y = 1.15; hb.add(mast);
+    intake.rotation.z = Math.PI / 2; intake.position.set(0.35, 1.42, 0); hb.add(intake);
+    // Aleta de cola: blanca con el borde superior azul (como la de la foto)
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.16, 1.35, 0.8), hWhite);
+    fin.position.set(-6.15, 0.75, 0); hb.add(fin);
+    const finTop = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.3, 0.82), hAcc);
+    finTop.position.set(-6.15, 1.55, 0); hb.add(finTop);
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.8, 6), hMat);
+    mast.position.y = 1.3; hb.add(mast);
+    // Cubo del rotor: disco oscuro con la arandela central — visible desde arriba
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.4, 0.18, 10),
+      new THREE.MeshStandardMaterial({ color: 0x14171c, roughness: 0.45, metalness: 0.85 }));
+    hub.position.y = 1.68; hb.add(hub);
     const bladeMat = new THREE.MeshStandardMaterial({ color: 0x101317, roughness: 0.28,
       metalness: 0.9 });                                           // aspas: negro metálico
     const rot = new THREE.Mesh(new THREE.BoxGeometry(9.5, 0.07, 0.42), bladeMat);
-    rot.position.y = 1.45; hb.add(rot);
+    rot.position.y = 1.78; hb.add(rot);
     const rot2 = rot.clone(); rot2.rotation.y = Math.PI / 2; hb.add(rot2);
     // Punteras de rotor marcadas — las palas reales llevan la punta señalizada
     const tipMat = new THREE.MeshStandardMaterial({ color: 0xe8b51e, roughness: 0.4 });
@@ -7052,8 +7321,8 @@ function buildWorld() {
       const tip = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.075, 0.43), tipMat);
       tip.position.x = s * 4.45; r.add(tip);
     }
-    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.7, 0.3), bladeMat);
-    tail.position.set(-6.2, 0.7, 0.2); hb.add(tail);               // rotor de cola
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.2, 0.22), bladeMat);
+    tail.position.set(-6.35, 0.8, 0.3); hb.add(tail);              // rotor de cola fino
     // Discos de difuminado: a régimen de giro las palas se ven como un velo
     // translúcido con el borde desvanecido — sin arista dura en el perímetro
     const rdCv = document.createElement('canvas'); rdCv.width = rdCv.height = 64;
@@ -7068,13 +7337,13 @@ function buildWorld() {
     }
     const blurMat = new THREE.MeshBasicMaterial({ map: tex3(rdCv), transparent: true,
       side: THREE.DoubleSide, depthWrite: false });
-    const disc = new THREE.Mesh(new THREE.CircleGeometry(4.9, 30), blurMat);
-    disc.rotation.x = -Math.PI / 2; disc.position.y = 1.46; hb.add(disc);
-    const tailDisc = new THREE.Mesh(new THREE.CircleGeometry(0.95, 14), blurMat);
-    tailDisc.rotation.y = Math.PI / 2; tailDisc.position.set(-6.2, 0.7, 0.24); hb.add(tailDisc);
-    // Estabilizador horizontal, tobera de escape y antena
-    const stab = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.08, 1.7), hMat);
-    stab.position.set(-5.3, 0.5, 0); hb.add(stab);
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(5.7, 30), blurMat);
+    disc.rotation.x = -Math.PI / 2; disc.position.y = 2.55; hb.add(disc);
+    const tailDisc = new THREE.Mesh(new THREE.CircleGeometry(0.8, 14), blurMat);
+    tailDisc.rotation.y = Math.PI / 2; tailDisc.position.set(-6.55, 1.0, 0.34); hb.add(tailDisc);
+    // Estabilizador horizontal ANCHO como las alas de la maqueta, tobera y antena
+    const stab = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.07, 3.1), hMat);
+    stab.position.set(-5.6, 0.62, 0); hb.add(stab);
     const exh = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.22, 0.8, 7), hMat);
     exh.rotation.z = Math.PI / 2; exh.position.set(-2.3, 0.5, 0.4); hb.add(exh);
     const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.05, 0.75, 4), hMat);
@@ -7108,6 +7377,36 @@ function buildWorld() {
     const navBeacon = mkNav(0xff1a10, 0.1, -1.5, 0, 1.1);          // baliza rotativa panza
     const navFast = mkNav(0xff1408, -3.6, 0.72, 0, 1.4);           // destello rojo ultrarrápido en el botalón
     hb.scale.setScalar(1.15);
+    // Modelo real EC135 (heli.glb): cuando llega sustituye al fuselaje
+    // procedural — se quedan los discos de difuminado, luces, foco y bola TV
+    c3dGlb('heli.glb').then(m => {
+      m.rotation.y = -Math.PI / 2;                       // fuselaje en +Z → nariz a +X
+      m.scale.setScalar(1.05);                           // tamaño real ≈ el procedural
+      const bb2 = new THREE.Box3().setFromObject(m);
+      const c2 = bb2.getCenter(new THREE.Vector3());
+      m.position.sub(c2); m.position.y += 0.1;
+      hb.add(m);
+      for (const ch of hb.children) {
+        if (ch === m || ch === disc || ch === tailDisc || ch.isSprite || ch.isLight || ch === cam) continue;
+        ch.visible = false;
+      }
+      // Aspas del modelo: el rotor principal y el fenestrón giran de verdad —
+      // cada malla se cuelga de un pivote en el centro de su geometría
+      const mkPiv = o => {
+        if (!o || !o.geometry) return null;
+        o.geometry.computeBoundingBox();
+        const c = o.geometry.boundingBox.getCenter(new THREE.Vector3());
+        const piv = new THREE.Group();
+        o.parent.add(piv); piv.position.copy(c); piv.add(o);
+        o.position.set(-c.x, -c.y, -c.z);
+        return piv;
+      };
+      m.traverse(o => {
+        if (o.name.includes('011')) hb.userData.gRotor = mkPiv(o);    // rotor 10.2m
+        else if (o.name.includes('012')) hb.userData.gTail = mkPiv(o);  // fenestrón
+      });
+      hb.userData.mdl = m;
+    }).catch(() => {});
     // hOuter lleva posición y guiñada; hb dentro lleva cabeceo y alabeo reales
     const hOuter = new THREE.Group(); hOuter.add(hb); world.add(hOuter);
     // Foco blanco potente bajo el fuselaje — solo brilla de noche: en cada
@@ -7554,16 +7853,16 @@ function buildWorld() {
     // Copa de roble A: tres grumos redondos solapados sobre tronco grueso —
     // el grumo bajo empieza DENTRO del tronco (top ~6.5), si no la copa flota
     const oakGeo = mergeGeos([
-      { geo: new THREE.IcosahedronGeometry(5.4, 1), m: _m(0, 10.5, 0, 1.15, 0.92, 1.15) },
-      { geo: new THREE.IcosahedronGeometry(3.8, 1), m: _m(3.6, 14, 1.4, 1, 0.85, 1) },
-      { geo: new THREE.IcosahedronGeometry(3.4, 1), m: _m(-3.8, 13.2, -1.6, 1, 0.9, 1) },
+      { geo: new THREE.IcosahedronGeometry(5.4, 2), m: _m(0, 10.5, 0, 1.15, 0.92, 1.15) },
+      { geo: new THREE.IcosahedronGeometry(3.8, 2), m: _m(3.6, 14, 1.4, 1, 0.85, 1) },
+      { geo: new THREE.IcosahedronGeometry(3.4, 2), m: _m(-3.8, 13.2, -1.6, 1, 0.9, 1) },
     ]);
     // Copa de roble B: copa ancha de 4 grumos — el árbol "paraguas" del bosque
     const oakBGeo = mergeGeos([
-      { geo: new THREE.IcosahedronGeometry(6.2, 1), m: _m(0, 10, 0, 1.25, 0.78, 1.25) },
-      { geo: new THREE.IcosahedronGeometry(4.0, 1), m: _m(4.4, 13, 1.8, 1, 0.82, 1) },
-      { geo: new THREE.IcosahedronGeometry(3.6, 1), m: _m(-4.2, 12.4, -2, 1, 0.86, 1) },
-      { geo: new THREE.IcosahedronGeometry(3.2, 1), m: _m(0.6, 14.8, -3.4, 1, 0.9, 1) },
+      { geo: new THREE.IcosahedronGeometry(6.2, 2), m: _m(0, 10, 0, 1.25, 0.78, 1.25) },
+      { geo: new THREE.IcosahedronGeometry(4.0, 2), m: _m(4.4, 13, 1.8, 1, 0.82, 1) },
+      { geo: new THREE.IcosahedronGeometry(3.6, 2), m: _m(-4.2, 12.4, -2, 1, 0.86, 1) },
+      { geo: new THREE.IcosahedronGeometry(3.2, 2), m: _m(0.6, 14.8, -3.4, 1, 0.9, 1) },
     ]);
     // Ciprés: llama alta y estrecha con base redondeada
     const cypGeo = mergeGeos([
@@ -7596,14 +7895,14 @@ function buildWorld() {
       geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
       return geo;
     };
-    for (const g of [leafGeo, pineBGeo, oakGeo, oakBGeo, cypGeo]) { puffGeo(g, 0.085); tintGeo(g); }
+    for (const g of [leafGeo, pineBGeo, oakGeo, oakBGeo, cypGeo]) { puffGeo(g, 0.13); tintGeo(g, 0.42, 1.02); }
     const trunkGeo = new THREE.CylinderGeometry(0.5, 0.8, 9, 6);
     const trunkOak = new THREE.CylinderGeometry(0.95, 1.5, 13, 6);   // tronco grueso
     const trunkCyp = new THREE.CylinderGeometry(0.35, 0.6, 8, 6);    // tronco fino
     if (!foliageTex) { foliageTex = makeFoliageTex(); barkTex = makeBarkTex(); }
-    const leafMat = new THREE.MeshStandardMaterial({ color: 0xd8e0c8, roughness: 0.95, map: foliageTex, vertexColors: true });
-    const oakMat = new THREE.MeshStandardMaterial({ color: 0xcfe0a8, roughness: 0.95, map: foliageTex, vertexColors: true });
-    const cypMat = new THREE.MeshStandardMaterial({ color: 0x9ab88e, roughness: 0.95, map: foliageTex, vertexColors: true });
+    const leafMat = new THREE.MeshStandardMaterial({ color: 0xa8c488, roughness: 0.97, map: foliageTex, vertexColors: true });
+    const oakMat = new THREE.MeshStandardMaterial({ color: 0xa8c478, roughness: 0.97, map: foliageTex, vertexColors: true });
+    const cypMat = new THREE.MeshStandardMaterial({ color: 0x88a878, roughness: 0.97, map: foliageTex, vertexColors: true });
     const barkMat = new THREE.MeshStandardMaterial({ color: 0xc8b8a0, roughness: 1, map: barkTex });
     // Registro de culling por distancia: las instancias lejanas de vegetación
     // pequeña se colapsan a escala 0 (GPU no dibuja nada, cero trabajo de ruteo)
@@ -9926,6 +10225,7 @@ function init3() {
 /* ================== CONTROLES ================== */
 const keys = {};
 let inGas = 0, inBrake = 0, inSteer = 0, inHB = false, inShift = 0, shiftHeld = false;
+let stGas = 0, stBrk = 0;                             // stick 2D: arriba = gas, abajo = freno
 let inGas2 = 0;                                     // entradas del JUGADOR 2 (modo local)
 addEventListener('keydown', e => {
   keys[e.code] = true;
@@ -9943,7 +10243,10 @@ addEventListener('keydown', e => {
   // Enter no re-activa el último botón pulsado (⏸/⟳/⏏ conservan el foco tras el
   // clic y volvían a dispararse al pulsar Enter → pausa o salida en plena carrera)
   if (playing && e.code === 'Enter') e.preventDefault();
-  if (e.code === 'Escape' && playing) setPaused(!paused);           // ESC pausa/reanuda
+  if (e.code === 'Escape' && playing) { if (droneOn) setDrone(false); else setPaused(!paused); }  // ESC sale del dron o pausa
+  if (e.code === 'KeyG' && droneOk() && !replaying) setDrone(!droneOn);  // G = dron FPV
+  if (e.code === 'KeyV' && playing && !replaying) setFpv(!fpvOn);        // V = 1ª persona
+  if (e.code === 'KeyT' && playing && !replaying) setCen(!cenOn);        // T = vista cenital
   if (e.code === 'Equal' || e.code === 'NumpadAdd') camZoom = Math.max(-0.55, camZoom - 0.12);
   if (e.code === 'Minus' || e.code === 'NumpadSubtract') camZoom = Math.min(1, camZoom + 0.12);
 });
@@ -9978,19 +10281,47 @@ function bindBtn(id, on, off) {
 }
 // Pad de dirección deslizante: arrastrar dentro de la zona gira de forma analógica
 (() => {
-  const pad = document.getElementById('stPad'), aL = document.getElementById('stA_L'), aR = document.getElementById('stA_R');
+  const pad = document.getElementById('stPad'), aL = document.getElementById('stA_L'),
+        aR = document.getElementById('stA_R'), knob = document.getElementById('stKnob');
   const setSteer = x => {
     const r = pad.getBoundingClientRect();
     const v = clamp((x - r.left) / r.width * 2 - 1, -1, 1) * 1.25;
     inSteer = clamp(v, -1, 1);
     aL.classList.toggle('on', inSteer < -0.12);
     aR.classList.toggle('on', inSteer > 0.12);
+    knob.style.transform = `translate(calc(-50% + ${(inSteer * 36).toFixed(0)}px), -50%)`;
   };
-  const off = e => { e.preventDefault(); inSteer = 0; aL.classList.remove('on'); aR.classList.remove('on'); };
+  const off = e => { e.preventDefault(); inSteer = 0; aL.classList.remove('on'); aR.classList.remove('on');
+    knob.style.transform = 'translate(-50%, -50%)'; };
   pad.addEventListener('pointerdown', e => { e.preventDefault(); try { pad.setPointerCapture(e.pointerId); } catch (x) {} setSteer(e.clientX); });
   pad.addEventListener('pointermove', e => { if (e.pressure > 0 || e.buttons) setSteer(e.clientX); });
   pad.addEventListener('pointerup', off);
   pad.addEventListener('pointercancel', off);
+})();
+// Stick físico a la izquierda del volante: el pomo sigue el pulgar en 2D —
+// horizontal = dirección analógica, arriba = acelerador, abajo = freno
+// (auto-centrado en ambos ejes al soltar)
+(() => {
+  const stk = document.getElementById('stStick'), kn = document.getElementById('stKnob2');
+  const setSteer = (x, y) => {
+    const r = stk.getBoundingClientRect();
+    let dx = x - (r.left + r.width / 2), dy = y - (r.top + r.height / 2);
+    const travel = r.width * 0.27, len = Math.hypot(dx, dy);
+    if (len > travel) { dx *= travel / len; dy *= travel / len; }   // pomo dentro del anillo
+    kn.style.transform = `translate(calc(-50% + ${dx.toFixed(0)}px), calc(-50% + ${dy.toFixed(0)}px))`;
+    const rng = r.width * 0.36;
+    inSteer = clamp(dx / rng, -1, 1);
+    stGas = clamp(-dy / rng, 0, 1);
+    stBrk = clamp(dy / rng, 0, 1);
+  };
+  const off = e => { if (e) e.preventDefault(); inSteer = 0; stGas = stBrk = 0;
+    stk.classList.remove('on'); kn.style.transform = 'translate(-50%, -50%)'; };
+  stk.addEventListener('pointerdown', e => { e.preventDefault();
+    try { stk.setPointerCapture(e.pointerId); } catch (x) {}
+    stk.classList.add('on'); setSteer(e.clientX, e.clientY); });
+  stk.addEventListener('pointermove', e => { if (e.pressure > 0 || e.buttons) setSteer(e.clientX, e.clientY); });
+  stk.addEventListener('pointerup', off);
+  stk.addEventListener('pointercancel', off);
 })();
 let pitReq = false;                                   // botón PIT mantenido
 let boxexReq = false, boxexPt = null;                 // BOXEX: autopiloto al box del color del coche
@@ -10013,6 +10344,7 @@ bindBtn('shiftBtn', () => inShift = 1, () => inShift = 0);
 bindBtn('gas2Btn', () => inGas2 = 1, () => inGas2 = 0);
 // (el botón ▲ J2 se eliminó: J2 cambia con Shift derecho / Enter)
 bindBtn('brkBtn', () => inBrake = 1, () => inBrake = 0);
+bindBtn('hbBtn', () => inHB = true, () => inHB = false);
 bindBtn('nitroBtn', () => inNitro = true, () => inNitro = false);
 bindBtn('pitBtn', () => pitReq = true, () => pitReq = false);
 // Ventana de boxes: cada opción activa/dESactiva ese servicio de la parada
@@ -10335,7 +10667,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 758;
+const BUILD_NO = 803;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -10674,6 +11006,26 @@ function scRescue(tgt) {
   scResc = { tgt };
   showToast('🚗 ' + T('scRescue')); sfx.beep();
 }
+// Retirada del safety car: como en la F1 real NO desaparece ni se aparta al
+// borde — sigue la trazada hasta la ENTRADA DE BOXES y aparca en la calle.
+// Si la boca quedó muy atrás (circuito sin pit lane cercano), se aparta normal
+function scToPit(force) {
+  const sc = scCar, rt = window._pitRoute;
+  if (!sc) return;
+  let pitS = -1;
+  if (rt && rt.pts && rt.pts.length) {
+    let pitI = 0, bd = 1e9;
+    for (let i = 0; i < pathLen; i++) {
+      const d = Math.hypot(path[i].x - rt.pts[0].x, path[i].z - rt.pts[0].z);
+      if (d < bd) { bd = d; pitI = i; }
+    }
+    pitS = pitI + Math.ceil((sc.s - pitI) / pathLen) * pathLen;
+    if (pitS < sc.s + 6) pitS += pathLen;
+    if (!force && pitS - sc.s > pathLen * 0.8) pitS = -1;  // la entrada acaba de pasar: no da una vuelta entera
+  }
+  if (pitS > 0) { sc.phase = 'toPit'; sc.pitS = pitS; }
+  else sc.phase = 'exit';
+}
 function scTick(dt) {
   const sc = scCar; if (!sc || !sc.grp) return;
   sc.blink += dt;                                       // rotativas alternas ~3 Hz
@@ -10692,7 +11044,9 @@ function scTick(dt) {
   // trazada) → exit (se aparta lateral) → park (fuera del circuito, quieto)
   if (sc.phase === 'grid') {
     if (fsState) sc.phase = fsState === 1 ? 'fsLead' : 'exit';  // falsa salida: lidera la vuelta extra
-    else if (performance.now() >= t0) sc.phase = 'lead'; // luces fuera → arranca
+    else if (performance.now() >= t0) scToPit(true);       // luces fuera → directo a boxes
+    // (sin pace lap: nada más arrancar la carrera el SC rueda hasta la ENTRADA
+    //  del pit lane, recorre la calle y aparca junto a la SALIDA, listo)
     else return;
   }
   if (sc.phase === 'park') return;
@@ -10787,11 +11141,13 @@ function scTick(dt) {
   } else if (sc.phase === 'fsLead') {
     // Vuelta extra de falsa salida: lidera al grupo por la trazada de vuelta a
     // la salida manteniendo ~9 índices de hueco sobre el coche de cabeza;
-    // al volver a la altura de los cajones se aparta y aparca al borde
+    // al volver a la altura de los cajones se retira por la ENTRADA DE BOXES
     vt = clamp(36 + (9 - gap) * 2.4, 22, 40);
     const sPos = ((Math.floor(sc.s) % pathLen) + pathLen) % pathLen;
-    if (fsHalf && (sPos >= pathLen - 20 || fsState === 2)) sc.phase = 'exit';
-  } else vt = sc.phase === 'exit' ? 30 : clamp(52 + (9 - gap) * 3.2, 0, 104);
+    if (fsHalf && (sPos >= pathLen - 20 || fsState === 2)) scToPit();
+  } else vt = sc.phase === 'exit' ? 30
+         : sc.phase === 'toPit' ? clamp(58 + (9 - gap) * 1.6, 34, 68)
+         : clamp(52 + (9 - gap) * 3.2, 0, 104);
   sc.v += clamp(vt - sc.v, -140 * dt, 70 * dt);
   sc.s += sc.v * dt / seg;
   // Posición interpolada + lateral: centrado; en 'exit' sale por el borde
@@ -10806,9 +11162,12 @@ function scTick(dt) {
   sc.grp.position.set(pa.x + (pb.x - pa.x) * f + nx * sc.lat,
     bankYAt(i, sc.lat) + 0.05, pa.z + (pb.z - pa.z) * f + nz * sc.lat);
   sc.grp.rotation.y = Math.PI / 2 - Math.atan2(tz, tx);
-  // Se aparta tras ~45% del circuito de pace lap… o antes si el líder lo pega
-  if (sc.phase === 'lead' && (sc.s - sc.s0 > pathLen * 0.45 || gap < 3.5)) sc.phase = 'exit';
+  // Se aparta tras ~45% del circuito de pace lap… o antes si el líder lo pega:
+  // como el safety car real, se retira entrando A BOXES por su boca
+  if (sc.phase === 'lead' && (sc.s - sc.s0 > pathLen * 0.45 || gap < 3.5)) scToPit();
   if (sc.phase === 'exit' && sc.lat > hw + 6.5) { sc.phase = 'park'; sc.v = 0; }
+  // Llegada a la boca del pit lane: pasa a navegar la calle y aparca dentro
+  if (sc.phase === 'toPit' && sc.s >= sc.pitS) { sc.phase = 'rPit'; sc.lwp = undefined; }
 }
 
 // El rival CPU avanza sobre la spline con perfil de velocidad (no es kinematic jugable, es "slot car")
@@ -10828,6 +11187,7 @@ function cpuSpawn(slot, tint, skill, latB) {
   const gk = slot + 1;                                        // cajones P2, P3, ... (P1 = jugador)
   const gLat = dragMode ? 0 : (gk % 2 ? 1 : -1) * (trackHW ? trackHW[pi0] : RW / 2) * 0.34;
   c.x = pr.x - pr.tz * gLat; c.z = pr.z + pr.tx * gLat; c.a = Math.atan2(pr.tz, pr.tx);
+  c.x0 = c.x; c.z0 = c.z;                                  // cajón propio (sensor de falsa salida)
   c.grp.position.set(c.x, 0, c.z); c.grp.rotation.y = Math.PI / 2 - c.a;
   scene3.add(c.grp);
   return c;
@@ -11343,6 +11703,11 @@ function exitToMenu() {
   el('fsBan').style.display = 'none'; el('formChip').style.display = 'none';
   document.getElementById('lights').style.display = 'none';
   demoSpot = null; dsHide();
+  setDrone(false); drone = null;                       // el dron no sobrevive al menú
+  setFpv(false);
+  document.getElementById('droneBtn').style.display = 'none';
+  document.getElementById('fpvBtn').style.display = 'none';
+  document.getElementById('cenBtn').style.display = 'none';
   document.getElementById('hud').style.display = 'none';
   document.getElementById('speedBox').style.display = 'none';
   for (const id of TOUCH_IDS) document.getElementById(id).style.display = 'none';
@@ -11456,26 +11821,39 @@ function pipShow() {
 function pipHide() {
   const d = document.getElementById('pip');
   if (d && d.style.display !== 'none') d.style.display = 'none';
+  if (pipDrone) pipDrone.grp.visible = false;
+  pip2Hide();
+}
+function pip2Show() {
+  if (!pip2CvEl) pip2CvEl = el('pip2Cv');
+  if (!pip2R) {
+    pip2R = new THREE.WebGLRenderer({ canvas: pip2CvEl, antialias: !LOW_POWER });
+    pip2R.setPixelRatio(Math.min(DPR, 2));
+    pip2R.setSize(420, 224, false);                  // mismo buffer 16:9 que el dron
+    pip2Cam = new THREE.PerspectiveCamera(68, 420 / 224, 0.5, 2400);
+  }
+  el('pip2').style.display = 'block';
+}
+function pip2Hide() {
+  const d = document.getElementById('pip2');
+  if (d && d.style.display !== 'none') d.style.display = 'none';
 }
 function pipTick(dt) {
   const alive = cpus.filter(c => c && !c.elim && !c.fin);
-  const ok = playing && !demoMode && !paused && !replaying && pfSlowT <= 0 && alive.length;
-  if (!ok) { if (pipTgt) pipTgt = null; pipHide(); return; }
-  if (pipTgt) {
-    pipOnT -= dt;
-    if (pipOnT <= 0 || !alive.includes(pipTgt)) { pipTgt = null; pipHide(); pipT = rnd(14, 22); return; }
-    pipShow();                                             // re-aparece tras una pausa
-    const prog = c => (c === car ? lapsDone * pathLen + pathIdx : c.s);
-    const pos = [car, ...alive].sort((a, b) => prog(b) - prog(a)).indexOf(pipTgt) + 1;
-    el('pipNm').textContent = 'TV · ' + (pipTgt.nm || 'CPU') + ' · P' + pos;
-  } else {
-    pipT -= dt;
-    if (pipT <= 0) {
-      pipTgt = alive[(Math.random() * alive.length) | 0];
-      pipOnT = rnd(7, 10);
-      pipShow();
-    }
-  }
+  const ok = playing && !paused && !replaying && pfSlowT <= 0;   // también en demo
+  if (!ok) { pipTgt = null; pipHide(); return; }
+  // DRON TV: por defecto persigue SIEMPRE al que va en cabeza de carrera —
+  // la ventana muestra su cámara en tiempo real (sin rivales: tu propio coche)
+  const prog = c => (c === car ? lapsDone * pathLen + pathIdx : c.s);
+  const field = [car, ...alive];
+  pipTgt = field.reduce((m, c) => prog(c) > prog(m) ? c : m, field[0]);
+  pipShow();
+  const pos = field.slice().sort((a, b) => prog(b) - prog(a)).indexOf(pipTgt) + 1;
+  const nmT = pipTgt === car ? YOU() : (pipTgt.nm || 'CPU');
+  el('pipNm').textContent = '🛸 ' + T('drone') + ' · P' + pos + ' · ' + nmT;
+  pip2Show();
+  el('pip2Nm').textContent = '🏎️ 1P · P' + pos + ' · ' + nmT;
+  el('pip2Sub').textContent = T('onb');
 }
 // ===== FALSA SALIDA =====
 // Alguien se adelanta al semáforo → letrero + alarma → el grupo da una vuelta
@@ -11587,7 +11965,7 @@ function fsRestart() {
   cpIdx = 0; lapsDone = 0; lapT0 = 0; sectT0 = 0; formT = 0;   // la vuelta extra sustituye a la de formación
   launchWin = 0; launchDone = false;
   wrongWay = 0; wwBack = 0; lastIdx = pathIdx;
-  for (const c of cpus) if (c) { c.s = -8 - (c.slot || 0) * 4; c.v = 0; c.fin = false; c.tm = 0; }
+  for (const c of cpus) if (c) { c.s = -8 - (c.slot || 0) * 4; c.v = 0; c.fin = false; c.tm = 0; c.launchDone = false; }
   scReset();                                              // el pace car también vuelve a su sitio
   el('formChip').style.display = 'none';
   el('fsBan').style.display = 'none';
@@ -11677,8 +12055,9 @@ function update(dt) {
   const go = performance.now() >= t0;
   // FALSA SALIDA: alguien se mueve antes de apagarse las luces
   if (!fsState && !go && !dragMode) {
-    if (!demoMode && !mpMode && Math.hypot(car.x - fsX, car.z - fsZ) > 3.4) falseStart('p');
-    else for (const c of cpus) if (c && !c.elim && c.v > 2.5) { falseStart(c); break; }
+    if (!demoMode && !mpMode && Math.hypot(car.x - fsX, car.z - fsZ) > 3.0) falseStart('p');
+    else for (const c of cpus) if (c && !c.elim &&
+        (p2Mode ? Math.hypot(c.x - c.x0, c.z - c.z0) > 3.0 : c.v > 2.5)) { falseStart(c); break; }
   }
   // PHOTO FINISH en curso: tiempo a cámara lenta mientras la rendija captura al rival
   if (pfSlowT > 0) {
@@ -11691,7 +12070,7 @@ function update(dt) {
   pipTick(dt);                                             // carrera: ventana TV sobre rivales
   // Entradas
   let steer, gas, brake, hb;
-  if (demoMode) {                               // solo la DEMO lleva al jugador con IA
+  if (demoMode || droneOn) {              // la DEMO y el MODO DRON llevan al jugador con IA
     const ai = aiDrive(car.x, car.z, car.vx, car.vz, car.a, pathIdx);
     steer = ai.steer; gas = ai.gas; brake = ai.brake; hb = ai.hb;
   } else {
@@ -11701,7 +12080,7 @@ function update(dt) {
     if (keys.KeyA || (!p2Mode && keys.ArrowLeft)) steer -= 1;
     if (keys.KeyD || (!p2Mode && keys.ArrowRight)) steer += 1;
     steer = clamp(steer, -1, 1);
-    gas = Math.max(inGas, pad.gas); brake = Math.max(inBrake, pad.brake);
+    gas = Math.max(inGas, pad.gas, stGas); brake = Math.max(inBrake, pad.brake, stBrk);
     hb = inHB || pad.hb || (keys.Space && !dragMode);
     if (keys.KeyW || (!p2Mode && keys.ArrowUp)) gas = 1;          // ↑ es de J2 en modo 2 jugadores
     if (keys.KeyS || (!p2Mode && keys.ArrowDown)) brake = 1;      // S = marcha atrás/freno
@@ -11929,7 +12308,7 @@ function update(dt) {
     // Pisar gas antes de apagarse las luces hace CRECER al coche muy despacio
     // (embrague): solo una anticipación larga y sostenida llega a moverlo
     // lo bastante para que el sensor de parrilla cante FALSA SALIDA.
-    if (!fsState && !demoMode && !dragMode && !mpMode && gas > 0) vf = Math.min(vf + 4 * dt, 0.9);
+    if (!fsState && !demoMode && !dragMode && !mpMode && gas > 0) vf = Math.min(vf + 4 * dt, 1.2);
     else { vf = 0; vl = 0; }
   }
   if (brkT > 0) { vf = 0; vl = 0; }                          // averiado al 100%: parado en seco unos segundos
@@ -12751,10 +13130,12 @@ function update(dt) {
 
   // HUD (solo se reescribe el DOM cuando el valor cambia → sin layout thrash)
   const kmh = Math.round(spd * 3.4);
-  if (kmh !== lastKmh) { lastKmh = kmh; el('speedNum').innerHTML = kmh + '<small> km/h</small>'; }
+  if (kmh !== lastKmh) { lastKmh = kmh; el('speedNum').innerHTML = kmh + '<small> km/h</small>';
+    el('whSpd').textContent = kmh; }
   const gearShow = vf < -1 ? 'R' : gear;                                   // marcha atrás
   if (gearShow !== lastGear) {
     lastGear = gearShow;
+    el('whGear').textContent = 'M' + gearShow;
     const gn = el('gearNum');
     gn.textContent = T('gear') + ' ' + gearShow;
     // color propio por marcha + parpadeo neón del aro al cambiar
@@ -12815,6 +13196,256 @@ function update(dt) {
 }
 
 /* ================== DIBUJO ================== */
+/* ================== DRON FPV ================== */
+// Dron de cámara pilotable: con G (o el botón DRON del HUD) el coche pasa a
+// autopiloto (aiDrive) y la vista salta a un quad FPV que se vuela libre por
+// el circuito. En pausa queda congelado; ESC o G devuelven el control al coche.
+let droneOn = false, drone = null, drTUp = false, drTDn = false;
+function droneOk() { return playing && !mpMode && !p2Mode && !dragMode; }
+function mkDrone() {
+  const g = new THREE.Group(), body = new THREE.Group();
+  const shell = new THREE.MeshPhysicalMaterial({ color: 0x1c2230, roughness: 0.32,
+    metalness: 0.8, clearcoat: 0.7, clearcoatRoughness: 0.25 });        // chasis grafito
+  const accent = new THREE.MeshStandardMaterial({ color: 0x2fb8ff, roughness: 0.35,
+    metalness: 0.6, emissive: 0x0a4a70, emissiveIntensity: 0.7 });      // aro cian
+  const dark = new THREE.MeshStandardMaterial({ color: 0x10141c, roughness: 0.5, metalness: 0.7 });
+  const hub = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 12), shell);
+  hub.scale.set(1, 0.55, 1); body.add(hub);
+  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.46, 0.10, 18), accent);
+  body.add(belt);
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(0.30, 14, 10),
+    new THREE.MeshPhysicalMaterial({ color: 0x0a141e, roughness: 0.08, metalness: 0.9,
+      transparent: true, opacity: 0.85 }));
+  dome.position.y = 0.20; dome.scale.set(1, 0.7, 1); body.add(dome);
+  // Brazos en X + motor + hélice de 2 palas por brazo (sentido alterno)
+  const props = [];
+  const blMat = new THREE.MeshStandardMaterial({ color: 0x14181f, roughness: 0.3, metalness: 0.85 });
+  for (let i = 0; i < 4; i++) {
+    const ang = Math.PI / 4 + i * Math.PI / 2, ax = Math.cos(ang), az = Math.sin(ang);
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, 0.95, 8), dark);
+    arm.rotation.z = Math.PI / 2; arm.rotation.y = -ang;
+    arm.position.set(ax * 0.48, 0, az * 0.48); body.add(arm);
+    const mot = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 0.16, 10), dark);
+    mot.position.set(ax * 0.92, 0.05, az * 0.92); body.add(mot);
+    const prop = new THREE.Group(); prop.position.set(ax * 0.92, 0.16, az * 0.92);
+    const b1 = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.016, 0.07), blMat); prop.add(b1);
+    const b2 = b1.clone(); b2.rotation.y = Math.PI / 2; prop.add(b2);
+    body.add(prop); props.push(prop);
+  }
+  // Gimbal + óptica delantera (+Z, el morro del dron)
+  const gim = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), dark);
+  gim.position.set(0, -0.22, 0.30); body.add(gim);
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.10, 10),
+    new THREE.MeshPhysicalMaterial({ color: 0x0a1626, roughness: 0.05, metalness: 0.4, clearcoat: 1 }));
+  lens.rotation.x = Math.PI / 2; lens.position.set(0, -0.22, 0.40); body.add(lens);
+  for (const s of [-1, 1]) {                                    // patines
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.22, 0.05), dark);
+    leg.position.set(s * 0.26, -0.22, 0); body.add(leg);
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, 0.55), dark);
+    foot.position.set(s * 0.26, -0.34, 0); body.add(foot);
+  }
+  // LEDs de navegación: verde delante, rojo parpadeante detrás
+  const navTx = tex3(makeGlowTex(255, 255, 255, 0.9));
+  const mkLed = (c, x, z, s) => {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: navTx, color: c,
+      transparent: true, opacity: 0.95, depthWrite: false, fog: false,
+      blending: THREE.AdditiveBlending }));
+    sp.scale.set(s, s, 1); sp.position.set(x, 0.02, z); body.add(sp); return sp;
+  };
+  mkLed(0x30ff70, 0.30, 0.30, 0.5); mkLed(0x30ff70, -0.30, 0.30, 0.5);
+  const ledR = mkLed(0xff2010, 0.30, -0.30, 0.55), ledR2 = mkLed(0xff2010, -0.30, -0.30, 0.55);
+  body.position.y = 0.34; g.add(body);
+  g.scale.setScalar(1.9);                                   // tamaño legible en el encuadre FPV
+  g.visible = false; (world || scene3).add(g);
+  return { grp: g, body, props, ledR, ledR2,
+    x: 0, y: 30, z: 0, vx: 0, vy: 0, vz: 0, yaw: 0, pitch: 0, roll: 0,
+    camX: 0, camY: 0, camZ: 0 };
+}
+// Vista en primera persona: cámara en la cabeza del piloto — la carrocería del
+// coche propio se oculta (las luces NO: de noche siguen iluminando la pista)
+// y la cabina/halo de carbono queda a pantalla completa
+// Ruedas delanteras propias para la vista 1P: el GLB no las trae separables,
+// así que van dos pivotes que DIRECCIONAN con el volante y ruedan — el plano
+// onboard real enseña los neumáticos a los lados del morro
+function fpvWheels() {
+  if (carGrp.userData._fpvW) return carGrp.userData._fpvW;
+  // carGrp lleva la escala del GLB (~0.3): compensamos posiciones y radios
+  const ks = 1 / (carGrp.getWorldScale(new THREE.Vector3()).x || 1);
+  const wg = new THREE.Group();
+  const tireG = new THREE.CylinderGeometry(0.38 * ks, 0.38 * ks, 0.45 * ks, 18); tireG.rotateZ(Math.PI / 2);
+  const tM = new THREE.MeshStandardMaterial({ color: 0x0c0d10, roughness: 0.9 });
+  const rimM = new THREE.MeshStandardMaterial({ color: 0x9aa0a8, roughness: 0.35, metalness: 0.75 });
+  wg.userData.pivs = [];
+  for (const s of [-1, 1]) {
+    const piv = new THREE.Group(); piv.position.set(s * 1.0 * ks, 0.38 * ks, 4.3 * ks);
+    const spin = new THREE.Group();
+    spin.add(new THREE.Mesh(tireG, tM));
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.2 * ks, 0.2 * ks, 0.48 * ks, 12), rimM);
+    rim.rotation.z = Math.PI / 2; spin.add(rim);
+    piv.add(spin); piv.userData.spin = spin;
+    wg.add(piv); wg.userData.pivs.push(piv);
+  }
+  wg.visible = false; carGrp.add(wg);
+  carGrp.userData._fpvW = wg;
+  return wg;
+}
+function fpvHideCar() {
+  if (!carGrp || carGrp.userData._fpvHid) return;
+  const wg = fpvWheels();                                  // nacen ocultas con el resto
+  const tgt = carGrp.userData.spot && carGrp.userData.spot.target;
+  const hid = [];
+  for (const ch of carGrp.children)
+    if (ch.visible && !ch.isLight && ch !== tgt && ch !== wg && !wheelF.includes(ch)) { ch.visible = false; hid.push(ch); }
+  carGrp.userData._fpvHid = hid;
+}
+function fpvShowCar() {
+  const hid = carGrp && carGrp.userData._fpvHid;
+  if (hid) { for (const ch of hid) ch.visible = true; carGrp.userData._fpvHid = null; }
+  if (carGrp && carGrp.userData._fpvW) carGrp.userData._fpvW.visible = false;
+}
+function setCen(on) {
+  if (on === cenOn) return;
+  if (on && droneOn) setDrone(false);               // la cenital se excluye con dron y 1P
+  if (on && fpvOn) setFpv(false);
+  cenOn = on;
+  el('cenBtn').classList.toggle('on', on);
+  if (on) { showToast('🎥 ' + T('cenOn')); buzz(40); }
+}
+function setFpv(on) {
+  if (on === fpvOn) return;
+  if (on && droneOn) setDrone(false);               // dron y 1ª persona se excluyen
+  if (on && cenOn) setCen(false);                   // y también con la cenital
+  fpvOn = on;
+  document.body.classList.toggle('fpv', on);
+  el('fpvBtn').classList.toggle('on', on);
+  if (on) { fpvHideCar(); showToast('🏎️ ' + T('fpvOn')); buzz(40); }
+  else fpvShowCar();
+}
+function setDrone(on) {
+  if (on === droneOn) return;
+  if (on && !droneOk()) return;
+  if (on && fpvOn) setFpv(false);                   // FPV del dron gana a la de cabina
+  if (on && cenOn) setCen(false);                   // y a la cenital
+  droneOn = on;
+  const btn = el('droneBtn'), hud = el('droneHud');
+  if (on) {
+    if (!drone) drone = mkDrone();
+    const D = drone, cf = Math.cos(car.a), sf = Math.sin(car.a);
+    D.x = car.x - cf * 10; D.z = car.z - sf * 10; D.y = 16;
+    D.vx = D.vy = D.vz = 0; D.yaw = car.a; D.pitch = D.roll = 0;
+    // La cámara arranca donde estaba la de carrera: la entrada es un barrido
+    // suave hasta ponerse en cola del dron, no un corte seco
+    D.camX = cam3.position.x; D.camY = cam3.position.y; D.camZ = cam3.position.z;
+    D.grp.visible = true;
+    btn.classList.add('on');
+    hud.style.display = 'block';
+    if (OPTS.touchUi) { el('drUpBtn').style.display = 'flex'; el('drDnBtn').style.display = 'flex'; }
+    el('wheelUI').style.display = 'none';            // pedales muertos: la IA lleva el coche
+    showToast('🛸 ' + T('droneOn')); buzz(40);
+  } else {
+    if (drone) drone.grp.visible = false;
+    btn.classList.remove('on');
+    hud.style.display = 'none';
+    el('drUpBtn').style.display = 'none'; el('drDnBtn').style.display = 'none';
+    el('wheelUI').style.display = '';
+  }
+}
+// Colisión del dron con el escenario: los obstáculos son círculos 2D — se
+// aplica techo según el tipo (árboles altos, muros/edificios medios, vallas
+// bajas). Rebota con chispas y golpe seco como el coche
+function droneCollide(D) {
+  for (const o of obstacles) {
+    if (D.y > (o.veg ? 26 : (o.r > 2.5 ? 9 : 5))) continue;    // por encima del obstáculo
+    let dx = D.x - o.x, dz = D.z - o.z, dd = Math.hypot(dx, dz);
+    if (dd < 0.01) { dx = 1; dz = 0; dd = 1; }           // centro exacto: sale por +X
+    if (dd < o.r + 0.9) {
+      D.x = o.x + dx / dd * (o.r + 0.9); D.z = o.z + dz / dd * (o.r + 0.9);
+      const vn = (D.vx * dx + D.vz * dz) / dd;
+      if (vn < 0) {
+        D.vx -= vn * dx / dd * 1.7; D.vz -= vn * dz / dd * 1.7;
+        sfx.hit(Math.min(1.1, -vn / 30));
+        sparkBurst(D.x, D.z, dx / dd, dz / dd); buzz(50);
+        car.wheelVib = Math.max(car.wheelVib || 0, Math.min(1, -vn * 0.08));
+      }
+    }
+  }
+}
+// Física + cámara del dron: se llama desde draw() justo antes del render, así
+// pisa el encuadre de carrera sin tocar su lógica. Controles:
+//   WASD/flechas traslación · Q/E guiñada · R/F sube/baja · SHIFT turbo
+//   táctil: pad = guiñada, stick = avance, ▲/▼ altura · mando: sticks + LT/RT
+function droneTick(dt, now) {
+  const D = drone; if (!D) return;
+  if (!paused && !replaying) {
+    let fwd = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
+    let str = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
+    let rot = (keys.KeyQ ? 1 : 0) - (keys.KeyE ? 1 : 0);
+    let lift = (keys.KeyR || keys.Space ? 1 : 0) - (keys.KeyF || keys.KeyC ? 1 : 0);
+    rot += inSteer;                                       // pad táctil X = guiñada
+    fwd += stGas - stBrk;                                 // stick 2D Y = avance
+    lift += (drTUp ? 1 : 0) - (drTDn ? 1 : 0);
+    const gp = pad._gp;                                   // mando libre: la IA lleva el coche
+    if (gp && gp.connected) {
+      const dz2 = v => Math.abs(v) > 0.16 ? v : 0;
+      str += dz2(gp.axes[0] || 0); fwd -= dz2(gp.axes[1] || 0);
+      rot += dz2(gp.axes[2] || 0);
+      lift += (gp.buttons[7] ? gp.buttons[7].value : 0) - (gp.buttons[6] ? gp.buttons[6].value : 0);
+    }
+    const boost = (keys.ShiftLeft || keys.ShiftRight || pad.nitro) ? 1.9 : 1;
+    fwd = clamp(fwd, -1, 1); str = clamp(str, -1, 1);
+    rot = clamp(rot, -1.4, 1.4); lift = clamp(lift, -1, 1);
+    D.yaw += rot * dt * 2.5;
+    const cf = Math.cos(D.yaw), sf = Math.sin(D.yaw);
+    const ACC = 95 * boost;
+    D.vx += (cf * fwd + sf * str) * ACC * dt;
+    D.vz += (sf * fwd - cf * str) * ACC * dt;
+    D.vy += lift * ACC * 0.62 * dt;
+    const dr = Math.exp(-2.4 * dt);
+    D.vx *= dr; D.vy *= Math.exp(-3 * dt); D.vz *= dr;    // amortiguación de vuelo
+    const vmax = 46 * boost, vh = Math.hypot(D.vx, D.vz);
+    if (vh > vmax) { D.vx *= vmax / vh; D.vz *= vmax / vh; }
+    D.vy = clamp(D.vy, -30, 30);
+    D.x += D.vx * dt; D.z += D.vz * dt; D.y = clamp(D.y + D.vy * dt, 1.1, 160);
+    // Sin salirse del mundo: radio máx. alrededor del centro del circuito
+    const dx = D.x - trackCX, dz = D.z - trackCZ, rr = Math.hypot(dx, dz);
+    const rmax = Math.max(trackSpanX, trackSpanZ) * 0.72 + 60;
+    if (rr > rmax) { D.x = trackCX + dx / rr * rmax; D.z = trackCZ + dz / rr * rmax; }
+    droneCollide(D);                                    // choca con el escenario
+    // Actitud: cabeceo al avanzar, alabeo al desplazar/girar — sensación FPV
+    D.pitch += (clamp(fwd * 0.30 + D.vy * 0.002, -0.42, 0.42) - D.pitch) * Math.min(1, dt * 5);
+    D.roll += (clamp(-str * 0.26 - rot * 0.12, -0.4, 0.4) - D.roll) * Math.min(1, dt * 5);
+  }
+  D.grp.position.set(D.x, D.y, D.z);
+  D.grp.rotation.y = Math.PI / 2 - D.yaw;                   // el modelo mira +Z como el coche
+  D.body.rotation.x = D.pitch; D.body.rotation.z = D.roll;
+  for (let i = 0; i < 4; i++) D.props[i].rotation.y += dt * (i % 2 ? -68 : 68);
+  const bl = Math.floor(now / 140) % 2;                     // baliza trasera estrobo
+  D.ledR.material.opacity = D.ledR2.material.opacity = bl ? 1 : 0.15;
+  // Cámara perseguidora: tras y por encima del dron, mirando a su morro.
+  // El ancla (D.cam*) es persistente: la cámara de carrera hace position.set()
+  // cada frame justo antes, así que el suavizado NO puede depender de leerla.
+  const cf2 = Math.cos(D.yaw), sf2 = Math.sin(D.yaw);
+  const k = Math.min(1, dt * 5);
+  D.camX += (D.x - cf2 * 7.2 - D.camX) * k;
+  D.camY += (D.y + 2.7 - D.camY) * k;
+  D.camZ += (D.z - sf2 * 7.2 - D.camZ) * k;
+  cam3.position.set(D.camX, D.camY, D.camZ);
+  cam3.up.set(0, 1, 0);
+  cam3.lookAt(D.x + cf2 * 10, D.y + 0.2, D.z + sf2 * 10);
+  if (Math.abs(70 - cam3.fov) > 0.01) { cam3.fov += (70 - cam3.fov) * Math.min(1, dt * 5); cam3.updateProjectionMatrix(); }
+  // Vista FPV limpia: fuera cabina y efectos de velocidad del coche
+  el('wheelImg').style.opacity = 0; el('wheelGiro').style.opacity = 0; el('wheelLayer').style.opacity = 0;
+  el('cockpitCar').style.opacity = 0;
+  el('speedVig').style.opacity = 0; el('speedLines').style.opacity = 0;
+  const h = el('droneHud');
+  if (h._t === undefined || now - h._t > 150) {
+    h._t = now;
+    h.innerHTML = '🛸 <b>' + T('drone') + '</b> · ALT ' + D.y.toFixed(0) + 'm · ' +
+      Math.round(Math.hypot(D.vx, D.vz) * 3.6) + ' km/h<br>' +
+      '<span style="font-weight:600;font-size:9.5px;color:#8fb8dd">' + T('droneKeys') + '</span>';
+  }
+}
+
 function draw(now) {
   g.clearRect(0, 0, W, H);
   if (!playing) return;
@@ -12885,12 +13516,11 @@ function draw(now) {
     const ph = Math.floor(now / 130) % 4;
     for (const s of ledMats) s.m.map = (s.r ? ledFR : ledFL)[ph];
   }
-  // Balizas: pulso rojo intenso que viaja en cadena a lo largo de la curva
+  // Balizas: TODAS parpadean siempre a la vez — rojo intenso encendido/apagado
   if (beacons.length) {
-    const cyc = Math.floor(now / 150);
+    const on = Math.floor(now / 380) % 2 === 0;
     for (const bc of beacons) {
-      const on = (cyc - bc.i) % 5 === 0;
-      bc.b.opacity = on ? 1 : 0.16;
+      bc.b.opacity = on ? 1 : 0.18;
       bc.g.opacity = on ? 0.9 : 0.06;
     }
   }
@@ -13171,9 +13801,9 @@ function draw(now) {
       const hCar = (H.phase === 'lead' && H.leadCar) ? H.leadCar : car;
       const wy = hv2 > 6
                ? Math.atan2(-H.vz, H.vx) + Math.PI
-               : (H.bnx !== undefined && hCar                     // lookAt al MORRO del objetivo
-                  ? Math.atan2(-(H.bnz - hz), H.bnx - hx) + Math.PI
-                  : (hCar && hCar.a !== undefined
+               : (H.bnx !== undefined && hCar                     // la COLA encara al coche —
+                  ? Math.atan2(-(H.bnz - hz), H.bnx - hx)            // sin el +π de antes, el
+                  : (hCar && hCar.a !== undefined                    // morro apunta al lado contrario
                      ? Math.atan2(-Math.sin(hCar.a), Math.cos(hCar.a)) + Math.PI
                      : H.yaw));
       let dyaw = wy - H.yaw;
@@ -13193,9 +13823,14 @@ function draw(now) {
       H.body.rotation.z = H.pitch;                            // cabeceo (morro +X)
       H.body.rotation.x = H.roll;                             // alabeo
     }
-    H.rot.rotation.y += dt * 38;
-    H.rot2.rotation.y += dt * 38;
-    H.tail.rotation.x += dt * 55;
+    if (H.body.userData.gRotor) {
+      H.body.userData.gRotor.rotation.y += dt * 38;      // palas reales del GLB
+      if (H.body.userData.gTail) H.body.userData.gTail.rotation.x += dt * 55;
+    } else {
+      H.rot.rotation.y += dt * 38;                       // respaldo procedural
+      H.rot2.rotation.y += dt * 38;
+      H.tail.rotation.x += dt * 55;
+    }
     // Luces de navegación: estrobo anticolisión de doble destello (~60/min,
     // patrón real de aviación) y baliza roja de panza latiendo
     {
@@ -13356,7 +13991,7 @@ function draw(now) {
   const camH = camHS;
   // Look-ahead suavizado: la cámara se adelanta a la dirección, pero el vector va
   // filtrado — al chocar la velocidad se invierte de golpe y el encuadre no sacude
-  const lead = 14 * (1 - zm) * Math.min(1, spd / 60);
+  const lead = 6 * (1 - zm) * Math.min(1, spd / 60);
   const lxT = spd > 3 ? car.vx / spd * lead : 0, lzT = spd > 3 ? car.vz / spd * lead : 0;
   const kL = Math.min(1, dt * 5);
   camLeadX += (lxT - camLeadX) * kL; camLeadZ += (lzT - camLeadZ) * kL;
@@ -13383,13 +14018,44 @@ function draw(now) {
   const camY = camH * (1 - tilt * 0.28);
   cam3.position.set(cx - ux * back, cam3.position.y + (camY - cam3.position.y) * Math.min(1, dt * 3), cz - uz * back);
   cam3.up.set(ux, 0, uz);
-  // el punto de mira solo se adelanta de cerca: con zoom completo el circuito queda centrado
-  cam3.lookAt(cx + ux * back * 0.35 * (1 - zm), 0, cz + uz * back * 0.35 * (1 - zm));
+  // el punto de mira casi no se adelanta: el coche queda centrado en pantalla
+  cam3.lookAt(cx + ux * back * 0.12 * (1 - zm), 0, cz + uz * back * 0.12 * (1 - zm));
   // Peralte: la cámara se ladea levemente siguiendo la dirección — sensación de curva
   cam3.rotateZ(-(car.steer || 0) * 0.05 * (1 - zm));
   // FOV respira con la velocidad y pega un puñetazo con el nitro (más sensación de empuje)
   const fovT = 66 + spd * 0.105 * (1 - zm * 0.6) + (nitroOn ? 6.5 : 0) + (boostT > 0 ? 4 : 0) - launchZ * 6;
   if (Math.abs(fovT - cam3.fov) > 0.01) { cam3.fov += (fovT - cam3.fov) * Math.min(1, dt * 4); cam3.updateProjectionMatrix(); }
+  // PRIMERA PERSONA: cámara rígida en la cabeza del piloto mirando al morro —
+  // la capa DOM de la cabina/halo hace de carrocería y gira con la dirección
+  if (fpvOn && !replaying) {
+    fpvHideCar();
+    const fpw = carGrp.userData._fpvW;                    // delanteras: direccionan y ruedan
+    if (fpw) {
+      fpw.visible = true;
+      for (const piv of fpw.userData.pivs) {
+        piv.rotation.y = inSteer * 0.4;
+        piv.userData.spin.rotation.x -= spd * dt * 1.25;
+      }
+    }
+    cam3.position.set(car.x + cf * 0.55, 1.72, car.z + sf * 0.55);
+    cam3.up.set(0, 1, 0);
+    cam3.lookAt(car.x + cf * 30, 0.6, car.z + sf * 30);    // algo picada: las ruedas asoman
+    cam3.rotateZ(-(car.steer || 0) * 0.045);            // ladearse leve al girar
+    const fovF = 74 + spd * 0.06 + (nitroOn ? 6 : 0);
+    if (Math.abs(fovF - cam3.fov) > 0.01) { cam3.fov += (fovF - cam3.fov) * Math.min(1, dt * 5); cam3.updateProjectionMatrix(); }
+  } else {
+    fpvShowCar();                                        // al salir, el coche vuelve
+  }
+  // CENITAL: pájaro sobre el coche — el morro apunta siempre hacia arriba de
+  // pantalla y la cámara se adelanta un poco para dejarlo en el tercio inferior
+  if (cenOn && !replaying && !demoSpot && pfSlowT <= 0) {
+    const cH = 100 + spd * 0.30;
+    cam3.position.set(car.x, cH, car.z);
+    cam3.up.set(cf, 0, sf);
+    cam3.lookAt(car.x, 0, car.z);                       // coche clavado en el centro
+    const fovC = 54 + spd * 0.05;
+    if (Math.abs(fovC - cam3.fov) > 0.01) { cam3.fov += (fovC - cam3.fov) * Math.min(1, dt * 4); cam3.updateProjectionMatrix(); }
+  }
   // Viñeta de velocidad + líneas radiales: efecto túnel — solo de cerca y a
   // partir de ~200 km/h; las líneas entran después (rampa cuadrática) y solo
   // "lloran" en la parte alta del cuentavueltas de velocidad
@@ -13399,15 +14065,30 @@ function draw(now) {
   // (sin vibración de imagen: la cámara nunca tiembla — ni a alta velocidad,
   //  ni por baches, ni frenando; el coche sí rebota visualmente sobre el relieve)
   // Volante de cabina: aparece al acercar la cámara, gira con la dirección del coche
-  const wOp = clamp((1 - camZoom) * 1.8 - 0.35, 0, 0.96);
-  wheelDegS += ((car.steer || 0) * 55 - wheelDegS) * Math.min(1, dt * 3.6);   // giro suave y corto
+  const wOp = fpvOn ? 0.96 : cenOn ? 0 : clamp((1 - camZoom) * 1.8 - 0.35, 0, 0.96);
+  wheelDegS += ((car.steer || 0) * 24 - wheelDegS) * Math.min(1, dt * 3.6);   // giro suave y corto
   car.wheelVib = Math.max(0, (car.wheelVib || 0) - dt * 2.4);
   const wTf = `rotate(${wheelDegS.toFixed(1)}deg)`;
+  // Cabina del coche (halo carbono) + cockpit fijo (pods): solo funden con la
+  // cámara — NO giran
+  el('cockpitCar').style.opacity = wOp.toFixed(2);
   el('wheelImg').style.opacity = wOp.toFixed(2);
-  el('wheelImg').style.transform = wTf;
+  el('whDash').style.opacity = wOp.toFixed(2);          // velocímetro: con la cabina
+  // Aro del volante: gira con la dirección
+  el('wheelGiro').style.opacity = wOp.toFixed(2);
+  el('wheelGiro').style.transform = wTf;
   // Capa de LEDs + pantalla + grados: gira y aparece junto al volante
   el('wheelLayer').style.opacity = wOp.toFixed(2);
   el('wheelLayer').style.transform = wTf;
+  // Los botones integrados giran CON el volante (sus iconos van horneados);
+  // con el volante oculto (cámara lejos) quedan quietos como botones sólidos
+  el('wheelUI').style.transform = wOp > 0.4 ? wTf : 'none';
+  el('wheelWrap').classList.toggle('bare', wOp < 0.4);
+  // Delanteras del cockpit: basculan con la dirección como una onboard real
+  if (fpvOn) {
+    const wk = `perspective(700px) rotateY(${(wheelDegS * 0.55).toFixed(1)}deg)`;
+    el('fpvWL').style.transform = wk; el('fpvWR').style.transform = wk;
+  }
   el('wheelDeg').textContent = (wheelDegS > 0.5 ? '+' : '') + Math.round(wheelDegS) + '°';
   // LEDs: barra RPM progresiva (verde→rojo→azul, parpadea al corte) + testigos fijos
   if (!wheelLeds) wheelLeds = document.querySelectorAll('#wheelWrap .wled');
@@ -13472,6 +14153,35 @@ function draw(now) {
     }
     rn.ripI.instanceMatrix.needsUpdate = true;
     if (rn.ripI.instanceColor) rn.ripI.instanceColor.needsUpdate = true;
+  }
+
+  // LA GRADA TE ANIMA: los espectadores cercanos al coche saltan y se agitan
+  // como una ola — el radio y la fuerza crecen con crowdBoost (meta, vueltas).
+  // Solo se reescriben matrices de los que cambian: coste ~nulo
+  if (crowdPpl && playing && !paused) {
+    const arr = crowdPpl.instanceMatrix.array;
+    const exc = 1 + crowdBoost * 0.6;
+    const R = 46 * (1 + Math.min(1.3, crowdBoost * 0.4)), Rr = R * R;
+    const cx2 = car.x, cz2 = car.z, n3 = crowdPpl.count;
+    let dirty = false;
+    for (let i = 0; i < n3; i++) {
+      const bx = crowdBase[i * 3], bz = crowdBase[i * 3 + 1], ph = crowdBase[i * 3 + 2];
+      const dx = bx - cx2, dz = bz - cz2, i16 = i * 16;
+      const d2 = dx * dx + dz * dz;
+      if (d2 < Rr) {
+        const prox = 1 - Math.sqrt(d2) / R;
+        const jump = Math.abs(Math.sin(now * 0.011 + ph * 7)) * 0.5 * prox * exc;
+        const sway = Math.sin(now * 0.008 + ph * 5) * 0.08 * prox;
+        arr[i16 + 12] = bx + sway * 0.3;
+        arr[i16 + 13] = crowdMat[i16 + 13] + jump;
+        arr[i16 + 14] = bz + sway;
+        dirty = true;
+      } else if (arr[i16 + 13] !== crowdMat[i16 + 13]) {
+        arr[i16 + 12] = bx; arr[i16 + 13] = crowdMat[i16 + 13]; arr[i16 + 14] = bz;
+        dirty = true;
+      }
+    }
+    if (dirty) crowdPpl.instanceMatrix.needsUpdate = true;
   }
   // La niebla se retira al alejar la cámara para no ocultar el circuito
   // (en el NEÓN no hay niebla: el sol ilumina aire limpio)
@@ -13553,6 +14263,10 @@ function draw(now) {
     if (cam3.fov !== 52) { cam3.fov = 52; cam3.updateProjectionMatrix(); }
   }
 
+  // DRON FPV: con el dron activo la cámara de carrera queda anulada por la
+  // perseguidora del quad (la física del dron se actualiza dentro)
+  if (droneOn) droneTick(dt, now);
+
   window._renderScene3(scene3, cam3);
   // PHOTO FINISH cenital: render limpio desde arriba con el coche en la línea —
   // la cámara se planta 58u sobre el coche mirando al suelo, morro hacia arriba
@@ -13572,14 +14286,50 @@ function draw(now) {
     }
   }
 
-  // ===== TV PIP: cámara de retransmisión persiguiendo al rival enfocado =====
-  if (pipTgt && pipR && pipCam && (pipN++ & 1) === 0) {     // a 30 fps basta para la ventana
-    const t = pipTgt, fx = Math.cos(t.a), fz = Math.sin(t.a);
-    pipCam.position.set(t.x - fx * 9 - fz * 2.5, 4.2, t.z - fz * 9 + fx * 2.5);
-    pipCam.lookAt(t.x + fx * 5, 1.1, t.z + fz * 5);
-    pipCam.fov = 44 + Math.min(14, Math.hypot(t.vx || 0, t.vz || 0) * 0.08);
-    pipCam.updateProjectionMatrix();
-    pipR.render(scene3, pipCam);
+  // ===== DRON TV: el dron real vuela tras el LÍDER — la ventana es su cámara =====
+  if (pipTgt) {
+    if (!pipDrone) { pipDrone = mkDrone(); pipDrone.grp.visible = true; }
+    const D = pipDrone, t = pipTgt, fx = Math.cos(t.a), fz = Math.sin(t.a);
+    pipDrone.grp.visible = true;
+    // Ancla de vuelo: detrás-arriba del líder con un vaivén lateral lento —
+    // el dron persigue suave, sin cortes (altura sobre la copa de los árboles)
+    const sway = Math.sin(now * 0.00055) * 5.5;
+    const tx = t.x - fx * 15 - fz * sway, tz = t.z - fz * 15 + fx * sway, ty = 11.5;
+    const k = Math.min(1, dt * 1.7);
+    D.x += (tx - D.x) * k; D.y += (ty - D.y) * k; D.z += (tz - D.z) * k;
+    // Morro (+Z del modelo) apuntando al líder + actitud por la aceleración
+    const want = Math.atan2(t.z - D.z, t.x - D.x);          // heading como el coche
+    let dy = want - D.yaw; while (dy > Math.PI) dy -= 6.283; while (dy < -Math.PI) dy += 6.283;
+    D.yaw += dy * Math.min(1, dt * 2.2);
+    D.pitch += (clamp(-Math.hypot(tx - D.x, tz - D.z) * 0.02, -0.3, 0.18) - D.pitch) * Math.min(1, dt * 3);
+    D.roll += (clamp(-dy * 0.5, -0.35, 0.35) - D.roll) * Math.min(1, dt * 3);
+    droneCollide(D);                                     // choca con el escenario
+    D.grp.position.set(D.x, D.y, D.z);
+    D.grp.rotation.y = Math.PI / 2 - D.yaw;
+    D.body.rotation.x = D.pitch; D.body.rotation.z = D.roll;
+    for (let i = 0; i < 4; i++) D.props[i].rotation.y += dt * (i % 2 ? -68 : 68);
+    const bl = Math.floor(now / 140) % 2;
+    D.ledR.material.opacity = D.ledR2.material.opacity = bl ? 1 : 0.15;
+    // Cámara = ojo del gimbal del dron, a 30 fps basta para la ventana
+    if (pipR && pipCam && (pipN++ & 1) === 0) {
+      pipCam.position.set(D.x, D.y - 0.35, D.z);
+      pipCam.lookAt(t.x + fx * 4.5, 1.1, t.z + fz * 4.5);
+      pipCam.fov = 52 + Math.min(12, Math.hypot(t.vx || 0, t.vz || 0) * 0.08);
+      pipCam.updateProjectionMatrix();
+      pipR.render(scene3, pipCam);
+    }
+    // Ventana onboard: la misma cámara de primera persona (T-cam sobre el
+    // airbox) sobre el líder — el morro del coche se ve en el encuadre real
+    if (pip2R && pip2Cam) {
+      pip2Cam.position.set(t.x + fx * 0.3, 2.0, t.z + fz * 0.3);
+      pip2Cam.up.set(0, 1, 0);
+      pip2Cam.lookAt(t.x + fx * 40, 0.8, t.z + fz * 40);
+      pip2Cam.fov = 68 + Math.min(10, Math.hypot(t.vx || 0, t.vz || 0) * 0.08);
+      pip2Cam.updateProjectionMatrix();
+      pip2R.render(scene3, pip2Cam);
+    }
+  } else if (pipDrone && pipDrone.grp.visible) {
+    pipDrone.grp.visible = false;
   }
 
   // ===== PHOTO FINISH: rendija sobre la línea de meta =====
@@ -13862,12 +14612,11 @@ function draw(now) {
     });
     g.textBaseline = 'alphabetic';
   }
-  // Radar del volante: el mismo mapa dentro de la pantalla del volante,
-  // adaptado a su ventana y girando con él (canvas sobre la zona del display)
+  // Radar del volante: ELIMINADO — el canvas queda oculto y no se dibuja
   {
     const wrc = el('wheelRadar');
-    const wOp2 = parseFloat(el('wheelImg').style.opacity || 0);
-    if (wrc && wOp2 > 0.03 && pathPts.length > 4) {
+    if (wrc) wrc.style.display = 'none';
+    if (false) {
       const wc = wrc.getContext('2d'), ww = wrc.width, wh = wrc.height;
       wc.clearRect(0, 0, ww, wh);
       wc.fillStyle = '#060a10'; wc.fillRect(0, 0, ww, wh);          // cristal apagado
@@ -14238,7 +14987,7 @@ function startStage(n, seed, mp, mode) {
   cpu = cpus[0] || null; cpu2 = cpus[1] || null;
   // FALSA SALIDA de un rival: solo el 15% de las salidas alguien se adelanta
   // (c.react se compara contra el timestamp en ms → -900..-1600 ms de adelanto)
-  if (!dragMode && !p2Mode && cpus.length && Math.random() < 0.15) {
+  if (!dragMode && !p2Mode && !mpMode && cpus.length && Math.random() < 0.15) {
     cpus[(Math.random() * cpus.length) | 0].react = -rnd(900, 1600);
   }
   if (dragMode && cpu) { cpu.latBias = 4.8; cpu.react = Math.max(0.08, (0.4 + Math.random() * 0.4) / diffK); cpu.k = 0.94 * diffK; }  // carril contrario + reacción + punta
@@ -14257,6 +15006,7 @@ function startStage(n, seed, mp, mode) {
   }
   cam3.position.set(car.x, 62, car.z);
   camZoom = (OPTS.cam || demoMode) ? 1 : 0.12;   // la DEMO siempre arranca con ZOOM OUT (circuito entero)
+  cenOn = !demoMode; el('cenBtn').classList.toggle('on', cenOn);   // cenital activa por defecto
   mmZoom = 1;                                    // el radar arranca con el circuito entero
   demoSpot = demoMode ? { tgt: null, k: 0, phase: 'wait', t: 9, q: [] } : null;
   if (!demoMode) dsHide();
@@ -14301,6 +15051,7 @@ function startStage(n, seed, mp, mode) {
   document.getElementById('vsChip').innerHTML = ic('vs') + T('pos1');
   document.getElementById('vsChip')._a = true;
   document.getElementById('demoChip').style.display = demoMode ? 'block' : 'none';
+  setDrone(false); drone = null;                       // world se reconstruye por etapa: dron nuevo
   document.getElementById('vsChip').style.display = (mpMode || vsMode || champMode || koMode) ? 'block' : 'none';
   document.getElementById('tireChip').style.display = 'block';
   document.getElementById('tireChip')._w = -1;
@@ -14321,6 +15072,9 @@ function startStage(n, seed, mp, mode) {
          (p2Mode && id === 'gas2Btn'))) ? 'flex' : 'none';
   }
   playing = true;
+  document.getElementById('droneBtn').style.display = droneOk() ? 'flex' : 'none';
+  document.getElementById('fpvBtn').style.display = 'flex';
+  document.getElementById('cenBtn').style.display = 'flex';
   // Ningún control del menú/HUD conserva el foco: Enter/Espacio lo re-dispararían
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   // Semáforo F1: 5 luces se encienden en serie y al apagarse → ¡GO!
@@ -14328,6 +15082,7 @@ function startStage(n, seed, mp, mode) {
 }
 function finishStage() {
   playing = false;
+  setDrone(false);
   radioHalt();
   pipTgt = null; pipHide();                                // TV PIP fuera con la bandera
   crowdBoost = 3;                                  // el público estalla al cruzar meta
@@ -14495,7 +15250,7 @@ function fmtT(s) {
 }
 /* ================== OPCIONES ================== */
 const OPTS = { sound: 1, shadow: 1, skid: 1, dust: 1, ao: 1, bloom: 1, cam: 0, brakeAid: 1, steerAid: 1, car: 0,
-               lefty: 0, vib: 1, fps: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0, tod: 'dusk', rline: 0, aiEng: 0, res: 0, gfx: 1 };   // res: 0=AUTO 1=ALTA 2=ULTRA · gfx: preset -1=custom   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
+               lefty: 0, vib: 1, fps: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0, tod: 'dusk', rline: 0, aiEng: 0, res: 0, gfx: 1, pad: 1 };   // res: 0=AUTO 1=ALTA 2=ULTRA · gfx: preset -1=custom   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
 try { Object.assign(OPTS, JSON.parse(localStorage.getItem('af1_opts') || '{}')); } catch (e) {}
 OPTS.car = (Math.random() * CARS.length) | 0;   // coche preseleccionado aleatorio en cada partida
 if (!OPTS.todV) { OPTS.tod = 'dusk'; OPTS.todV = 1; saveOpts(); }   // migración única: atardecer por defecto (el usuario puede cambiarlo en el selector)
@@ -14509,7 +15264,7 @@ function addPts(n) {
 }
 const SENS_MULT = [0.7, 1.0, 1.35];                  // sensibilidad de giro: BAJA/NORMAL/ALTA
 const SENS_KEYS = ['sensLow', 'sensMid', 'sensHigh'];
-const TOUCH_IDS = ['stPad', 'gasBtn', 'brkBtn', 'pitBtn', 'boxexBtn', 'lightsBtn', 'nitroBtn', 'shiftBtn', 'gas2Btn', 'zoomIn', 'zoomOut'];
+const TOUCH_IDS = ['stPad', 'stStick', 'gasBtn', 'brkBtn', 'hbBtn', 'pitBtn', 'boxexBtn', 'lightsBtn', 'nitroBtn', 'shiftBtn', 'gas2Btn', 'zoomIn', 'zoomOut'];
 function paintSens() {
   const c = document.getElementById('optSens'); if (!c) return;
   [...c.children].forEach((b, i) => {
@@ -14626,6 +15381,32 @@ wireOpt('optTouch', 'touchUi', 'ON', 'OFF');
 wireOpt('optLefty', 'lefty', 'ON', 'OFF');
 wireOpt('optVib', 'vib', 'ON', 'OFF');
 wireOpt('optFps', 'fps', 'ON', 'OFF');
+/* ---- Mando de juego: activación + mapeo configurable ---- */
+wireOpt('optPad', 'pad', 'ON', 'OFF');
+const PAD_DEF = { steer: 'a0', gas: 'b7', brake: 'b6', hb: 'b1', nitro: 'b0', pit: 'b2', shift: 'b5', pause: 'b9' };
+OPTS.padMap = Object.assign({}, PAD_DEF, OPTS.padMap || {});
+const PAD_BT = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'BACK', 'START', 'LS', 'RS', '▲', '▼', '◀', '▶'];
+const PAD_AX = { a0: 'STICK ◀▶', a1: 'STICK ↕', a2: 'STICK2 ◀▶', a3: 'STICK2 ↕' };
+const padBindName = v => v === 'dpad' ? 'CRUCETA'
+  : (v || '')[0] === 'a' ? ((PAD_AX[v.slice(0, 2)] || 'EJE ' + v.slice(1, 2)) + (v.endsWith('-') ? '−' : v.endsWith('+') ? '+' : ''))
+  : (PAD_BT[+v.slice(1)] || 'B' + v.slice(1));
+function paintPad() {
+  paintOpt('optPad', OPTS.pad, 'ON', 'OFF');
+  document.querySelectorAll('.padB').forEach(b => {
+    b.classList.remove('cap'); b.textContent = padBindName(OPTS.padMap[b.dataset.act]);
+  });
+}
+let padCap = null, padCapT = 0;                     // binding capturándose en OPCIONES
+document.querySelectorAll('.padB').forEach(b => b.addEventListener('click', () => {
+  if (padCap === b.dataset.act) { padCap = null; paintPad(); return; }   // 2º clic cancela
+  padCap = b.dataset.act; padCapT = performance.now() + 350;
+  document.querySelectorAll('.padB').forEach(x => x.classList.remove('cap'));
+  b.classList.add('cap'); b.textContent = T('padWait');
+}));
+document.getElementById('padRst').addEventListener('click', () => {
+  OPTS.padMap = Object.assign({}, PAD_DEF); saveOpts(); padCap = null; paintPad(); buzz(30);
+});
+paintPad();
 // Botón de sonido en el HUD: togglea OPTS.sound y pinta el icono
 const sndBtnEl = document.getElementById('sndBtn');
 function paintSnd() { sndBtnEl.textContent = OPTS.sound ? '🔊' : '🔇'; }
@@ -14824,6 +15605,7 @@ const I18N = {
     touchUi: 'CONTROLES TÁCTILES', lefty: 'MODO ZURDO', vib: 'VIBRACIÓN', fps: 'CONTADOR FPS', sens: 'SENSIBILIDAD GIRO',
     sensLow: 'BAJA', sensMid: 'NORMAL', sensHigh: 'ALTA',
     lang: 'IDIOMA', records: 'RÉCORDS', erase: 'BORRAR', back: 'VOLVER',
+    gateSub: 'ACCESO PRIVADO — introduce el PIN', gateBtn: 'ENTRAR', gateErr: 'PIN incorrecto',
     near: 'CERCA', track: 'CIRCUITO',
     stage: 'ETAPA', gear: 'MARCHA', wrongWay: 'DIRECCIÓN CONTRARIA', go: '¡GO!',
     lastSector: '¡ÚLTIMO SECTOR! — a por meta', cp: 'PUNTO DE CONTROL', lap: 'VUELTA', oilSlick: '¡ACEITE EN PISTA!',
@@ -14871,7 +15653,7 @@ const I18N = {
     mpHost: '🏠 CREAR', mpJoin: '🔗 UNIRSE', mpCodePh: 'CÓDIGO DE SALA',
     manu: 'MANUALES',
     manuCtrlT: 'CONTROLES',
-    manuCtrlD: '<b>Teclado:</b> WASD o flechas para dirigir · ESPACIO derrape<br><b>Táctil:</b> pad izquierdo + pedales GAS/FRENO · ⚡ nitro · PIT y BOXES: autopiloto a la calle de boxes',
+    manuCtrlD: '<b>Teclado:</b> WASD o flechas para dirigir · ESPACIO derrape · <b>G</b> dron FPV<br><b>Táctil:</b> pad izquierdo + pedales GAS/FRENO · ⚡ nitro · PIT y BOXES: autopiloto a la calle de boxes',
     manuModT: 'MODOS DE JUEGO',
     manuModD: '<b>SALIR A PISTA</b> carrera suelta · <b>CAMPEONATO</b> puntos por etapas · <b>CONTRARRELOJ</b> récord con coche fantasma · <b>ELIMINATORIA</b> el último cae · <b>VERSUS</b> duelo CPU / 2P / online / Bluetooth · <b>DEMO</b> carrera TV automática',
     manuHudT: 'HUD EN CARRERA',
@@ -14897,6 +15679,8 @@ const I18N = {
     dVsCpu: 'duelo contra la IA', dVsOn: 'rival por internet', dVsBt: 'rival cerca de ti (app Android)',
     p2: '2 JUGADORES', dVsP2: 'misma pantalla: J1 W+E · J2 ↑+SHIFT DER',
     secCar: 'COCHES', ctSteer: 'GIRAR', ctGas: 'ACELERAR', ctBrake: 'FRENAR', ctHb: 'DERRAPE', ctPit: 'Boxes',
+    secPad: 'MANDO', padOn: 'MANDO XBOX', padDevLbl: 'DISPOSITIVO', padNone: 'NO DETECTADO', padWait: 'PULSA…',
+    padShift: 'CAMBIO', padPause: 'PAUSA', padMap: 'MAPEO', padRst: 'RESTABLECER',
     nextRace: '▶ SIGUIENTE CARRERA', race: 'carrera', champPts: 'Puntos',
     champWin: '¡CAMPEÓN DEL GP!', champ2: 'SUBCAMPEÓN',
     pitting: 'En Boxes…', pitDone: '¡LISTO! Reparado y ruedas nuevas',
@@ -14937,6 +15721,10 @@ const I18N = {
     pwVersusT: 'VERSUS', pwVersusD: 'Activa el modo duelo al instante: VS CPU, carrera online y duelo Bluetooth.',
     pwVersusK: 'Toca la tarjeta para entrar',
     vsPowOn: '⚔️ VERSUS desbloqueado — nuevo modo en el menú', vsPowOff: 'VERSUS bloqueado',
+    drone: 'DRON', droneOn: 'MODO DRON — el coche sigue con el autopiloto',
+    fpvOn: 'VISTA EN PRIMERA PERSONA — tecla V para volver', onb: 'CÁMARA ONBOARD',
+    cenOn: 'VISTA CENITAL — tecla T para volver',
+    droneKeys: 'WASD/FLECHAS vuelan · Q/E giran · R/F altura · ⇧ turbo · G/ESC sales',
   },
   en: {
     options: 'OPTIONS', play: 'RACE', vs: 'VS CPU', demo: 'DEMO MODE',
@@ -14953,6 +15741,7 @@ const I18N = {
     touchUi: 'TOUCH CONTROLS', lefty: 'LEFT-HANDED', vib: 'HAPTICS', fps: 'FPS COUNTER', sens: 'STEER SENSITIVITY',
     sensLow: 'LOW', sensMid: 'NORMAL', sensHigh: 'HIGH',
     lang: 'LANGUAGE', records: 'RECORDS', erase: 'ERASE', back: 'BACK',
+    gateSub: 'PRIVATE ACCESS — enter your PIN', gateBtn: 'ENTER', gateErr: 'Wrong PIN',
     near: 'CLOSE', track: 'TRACK',
     stage: 'STAGE', gear: 'GEAR', wrongWay: 'WRONG WAY', go: 'GO!',
     lastSector: 'FINAL SECTOR! — go for the line', cp: 'CHECKPOINT', lap: 'LAP', oilSlick: 'OIL SLICK!',
@@ -15001,7 +15790,7 @@ const I18N = {
     allCars: 'ALL CARS', allBtn: 'ALL', oneBtn: 'ONE',
     manu: 'MANUALS',
     manuCtrlT: 'CONTROLS',
-    manuCtrlD: '<b>Keyboard:</b> WASD or arrows to steer · SPACE to drift<br><b>Touch:</b> left pad + GAS/BRAKE pedals · ⚡ nitro · PIT and BOXES: pit-lane autopilot',
+    manuCtrlD: '<b>Keyboard:</b> WASD or arrows to steer · SPACE to drift · <b>G</b> FPV drone<br><b>Touch:</b> left pad + GAS/BRAKE pedals · ⚡ nitro · PIT and BOXES: pit-lane autopilot',
     manuModT: 'GAME MODES',
     manuModD: '<b>RACE</b> single race · <b>CHAMPIONSHIP</b> points over stages · <b>TIME ATTACK</b> record + ghost car · <b>KNOCKOUT</b> last one drops out · <b>VERSUS</b> CPU / 2P / online / Bluetooth duel · <b>DEMO</b> automatic TV race',
     manuHudT: 'RACE HUD',
@@ -15026,6 +15815,8 @@ const I18N = {
     dVsCpu: 'AI duel', dVsOn: 'internet rival', dVsBt: 'nearby rival (Android app)',
     p2: '2 PLAYERS', dVsP2: 'same screen: P1 W+E · P2 ↑+R-SHIFT',
     secCar: 'CARS', ctSteer: 'STEER', ctGas: 'THROTTLE', ctBrake: 'BRAKE', ctHb: 'DRIFT', ctPit: 'Pits',
+    secPad: 'GAMEPAD', padOn: 'XBOX GAMEPAD', padDevLbl: 'DEVICE', padNone: 'NOT DETECTED', padWait: 'PRESS…',
+    padShift: 'SHIFT', padPause: 'PAUSE', padMap: 'MAPPING', padRst: 'RESET',
     nextRace: '▶ NEXT RACE', race: 'race', champPts: 'Points',
     champWin: 'GP CHAMPION!', champ2: 'RUNNER-UP',
     pitting: 'In the Pits…', pitDone: 'ALL FIXED! Fresh tires',
@@ -15066,6 +15857,10 @@ const I18N = {
     pwVersusT: 'VERSUS', pwVersusD: 'Instantly launches duel mode: VS CPU, online race and Bluetooth duel.',
     pwVersusK: 'Tap the card to enter',
     vsPowOn: '⚔️ VERSUS unlocked — new mode in the menu', vsPowOff: 'VERSUS locked',
+    drone: 'DRONE', droneOn: 'DRONE MODE — your car is on autopilot',
+    fpvOn: 'FIRST-PERSON VIEW — press V to go back', onb: 'ONBOARD CAMERA',
+    cenOn: 'TOP-DOWN VIEW — press T to go back',
+    droneKeys: 'WASD/ARROWS fly · Q/E turn · R/F altitude · ⇧ boost · G/ESC exit',
   },
 };
 let LANG = 'es';
@@ -15089,9 +15884,14 @@ function applyLang() {
   setI('secCar', 'helmet', T('secCar'));
   set('ctSteer', T('ctSteer')); set('ctGas', T('ctGas')); set('ctBrake', T('ctBrake'));
   set('ctHb', T('ctHb')); set('ctPit', T('ctPit'));
+  setI('secPad', 'pad', T('secPad'));
+  set('lbPad', T('padOn')); set('lbPadDev', T('padDevLbl'));
+  set('lbPbSteer', T('ctSteer')); set('lbPbGas', T('ctGas')); set('lbPbBrake', T('ctBrake'));
+  set('lbPbHb', T('ctHb')); set('lbPbNitro', 'NITRO'); set('lbPbPit', T('ctPit'));
+  set('lbPbShift', T('padShift')); set('lbPbPause', T('padPause'));
+  set('lbPadMap', T('padMap')); set('padRst', T('padRst'));
+  if (window.paintPad) paintPad();
   const ci = (id, n) => { const e = document.getElementById(id); if (e) e.innerHTML = ic(n); };
-  ci('ciSteer', 'wheel'); ci('ciGas', 'bolt'); ci('ciBrake', 'warn'); ci('ciHb', 'tire');
-  ci('ciNitro', 'burst'); ci('ciPit', 'pit'); ci('ciZoom', 'cam');
   set('lbSound', T('sound')); set('lbShadow', T('shadows')); set('lbSkid', T('skid')); set('lbDust', T('dust')); set('lbAO', T('ao')); set('lbBloom', T('bloom')); set('lbRes', T('res')); set('lbGfxQ', T('gfxQ')); paintGfx();
   set('lbAbs', T('brakeAid')); set('lbSteer', T('steerAid')); set('lbCam', T('initView'));
   set('lbTire', T('tire')); set('lbRline', T('rline')); paintTire();
@@ -16296,6 +17096,14 @@ document.getElementById('rstBtn').addEventListener('click', () => {
   if (lastStartArgs) { buzz(30); setPaused(false); startStage(...lastStartArgs); }
 });
 document.getElementById('exitBtn').addEventListener('click', () => { buzz(30); exitToMenu(); });
+document.getElementById('droneBtn').addEventListener('click', () => { buzz(30); setDrone(!droneOn); });
+document.getElementById('fpvBtn').addEventListener('click', () => { buzz(30); setFpv(!fpvOn); });
+document.getElementById('cenBtn').addEventListener('click', () => { buzz(30); setCen(!cenOn); });
+// Las ventanas TV son clicables: cada una abre su vista a pantalla completa
+document.getElementById('pip').addEventListener('click', () => { if (droneOk()) { buzz(30); setDrone(!droneOn); } });
+document.getElementById('pip2').addEventListener('click', () => { buzz(30); setFpv(!fpvOn); });
+bindBtn('drUpBtn', () => drTUp = true, () => drTUp = false);
+bindBtn('drDnBtn', () => drTDn = true, () => drTDn = false);
 document.getElementById('pauseBtn').addEventListener('click', () => { buzz(30); setPaused(true); });
 document.getElementById('resumeBtn').addEventListener('click', () => { buzz(30); setPaused(false); });
 document.getElementById('pauseExitBtn').addEventListener('click', () => { buzz(30); setPaused(false); exitToMenu(); });
@@ -16836,8 +17644,9 @@ document.getElementById('teleBack').addEventListener('click', () => {
 })();
 
 /* ================== BUCLE ================== */
-// Gamepad: stick izq + cruceta = dirección · RT/RB = gas · LT/LB = freno
-// A = nitro (o cambio en drag) · B = derrape · X = boxes · START = pausa
+// Gamepad: mapeo configurable en OPCIONES → MANDO (OPTS.padMap)
+// Por defecto: stick izq + cruceta = dirección · RT = gas · LT = freno
+// A = nitro · B = derrape · X = boxes · RB = cambio · START = pausa
 const pad = { steer: 0, gas: 0, brake: 0, hb: false, nitro: false, shift: false, pit: false, _st: false, _startT: false };
 function padPoll() {
   // Sin mando detectado aún: sondeo a ~2.5 Hz — getGamepads() aloja un array
@@ -16850,16 +17659,60 @@ function padPoll() {
   const gps = navigator.getGamepads && navigator.getGamepads();
   const gp = gps && [...gps].find(p => p && p.connected);
   if (gp) pad._seen = true;                            // ya conectado: sondeo a cada frame
+  pad._gp = gp || null;
   pad.steer = pad.gas = pad.brake = 0; pad.hb = pad.nitro = pad.shift = pad.pit = false;
+  // Nombre del mando en OPCIONES (~2 Hz, solo con la pantalla visible)
+  const dv = document.getElementById('padDev');
+  if (dv && dv.offsetParent && performance.now() > (pad._dvT || 0)) {
+    pad._dvT = performance.now() + 500;
+    dv.textContent = gp ? (gp.id || 'GAMEPAD').slice(0, 32).toUpperCase() : T('padNone');
+    dv.classList.toggle('no', !gp);
+  }
   if (!gp) { pad._st = false; pad._startT = false; return; }
-  const dz = v => Math.abs(v) > 0.16 ? v : 0;
   const bt = i => !!(gp.buttons[i] && gp.buttons[i].pressed);
   const bv = i => gp.buttons[i] ? gp.buttons[i].value : 0;
-  pad.steer = clamp(dz(gp.axes[0] || 0) + (bt(15) ? 1 : 0) - (bt(14) ? 1 : 0), -1, 1);
-  pad.gas = Math.max(bv(7), bt(5) ? 1 : 0);
-  pad.brake = Math.max(bv(6), bt(4) ? 1 : 0);
-  pad.hb = bt(1); pad.nitro = bt(0); pad.shift = bt(0) || bt(5); pad.pit = bt(2);
-  const st = bt(9);
+  const ax = i => gp.axes[i] || 0;
+  // Captura de binding: la siguiente entrada del mando queda asignada a la acción
+  if (padCap) {
+    if (performance.now() >= padCapT) {
+      const act = padCap, axisOk = act === 'steer' || act === 'gas' || act === 'brake';
+      for (let i = 0; i < gp.axes.length && padCap; i++) {
+        if (Math.abs(ax(i)) > 0.55) {
+          // gas/freno guardan también la DIRECCIÓN del empuje (a2+ / a2-):
+          // así un stick en reposo da 0 y no medio acelerador
+          if (axisOk) { OPTS.padMap[act] = act === 'steer' ? 'a' + i : 'a' + i + (ax(i) > 0 ? '+' : '-'); saveOpts(); buzz(30); }
+          padCap = null; paintPad();
+        }
+      }
+      for (let i = 0; i < gp.buttons.length && padCap; i++) {
+        if (bt(i)) {
+          if (act === 'steer') { if (i === 14 || i === 15) { OPTS.padMap.steer = 'dpad'; saveOpts(); buzz(30); } }
+          else { OPTS.padMap[act] = 'b' + i; saveOpts(); buzz(30); }
+          padCap = null; paintPad();
+        }
+      }
+    }
+    pad._st = false; pad._startT = false; return;      // capturando: el mando no conduce
+  }
+  if (!OPTS.pad) { pad._st = false; pad._startT = false; return; }
+  const dz = v => Math.abs(v) > 0.16 ? v : 0;
+  const M = OPTS.padMap;
+  // entrada analógica: 'aN' = eje N · 'bN' = gatillo/botón N · 'dpad' = cruceta
+  const rd = (v, trig) => {
+    if (!v) return 0;
+    if (v === 'dpad') return (bt(15) ? 1 : 0) - (bt(14) ? 1 : 0);
+    if (v[0] === 'a') {
+      const s = v.endsWith('-') ? -1 : 1, u = ax(+v.replace(/\D/g, '')) * s;
+      return trig ? Math.max(0, u) : u;              // gatillo: solo el lado empujado; reposo = 0
+    }
+    const n = +v.slice(1); return bv(n) || (bt(n) ? 1 : 0);
+  };
+  const rb = v => Math.abs(rd(v, true)) > 0.45;        // entrada como pulsación
+  pad.steer = clamp(dz(rd(M.steer)) + (M.steer === 'dpad' ? 0 : (bt(15) ? 1 : 0) - (bt(14) ? 1 : 0)), -1, 1);
+  pad.gas = Math.max(0, rd(M.gas, true) - 0.06);       // micro-zona muerta: el ruido del gatillo no acelera
+  pad.brake = Math.max(0, rd(M.brake, true) - 0.06);
+  pad.hb = rb(M.hb); pad.nitro = rb(M.nitro); pad.shift = rb(M.shift); pad.pit = rb(M.pit);
+  const st = rb(M.pause);
   if (st && !pad._st) pad._startT = true;            // flanco: solo una vez por pulsación
   pad._st = st;
 }
@@ -17286,6 +18139,34 @@ function logoBumpTex(img, sx, sy, sw, sh) {
 // PWA: service worker para instalar como app y jugar offline (solo http/https, no file://)
 if ('serviceWorker' in navigator && location.protocol.startsWith('http'))
   navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+<script>
+// ── Puerta de acceso PIN ─────────────────────────────────────────────────────
+// Cámbialo aquí por tu código (también vale una contraseña de texto):
+const GAME_PIN = '2026';
+(function gateInit() {
+  const g = document.getElementById('gate');
+  document.getElementById('gateSub').textContent = T('gateSub');
+  document.getElementById('gateGo').textContent = T('gateBtn');
+  if (sessionStorage.getItem('scgAuth') === '1') { g.remove(); return; }
+  const inp = document.getElementById('gatePin');
+  const box = document.getElementById('gateBox');
+  const err = document.getElementById('gateErr');
+  const go = () => {
+    if (inp.value.trim() === GAME_PIN) {
+      sessionStorage.setItem('scgAuth', '1');
+      g.classList.add('off');
+      setTimeout(() => g.remove(), 500);
+    } else {
+      err.textContent = T('gateErr');
+      box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+      inp.value = ''; inp.focus();
+    }
+  };
+  document.getElementById('gateGo').addEventListener('click', go);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  setTimeout(() => inp.focus(), 350);
+})();
 </script>
 </body>
 </html>

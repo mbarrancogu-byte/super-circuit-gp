@@ -41,3 +41,10 @@ _serve.log
 [0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*.jpg
 [0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*.png
 *_v.png
+
+# Artefactos de verificación local (tests Playwright, capturas, scripts)
+chk_*
+mk_*.py
+neonwall_view*.png
+wheel_prev*.png
+heli72/
