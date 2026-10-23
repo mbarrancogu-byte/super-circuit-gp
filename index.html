@@ -1646,9 +1646,19 @@
   #splash img { position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover; }                              /* llena la pantalla, recorta bordes */
   #splash.hide { opacity: 0; pointer-events: none; transition: opacity .45s; }
-  /* Idiomas dentro de la portada — JS los posa sobre el volante de la foto */
-  #splashLang { position: absolute; left: 50%; bottom: 15%; transform: translate(-50%, -50%);
-    display: flex; gap: 10px; z-index: 3; }
+  /* Idiomas de la portada: esquina superior derecha, bajo el engranaje —
+     separados del logo 3D y del START (no se superponen a nada) */
+  #splashLang { position: absolute; right: 14px; top: 118px;
+    display: flex; flex-direction: column; gap: 8px; z-index: 3; }
+  /* Capa WebGL de la portada: partículas de humo + distorsión de calor */
+  #splashFx { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+  /* Luz trasera de freno F1: parpadea periódicamente sobre la zaga del póster */
+  #splashBrake { position: absolute; z-index: 4; width: 13px; height: 30px;
+    border-radius: 4px; pointer-events: none;
+    background: radial-gradient(ellipse at center, #ff5a50, #e01008 70%);
+    box-shadow: 0 0 14px 4px rgba(255,40,30,0.85), 0 0 34px 10px rgba(255,50,40,0.4);
+    animation: brakeBlink 1.5s steps(1) infinite; }
+  @keyframes brakeBlink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0.06; } }
   /* Botón START grande centrado bajo las banderas — arranca el juego */
   #splashStart { position: absolute; left: 50%; transform: translateX(-50%); z-index: 6;
     display: flex; align-items: center; gap: 14px; padding: 15px 42px; cursor: pointer;
@@ -1832,9 +1842,12 @@
   .spNav { position: relative; display: flex; flex-direction: column; align-items: center;
     justify-content: center; gap: 4px; min-width: 96px; min-height: 58px;
     padding: 9px 12px; cursor: pointer; border-radius: 14px;
-    background: linear-gradient(180deg, rgba(30,40,60,0.92), rgba(10,15,27,0.92));
-    border: 1.5px solid rgba(160,180,215,0.4);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 8px 18px rgba(0,0,0,0.55);
+    /* tarjeta de cristal: translúcida con blur, borde luminoso tenue */
+    background: linear-gradient(180deg, rgba(46,60,92,0.42), rgba(14,22,40,0.38));
+    backdrop-filter: blur(10px) saturate(1.3); -webkit-backdrop-filter: blur(10px) saturate(1.3);
+    border: 1.5px solid rgba(200,218,255,0.28);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 8px 18px rgba(0,0,0,0.4),
+      inset 0 -8px 18px rgba(80,120,200,0.08);
     color: #cfe0f8; font-size: 10px; font-weight: 800; letter-spacing: 1.6px;
     transition: transform .15s, border-color .15s, box-shadow .15s; }
   .spNav svg { width: 30px; height: 30px;
@@ -2711,6 +2724,8 @@
   <div id="splashWheels"><i></i><i></i></div>
   <div id="splashSmoke"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="surge"></i></div>
   <div id="splashFog"><i></i><i></i><i></i><i></i><i></i></div>
+  <canvas id="splashFx"></canvas>
+  <div id="splashBrake"></div>
   <div id="splashOpts"><svg class="ic"><use href="#i-gear"/></svg></div>
   <div id="startGlow"></div>
   <div id="blinkStart"><svg width="100%" height="100%" viewBox="0 0 24 24"><use href="#i-down"/></svg></div>
@@ -10615,7 +10630,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 817;
+const BUILD_NO = 818;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -16123,10 +16138,13 @@ document.getElementById('optReset').addEventListener('click', () => {
                 width: im.naturalWidth * k, height: im.naturalHeight * k };
     const clX = v => Math.min(Math.max(v, 20), vw - 20);   // con cover la imagen se
     const clY = v => Math.min(Math.max(v, 14), vh - 14);   // recorta: anclajes al viewport
-    sl.style.left = clX(r.left + r.width * 0.5) + 'px';   // centro horizontal de la imagen
-    sl.style.top = clY(r.top + r.height * 0.40) + 'px';   // justo debajo del "WORLD TRACKS"
+    sl.style.left = 'auto';                                // banderas arriba-derecha,
+    sl.style.right = '14px';                               // libres del logo y del START
+    sl.style.top = '122px';
     sl.style.bottom = 'auto';
-    sl.style.gap = '12px';   // las dos banderas juntas, centradas
+    const bk = document.getElementById('splashBrake');     // luz de freno sobre la zaga
+    bk.style.left = clX(r.left + r.width * 0.497) + 'px';
+    bk.style.top = clY(r.top + r.height * 0.588) + 'px';
     const ss = document.getElementById('splashStart');  // botón START bajo las banderas
     ss.style.left = clX(r.left + r.width * 0.5) + 'px';
     ss.style.top = clY(r.top + r.height * 0.485) + 'px';
@@ -18070,6 +18088,156 @@ function logoBumpTex(img, sx, sy, sw, sh) {
     requestAnimationFrame(sloop);
   })(performance.now());
 })();
+/* ============ PORTADA FX (THREE.JS): humo real de partículas sobre las
+   ruedas traseras + distorsión de calor (heat haze) en los escapes ========= */
+(function splashFx() {
+  const sp = document.getElementById('splash'), cv = document.getElementById('splashFx');
+  const img = sp.querySelector('img');
+  if (!cv || !img) return;
+  const R = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: false,
+    powerPreference: 'low-power' });
+  R.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+  const sc = new THREE.Scene();
+  let vw = 2, vh = 2;
+  const cam = new THREE.OrthographicCamera(0, 1, 0, 1, -10, 10);   // coords en píxeles (y arriba)
+  // rect del póster con object-fit:cover (mismo cálculo que el resto de capas)
+  const pr = () => {
+    const iw = img.naturalWidth || 2058, ih = img.naturalHeight || 3072;
+    const k = Math.max(vw / iw, vh / ih);
+    return { x: (vw - iw * k) / 2, y: (vh - ih * k) / 2, w: iw * k, h: ih * k };
+  };
+  const XY = (u, v) => { const r = pr(); return [r.x + u * r.w, vh - (r.y + v * r.h)]; };
+
+  // ---- textura de bocanada de humo (radial con grumos) ----
+  const puffCv = document.createElement('canvas'); puffCv.width = puffCv.height = 128;
+  const pc = puffCv.getContext('2d');
+  const g0 = pc.createRadialGradient(64, 64, 4, 64, 64, 62);
+  g0.addColorStop(0, 'rgba(244,247,252,0.85)'); g0.addColorStop(0.45, 'rgba(228,235,245,0.42)');
+  g0.addColorStop(1, 'rgba(220,228,240,0)');
+  pc.fillStyle = g0; pc.fillRect(0, 0, 128, 128);
+  pc.globalCompositeOperation = 'destination-out';               // agujeros: textura irregular
+  for (let i = 0; i < 9; i++) {
+    const a = Math.random() * 6.28, rr = 30 + Math.random() * 26;
+    const gx = 64 + Math.cos(a) * rr, gy = 64 + Math.sin(a) * rr;
+    const g2 = pc.createRadialGradient(gx, gy, 0, gx, gy, 16 + Math.random() * 12);
+    g2.addColorStop(0, 'rgba(0,0,0,0.5)'); g2.addColorStop(1, 'rgba(0,0,0,0)');
+    pc.fillStyle = g2; pc.beginPath(); pc.arc(gx, gy, 30, 0, 6.29); pc.fill();
+  }
+  const puffT = new THREE.CanvasTexture(puffCv);
+
+  // ---- partículas THREE.Points con shader de rotación/escala/fade ----
+  const N = 240;
+  const pos = new Float32Array(N * 3), aSize = new Float32Array(N),
+        aA = new Float32Array(N), aR = new Float32Array(N);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('aSize', new THREE.BufferAttribute(aSize, 1));
+  geo.setAttribute('aA', new THREE.BufferAttribute(aA, 1));
+  geo.setAttribute('aR', new THREE.BufferAttribute(aR, 1));
+  const mat = new THREE.ShaderMaterial({
+    transparent: true, depthTest: false, depthWrite: false,
+    uniforms: { uT: { value: puffT }, uDpr: { value: 1 } },
+    vertexShader: `uniform float uDpr;
+      attribute float aSize; attribute float aA; attribute float aR;
+      varying float vA; varying float vR;
+      void main(){ vA = aA; vR = aR;
+        gl_PointSize = aSize * uDpr;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `uniform sampler2D uT; varying float vA; varying float vR;
+      void main(){
+        vec2 c = gl_PointCoord - 0.5;
+        float s = sin(vR), co = cos(vR);
+        vec2 uv = vec2(c.x * co - c.y * s, c.x * s + c.y * co) + 0.5;
+        vec4 t = texture2D(uT, uv);
+        if (t.a * vA < 0.01) discard;
+        gl_FragColor = vec4(t.rgb, t.a * vA); }` });
+  const pts = new THREE.Points(geo, mat); pts.frustumCulled = false; sc.add(pts);
+
+  // emisores en coords del póster: ruedas traseras L/R + centro del difusor
+  const EMIT = [[0.27, 0.76, -1], [0.73, 0.76, 1], [0.50, 0.66, 0]];
+  const P = [];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const spawn = p => {
+    const e = EMIT[(Math.random() * EMIT.length) | 0];
+    const [ex, ey] = XY(e[0], e[1]);
+    p.x = ex + rnd(-26, 26); p.y = ey + rnd(-10, 6);
+    p.vx = rnd(-8, 8) + e[2] * rnd(10, 26);          // deriva lateral (ruedas → hacia fuera)
+    p.vy = rnd(14, 42);                              // sube
+    p.sw = rnd(0.6, 2.2); p.ph = rnd(0, 6.28);       // vaivén senoidal propio
+    p.age = 0; p.life = rnd(1.6, 3.4);
+    p.s0 = rnd(26, 60); p.grow = rnd(55, 110);       // escala inicial → expansión
+    p.rot = rnd(0, 6.28); p.rotV = rnd(-0.9, 0.9);   // rotación lenta
+    p.a0 = rnd(0.30, 0.55);
+  };
+  for (let i = 0; i < N; i++) { P.push({}); spawn(P[i]); P[i].age = Math.random() * P[i].life; }
+
+  // ---- heat haze: quad que refracta la textura real del póster sobre los escapes ----
+  const haze = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
+    new THREE.ShaderMaterial({
+      transparent: true, depthTest: false, depthWrite: false,
+      uniforms: { uT: { value: null }, uTime: { value: 0 },
+                  uRect: { value: new THREE.Vector4(0.3, 0.255, 0.4, 0.145) }, // u,v,w,h en poster (v desde abajo)
+                  uAmp: { value: 5.0 }, uAsp: { value: 1 } },
+      vertexShader: `varying vec2 vUv;
+        void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `uniform sampler2D uT; uniform float uTime, uAmp, uAsp;
+        uniform vec4 uRect; varying vec2 vUv;
+        void main(){
+          vec2 puv = uRect.xy + vUv * uRect.zw;
+          float f = (1.0 - vUv.y);                          // más ondulación abajo (salida escapes)
+          float w = sin(puv.y * 90.0 - uTime * 7.0) * 0.55
+                  + sin(puv.x * 60.0 + uTime * 4.4) * 0.45;
+          puv.x += w * 0.0035 * f * uAmp * 0.2;
+          puv.y += sin(puv.x * 80.0 + uTime * 8.0) * 0.0022 * f * uAmp * 0.2;
+          vec4 c = texture2D(uT, puv);
+          float m = smoothstep(0.0, 0.18, vUv.x) * smoothstep(1.0, 0.82, vUv.x)
+                  * smoothstep(0.0, 0.30, vUv.y) * smoothstep(1.0, 0.90, vUv.y);
+          gl_FragColor = vec4(c.rgb, m * 0.85); }` }));
+  haze.visible = false; sc.add(haze);
+  new THREE.TextureLoader().load('portada.jpg', t => {
+    t.colorSpace = THREE.SRGBColorSpace; haze.material.uniforms.uT.value = t; haze.visible = true;
+  });
+
+  const place = () => {
+    vw = sp.clientWidth || 2; vh = sp.clientHeight || 2;
+    R.setSize(vw, vh, false);
+    mat.uniforms.uDpr.value = Math.min(devicePixelRatio, 1.75);
+    cam.left = 0; cam.right = vw; cam.top = vh; cam.bottom = 0; cam.updateProjectionMatrix();
+    const [hx, hy] = XY(0.5, 0.60), [hx2] = XY(0.5, 0.745), r = pr();
+    haze.position.set(hx, (hy + hx2) / 2, 0);
+    haze.scale.set(r.w * 0.42, Math.abs(hx2 - hy), 1);
+  };
+  place(); window.addEventListener('resize', place);
+  window.addEventListener('orientationchange', () => setTimeout(place, 300));
+
+  let lt = performance.now(), emitAcc = 0;
+  (function loop(now) {
+    requestAnimationFrame(loop);
+    if (sp.classList.contains('hide')) { lt = now; return; }
+    const dt = Math.min(0.05, (now - lt) / 1000); lt = now;
+    for (let i = 0; i < N; i++) {
+      const p = P[i];
+      p.age += dt;
+      if (p.age >= p.life) { spawn(p); continue; }
+      const k = p.age / p.life;
+      p.x += (p.vx + Math.sin(p.ph + p.age * 2.4 * p.sw) * 18 * k) * dt;
+      p.y += p.vy * dt * (1 - k * 0.45);                     // decelera al subir
+      p.rot += p.rotV * dt;
+      const s = (p.s0 + p.grow * k);
+      pos[i * 3] = p.x; pos[i * 3 + 1] = p.y; pos[i * 3 + 2] = 0;
+      aSize[i] = s;
+      aA[i] = p.a0 * Math.min(1, k * 6) * (1 - k * k);        // fade in → fade out
+      aR[i] = p.rot;
+    }
+    geo.attributes.position.needsUpdate = true;
+    geo.attributes.aSize.needsUpdate = true;
+    geo.attributes.aA.needsUpdate = true;
+    geo.attributes.aR.needsUpdate = true;
+    haze.material.uniforms.uTime.value = now / 1000;
+    R.render(sc, cam);
+  })(lt);
+})();
+
 // PWA: service worker para instalar como app y jugar offline (solo http/https, no file://)
 if ('serviceWorker' in navigator && location.protocol.startsWith('http'))
   navigator.serviceWorker.register('sw.js').catch(() => {});
