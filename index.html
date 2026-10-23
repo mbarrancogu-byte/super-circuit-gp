@@ -3440,7 +3440,7 @@ document.addEventListener('pointerdown', e => {
 });
 
 /* ================== ESTADO ================== */
-let playing = false, stage = 1, t0 = 0, raceT = 0;
+let playing = false, stage = 1, t0 = 0, raceT = 0, raceGo = false;
 let paused = false, pauseT0 = 0, radioWasPlaying = false;
 function setPaused(p) {
   if (!playing || p === paused) return;
@@ -10638,7 +10638,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 820;
+const BUILD_NO = 822;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -11594,10 +11594,13 @@ function ghostLoad() {
   setTimeout(() => showToast('👻 ' + T('ghostOn')), 1500);
   ghostCar = buildF1(0x9ff2ff);
   ghostCar.traverse(o => { if (o.material) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.58; } });
+  ghostCar.visible = false;                  // nace oculto: solo aparece tras el GO
   scene3.add(ghostCar);
 }
 function ghostTick() {
   if (!ghostPlay || !ghostCar) return;
+  // No aparecer en parrilla: el fantasma solo existe cuando el GO real ha sonado
+  if (!raceGo) { ghostCar.visible = false; return; }
   const d = ghostPlay, n = d.length;
   if (raceT >= d[n - 1][0]) { ghostCar.visible = false; return; }
   ghostCar.visible = true;
@@ -12004,6 +12007,7 @@ function startLights() {
       for (const i of lt.children) i.classList.replace('on', 'go');
       lt3Go(seq);                                 // el pórtico estroba en verde neón
       t0 = performance.now();
+      raceGo = true;                              // GO real: el fantasma ya puede aparecer
       launchWin = 0.55;                           // ventana de salida lanzada
       sfx.go();
       const cn = document.getElementById('countNum');
@@ -12017,6 +12021,7 @@ function startLights() {
       }, 850);
     }, 380 + Math.random() * 700);
   };
+  raceGo = false;                                 // el GO aún no ha sonado (t0 aquí es solo una estimación)
   t0 = performance.now() + 4000;                  // el reloj arranca cuando se apagan las luces
   radioNext = t0 + 5000 + Math.random() * 9000;   // primera radio 5-14 s tras el GO
   radioPlays = 0;                                 // máx. 3 mensajes de radio por carrera
