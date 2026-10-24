@@ -379,6 +379,14 @@
     50% { border-color: #ff2838; box-shadow: 0 0 16px rgba(255,50,60,0.9),
       inset 0 0 12px rgba(255,50,60,0.35); }
   }
+  /* Marcador de usos de NITRO: pastilla sobre la esquina del botón */
+  #nitroN { position: absolute; top: -7px; right: -7px; z-index: 3; min-width: 19px; height: 19px;
+    padding: 0 4px; border-radius: 999px; display: flex; align-items: center; justify-content: center;
+    background: rgba(14,10,4,0.92); border: 1.5px solid #ffb020; color: #ffd060;
+    font: 900 11px/1 'Consolas', monospace; pointer-events: none;
+    box-shadow: 0 0 8px rgba(255,170,40,0.5); }
+  #nitroBtn.empty { opacity: 0.42; filter: grayscale(0.8); }
+  #nitroBtn.empty #nitroN { border-color: #666; color: #888; box-shadow: none; }
   /* Ruedas delanteras en 1ª persona: asoman por las esquinas del cockpit
      como en una onboard real y basculan con la dirección */
   .fpvWh { display: none; position: fixed; bottom: -6%; width: 13%; z-index: 7;
@@ -2780,7 +2788,7 @@
 <div id="actBtns" style="display:none">
   <div class="zbtn" id="pitBtn"><img class="zIc" src="ctl_boxes.webp" alt=""><span class="tLb">PIT</span></div>
   <div class="zbtn" id="hbBtn"><img class="zIc" src="ctl_derrape.webp" alt=""><span class="tLb">HB</span></div>
-  <div class="zbtn" id="nitroBtn"><img class="zIc" src="ctl_nitro.webp" alt=""><span class="tLb">NITRO</span></div>
+  <div class="zbtn" id="nitroBtn"><img class="zIc" src="ctl_nitro.webp" alt=""><span class="tLb">NITRO</span><span id="nitroN">5</span></div>
 </div>
 <div class="dbtn" id="drUpBtn">▲</div>
 <div class="dbtn" id="drDnBtn">▼</div>
@@ -3574,6 +3582,7 @@ let cpus = [];                          // todos los rivales activos (cpu/cpu2 =
 let champRivals = Math.min(6, Math.max(1, +(localStorage.getItem('af1_rivals') || 2)));  // rivales del campeonato
 // Arcade: nitro (ERS), mini-turbo por derrape, rebufo, neumáticos, clima, boxes
 let nitro = 60, nitroOn = false, inNitro = false, slipT = 0, nitroHeat = 0, nitroHotF = false;
+let nitroUses = 5, nitroBurst = 0, nitroReqPrev = false;   // nitro: 5 usos de 2 s por carrera
 let fuel = 100, endurMode = false;                  // ENDURANCE: combustible que obliga a repostar
 let driftT = 0, boostT = 0;
 let tireWear = 0;                       // 0-100 (solo blandos gastan rápido)
@@ -10885,7 +10894,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 848;
+const BUILD_NO = 849;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -12501,8 +12510,13 @@ function update(dt) {
   // rebufo. El uso continuado SOBRECALIENTA el ERS: a 100% corta solo hasta
   // enfriarse por debajo del umbral (como el despliegue real de un híbrido)
   const nitroReq = (inNitro || pad.nitro || keys.ShiftLeft || keys.ShiftRight || keys.KeyN) && go && !dragMode;
+  // NITRO por usos: cada pulsación dispara un empujón fuerte de 2 s — solo 5
+  // por carrera (el marcador del botón cuenta los que quedan)
+  if (nitroReq && !nitroReqPrev && nitroUses > 0 && nitroBurst <= 0) { nitroUses--; nitroBurst = 2; }
+  nitroReqPrev = nitroReq;
+  nitroBurst = Math.max(0, nitroBurst - dt);
   nitroHeat = clamp(nitroHeat + (nitroOn ? 30 : -14) * dt, 0, 100);   // calienta usándolo, enfría al soltar
-  nitroOn = nitroReq && nitro > 0 && nitroHeat < 100;
+  nitroOn = nitroBurst > 0 && nitroHeat < 100;
   if (nitroReq && !nitroOn && nitroHeat >= 100 && !nitroHotF) {
     nitroHotF = true;
     showToast('🌡 ' + T('nitroHot')); sfx.beep(); buzz(90);
@@ -12792,6 +12806,9 @@ function update(dt) {
   el('pitBtn').classList.toggle('req', (pitReq || boxexReq || pitAuto) && !(pitDur > 0));
   el('hbBtn').classList.toggle('req', !!(inHB || (pad && pad.hb) || keys.Space));
   el('nitroBtn').classList.toggle('req', nitroOn || boostT > 0);
+  // Marcador de usos de NITRO: cuenta los que quedan, se apaga al llegar a 0
+  { const nn = el('nitroN'); if (nn._v !== nitroUses) { nn._v = nitroUses; nn.textContent = nitroUses; }
+    el('nitroBtn').classList.toggle('empty', nitroUses <= 0); }
 
   // Desgaste de neumáticos: blandos gastan rápido, duros aguantan toda la carrera
   // (los de lluvia se comen el doble sobre asfalto seco)
@@ -15117,6 +15134,7 @@ function startStage(n, seed, mp, mode) {
   dmg = 0; dmgBroken = false; brkT = 0; brkEsc = false; scResc = null;
   pitStop = 0; pitDur = 0; pitT = 0; addDamage(0); pitMenuHide();
   nitro = 60; nitroOn = inNitro = false; slipT = 0; driftT = 0; boostT = 0; oilT = 0; cutMax = null; slowT = 0;
+  nitroUses = 5; nitroBurst = 0; nitroReqPrev = false;
   fpsAcc = 0; fpsN = 0; perfChecked = false;
   // Tutorial: solo la primera vez que se corre en este dispositivo
   const tt = el('tuto');
