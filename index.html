@@ -6509,6 +6509,49 @@ function buildWorld() {
       reds.frustumCulled = false;
       pit.add(reds);
     }
+
+    // ==== Helipuerto: losa octogonal de hormigón sobre el césped del infield
+    // junto a la calle — disco, H pintada, anillo y luces de borde ====
+    {
+      const HX = 62, HZ = -14;                        // infield, a un paso de la calle
+      const pad = new THREE.Mesh(new THREE.CylinderGeometry(10, 10.6, 0.14, 8),
+        new THREE.MeshStandardMaterial({ map: makeConcreteTex(), color: 0x52565e, roughness: 0.95 }));
+      pad.position.set(HX, 0.07, HZ); pad.rotation.y = Math.PI / 8;
+      pad.receiveShadow = true; pad.castShadow = false;
+      pit.add(pad);
+      // Marca pintada: anillo amarillo de seguridad + H blanca central
+      const hc = document.createElement('canvas'); hc.width = hc.height = 256;
+      const hg = hc.getContext('2d');
+      hg.strokeStyle = 'rgba(235,195,60,0.9)'; hg.lineWidth = 11;
+      hg.beginPath(); hg.arc(128, 128, 104, 0, 7); hg.stroke();
+      hg.strokeStyle = 'rgba(235,195,60,0.45)'; hg.lineWidth = 4;
+      for (let a = 0; a < 8; a++) {                 // marcas del octógono
+        const an = a / 8 * Math.PI * 2 + Math.PI / 8;
+        hg.beginPath();
+        hg.moveTo(128 + Math.cos(an) * 96, 128 + Math.sin(an) * 96);
+        hg.lineTo(128 + Math.cos(an) * 112, 128 + Math.sin(an) * 112);
+        hg.stroke();
+      }
+      hg.fillStyle = 'rgba(238,238,232,0.92)';
+      hg.font = 'bold 128px Arial'; hg.textAlign = 'center'; hg.textBaseline = 'middle';
+      hg.fillText('H', 128, 134);
+      const hm = new THREE.Mesh(new THREE.PlaneGeometry(16.5, 16.5),
+        new THREE.MeshBasicMaterial({ map: tex3(hc), transparent: true, depthWrite: false }));
+      hm.rotation.x = -Math.PI / 2;
+      hm.position.set(HX, 0.15, HZ);
+      pit.add(hm);
+      // Luces ámbar de borde alrededor de la losa
+      const hMat = new THREE.MeshStandardMaterial({ color: 0xffaa22,
+        emissive: 0xff8811, emissiveIntensity: 1.8, roughness: 0.4 });
+      const hl = new THREE.InstancedMesh(lampGeo, hMat, 8);
+      for (let a = 0; a < 8; a++) {
+        const an = a / 8 * Math.PI * 2 + Math.PI / 8;
+        _lm.makeTranslation(HX + Math.cos(an) * 10.4, 0.12, HZ + Math.sin(an) * 10.4);
+        hl.setMatrixAt(a, _lm);
+      }
+      hl.frustumCulled = false;
+      pit.add(hl);
+    }
     // Persecución tipo pista de aterrizaje: cada lámpara guarda su orden x — el
     // pulso corre de un extremo a otro del pit lane (se anima en el loop)
     {
@@ -10842,7 +10885,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 847;
+const BUILD_NO = 848;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
