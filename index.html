@@ -8098,7 +8098,8 @@ function buildWorld() {
     vegReg(shades, shPos, shMat, ti, 430);
     world.add(pines, pines2, oaks, oaks2, cyps);
     world.add(trunksP, trunksO, trunksC);
-    // Reparto: cantos pequeños y rocas medias cerca de la pista, peñascos en el entorno
+    // Reparto: cantos pequeños y rocas medias cerca de la pista, peñascos en el entorno.
+    // Nunca dentro del circuito: el infield queda limpio (solo césped y emblema)
     guard = 0;
     const rkS = new THREE.Vector3();
     const putRock = (mesh, i, x, z, s, sink) => {
@@ -8109,27 +8110,27 @@ function buildWorld() {
     };
     for (let i = 0; i < 90 && guard++ < 4000; i++) {         // cantos rodados: no obstáculo
       const x = rnd(-850, 850), z = rnd(-850, 850);
-      if (nearRoad(x, z, 9) || inPitArea(x, z)) { i--; continue; }   // inPitArea ya cubre el lago
+      if (nearRoad(x, z, 9) || inPitArea(x, z) || inLoop(x, z)) { i--; continue; }   // inPitArea ya cubre el lago
       putRock(rocksS, i, x, z, rnd(0.35, 1.1), 0.18);
       rocksS.setColorAt(i, tCol.setHSL(0, 0, rnd(0.55, 1)));
     }
     guard = 0;
     for (let i = 0; i < 46 && guard++ < 4000; i++) {         // rocas medias
       const x = rnd(-850, 850), z = rnd(-850, 850);
-      if (nearRoad(x, z, 12) || inPitArea(x, z)) { i--; continue; }
+      if (nearRoad(x, z, 12) || inPitArea(x, z) || inLoop(x, z)) { i--; continue; }
       const s = rnd(0.9, 1.7);
       putRock(rocksM, i, x, z, s, 0.5);
       rocksM.setColorAt(i, tCol.setHSL(0.08, rnd(0, 0.1), rnd(0.6, 1)));
-      obstacles.push({ x, z, r: 1.9 * s });
+      obstacles.push({ x, z, r: 1.9 * s, rock: 1 });
     }
     guard = 0;
     for (let i = 0; i < 26 && guard++ < 3000; i++) {         // peñascos lejanos grandes
       const x = rnd(-820, 820), z = rnd(-820, 820);
-      if (nearRoad(x, z, 20) || inPitArea(x, z)) { i--; continue; }
+      if (nearRoad(x, z, 20) || inPitArea(x, z) || inLoop(x, z)) { i--; continue; }
       const s = rnd(1.4, 2.6);
       putRock(rocksL, i, x, z, s, 1.1);
       rocksL.setColorAt(i, tCol.setHSL(0.07, rnd(0, 0.12), rnd(0.7, 1)));
-      obstacles.push({ x, z, r: 3.4 * s });
+      obstacles.push({ x, z, r: 3.4 * s, rock: 1 });
     }
     for (const m of [rocksS, rocksM, rocksL]) {
       m.castShadow = true; m.frustumCulled = false;
@@ -10668,7 +10669,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 831;
+const BUILD_NO = 832;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
