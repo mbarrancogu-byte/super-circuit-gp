@@ -3671,7 +3671,7 @@ function applyCarGlowAll() {
   if (carGrp && carGrp.userData.uglow)
     carGrp.userData.uglow.material.opacity = carGlowK >= 0.15 ? 0.5 : carGlowK * 2.2;
   if (carGrp && carGrp.userData.hpool)
-    carGrp.userData.hpool.material.opacity = carGlowK >= 0.15 ? 0.34 : carGlowK * 1.5;
+    carGrp.userData.hpool.material.opacity = carGlowK >= 0.15 ? 0.2 : carGlowK * 0.9;
 }
 let ledMats = [], ledFR = null, ledFL = null;         // señales LED: materiales y frames por lado
 let beacons = [];                                     // balizas rojo intenso de las curvas
@@ -9176,12 +9176,12 @@ function buildCar(paintHex, withLight) {
   const mkBeam = () => {
     const bg = new THREE.ConeGeometry(7.5, bLen, 18, 1, true);
     bg.translate(0, -bLen / 2, 0); bg.rotateX(-Math.PI / 2);
-    return new THREE.Mesh(bg, beamMat(0xffe0a8, 0.16, bLen));
+    return new THREE.Mesh(bg, beamMat(0xffe0a8, 0.09, bLen));
   };
   const bl = mkBeam(); bl.position.set(-1.5, 1.8, 4.4); bl.rotation.x = 0.05; grp.add(bl);
   const br = mkBeam(); br.position.set(1.5, 1.8, 4.4); br.rotation.x = 0.05; grp.add(br);
   if (withLight) {
-    const light = new THREE.SpotLight(0xffe0a8, 3.4, 95, 0.46, 0.6, 1.7);
+    const light = new THREE.SpotLight(0xffe0a8, 1.8, 95, 0.46, 0.6, 1.7);
     light.position.set(0, 2.2, 4); light.target.position.set(0, 0, 60);
     grp.add(light, light.target);
   }
@@ -9735,7 +9735,7 @@ function buildF1(tint) {
   const mkBeam = () => {
     const bg = new THREE.ConeGeometry(7.5, bLen, 18, 1, true);
     bg.translate(0, -bLen / 2, 0); bg.rotateX(-Math.PI / 2);
-    const m = new THREE.Mesh(bg, beamMat(0xffe0a8, 0.16, bLen));
+    const m = new THREE.Mesh(bg, beamMat(0xffe0a8, 0.09, bLen));
     m.userData.isHeadlight = true; m.visible = !dayMode;
     return m;
   };
@@ -9816,7 +9816,7 @@ function spawnCar() {
   carGrp = buildF1(CARS[Math.min(OPTS.car || 0, CARS.length - 1)].tint);
   wheelF = carGrp.userData.wF || []; wheelR = carGrp.userData.wR || [];   // el SCGP-X expone sus ruedas
   tailSpr = carGrp.userData.tails;
-  const light = new THREE.SpotLight(0xffe0a8, 3.4, 95, 0.46, 0.6, 1.7);
+  const light = new THREE.SpotLight(0xffe0a8, 1.8, 95, 0.46, 0.6, 1.7);
   light.position.set(0, 2.2, 4); light.target.position.set(0, 0, 60);
   carGrp.add(light, light.target);
   carGrp.userData.spot = light;
@@ -10331,7 +10331,7 @@ let lightsOn = null;                                  // faros: null = automáti
 function applyLights() {
   const on = lightsOn === null ? !dayMode : lightsOn;
   if (carGrp) {
-    if (carGrp.userData.spot) carGrp.userData.spot.intensity = on ? 3.6 : 0;
+    if (carGrp.userData.spot) carGrp.userData.spot.intensity = on ? 1.9 : 0;
     carGrp.traverse(o => { if (o.userData && o.userData.isHeadlight) o.visible = on; });
   }
   const lb = el('lightsBtn'); if (lb) lb.classList.toggle('on', on);
@@ -10669,7 +10669,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 832;
+const BUILD_NO = 833;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -10913,7 +10913,7 @@ function scSpawn() {
     grp.add(lens);
     const bg = new THREE.ConeGeometry(3.0, bLen, 16, 1, true);
     bg.translate(0, -bLen / 2, 0); bg.rotateX(-Math.PI / 2);
-    const bm = new THREE.Mesh(bg, beamMat(0xffe0a8, 0.16, bLen));
+    const bm = new THREE.Mesh(bg, beamMat(0xffe0a8, 0.09, bLen));
     bm.position.set(s, 0.92, 4.1); bm.rotation.x = 0.05;
     grp.add(bm);
   }
