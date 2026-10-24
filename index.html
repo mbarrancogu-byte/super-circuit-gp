@@ -3072,6 +3072,7 @@
       <div class="optSec" id="secCtl">🎮 CONTROLES</div>
       <div class="optRow"><div class="lbl" id="lbTouch">CONTROLES TÁCTILES</div><button class="optT sw" id="optTouch">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbLefty">MODO ZURDO</div><button class="optT sw" id="optLefty">OFF</button></div>
+      <div class="optRow"><div class="lbl" id="lbHudWheel">VOLANTE VIRTUAL EN PANTALLA</div><button class="optT sw" id="optHudWheel">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbVib">VIBRACIÓN</div><button class="optT sw" id="optVib">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbFps">CONTADOR FPS</div><button class="optT sw" id="optFps">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbSens">SENSIBILIDAD GIRO</div><div class="segC" id="optSens"><button class="segB" data-v="0">BAJA</button><button class="segB on" data-v="1">NORMAL</button><button class="segB" data-v="2">ALTA</button></div></div>
@@ -10674,7 +10675,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 834;
+const BUILD_NO = 835;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -14059,9 +14060,10 @@ function draw(now) {
   // (sin vibración de imagen: la cámara nunca tiembla — ni a alta velocidad,
   //  ni por baches, ni frenando; el coche sí rebota visualmente sobre el relieve)
   // Volante de cabina: aparece al acercar la cámara, gira con la dirección del coche
-  const wOp = droneOn ? clamp((1 - camZoom) * 1.8 - 0.35, 0, 0.96) : 0.96;
-  // Cabina SIEMPRE visible en todas las vistas (persecución, cenital, 1P) como
-  // en primera persona — solo el modo dron FPV conserva su comportamiento
+  // Volante virtual (HUD): oculto en la vista de cabina 1P — ahí ya se ve el
+  // volante del propio coche y se montaban los dos — y si el usuario lo apaga
+  // en Ajustes → Controles; el dron FPV conserva su fundido con el zoom
+  const wOp = (fpvOn || !OPTS.hudWheel) ? 0 : droneOn ? clamp((1 - camZoom) * 1.8 - 0.35, 0, 0.96) : 0.96;
   wheelDegS += ((car.steer || 0) * 24 - wheelDegS) * Math.min(1, dt * 3.6);   // giro suave y corto
   car.wheelVib = Math.max(0, (car.wheelVib || 0) - dt * 2.4);
   const wTf = `rotate(${wheelDegS.toFixed(1)}deg)`;
@@ -15247,9 +15249,10 @@ function fmtT(s) {
 }
 /* ================== OPCIONES ================== */
 const OPTS = { sound: 1, shadow: 1, skid: 1, dust: 1, ao: 1, bloom: 1, cam: 0, brakeAid: 1, steerAid: 1, car: 0,
-               lefty: 0, vib: 1, fps: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0, tod: 'dusk', rline: 0, aiEng: 0, res: 0, gfx: 1, pad: 1 };   // res: 0=AUTO 1=ALTA 2=ULTRA · gfx: preset -1=custom   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
+               lefty: 0, vib: 1, fps: 1, touchUi: 1, steerSens: 1, tire: 0, circSel: 'auto', nick: '', powVs: 0, endur: 0, tod: 'dusk', rline: 0, aiEng: 0, res: 0, gfx: 1, pad: 1, hudWheel: 1 };   // hudWheel: volante virtual en pantalla · res: 0=AUTO 1=ALTA 2=ULTRA · gfx: preset -1=custom   // cam: 0=CERCA 1=CIRCUITO · tire: 0=BLANDOS 1=DUROS · circSel: 'auto'|'rally'|índice
 try { Object.assign(OPTS, JSON.parse(localStorage.getItem('af1_opts') || '{}')); } catch (e) {}
 OPTS.car = (Math.random() * CARS.length) | 0;   // coche preseleccionado aleatorio en cada partida
+if (OPTS.hudWheel === undefined) OPTS.hudWheel = 1;   // opciones guardadas antes de existir el ajuste
 if (!OPTS.todV) { OPTS.tod = 'dusk'; OPTS.todV = 1; saveOpts(); }   // migración única: atardecer por defecto (el usuario puede cambiarlo en el selector)
 function saveOpts() { try { localStorage.setItem('af1_opts', JSON.stringify(OPTS)); } catch (e) {} }
 /* ---- Puntuación global: cada victoria suma al total persistente ---- */
@@ -15376,6 +15379,7 @@ el('optAIKey').addEventListener('click', () => {
 });
 wireOpt('optTouch', 'touchUi', 'ON', 'OFF');
 wireOpt('optLefty', 'lefty', 'ON', 'OFF');
+wireOpt('optHudWheel', 'hudWheel', 'ON', 'OFF');
 wireOpt('optVib', 'vib', 'ON', 'OFF');
 wireOpt('optFps', 'fps', 'ON', 'OFF');
 /* ---- Mando de juego: activación + mapeo configurable ---- */
@@ -15599,7 +15603,7 @@ const I18N = {
     aiEng: 'INGENIERO IA', aiKey: 'API KEY GEMINI',
     aiKeyMsg: 'Pega tu API key de Gemini (Google AI Studio — gratis en aistudio.google.com):',
     aiNoKey: 'Falta la API key de Gemini — pégala en OPCIONES',
-    touchUi: 'CONTROLES TÁCTILES', lefty: 'MODO ZURDO', vib: 'VIBRACIÓN', fps: 'CONTADOR FPS', sens: 'SENSIBILIDAD GIRO',
+    touchUi: 'CONTROLES TÁCTILES', lefty: 'MODO ZURDO', hudWheel: 'VOLANTE VIRTUAL EN PANTALLA', vib: 'VIBRACIÓN', fps: 'CONTADOR FPS', sens: 'SENSIBILIDAD GIRO',
     sensLow: 'BAJA', sensMid: 'NORMAL', sensHigh: 'ALTA',
     lang: 'IDIOMA', records: 'RÉCORDS', erase: 'BORRAR', back: 'VOLVER',
     gateSub: 'ACCESO PRIVADO — introduce el PIN', gateBtn: 'ENTRAR', gateErr: 'PIN incorrecto',
@@ -15735,7 +15739,7 @@ const I18N = {
     aiEng: 'AI ENGINEER', aiKey: 'GEMINI API KEY',
     aiKeyMsg: 'Paste your Gemini API key (Google AI Studio — free at aistudio.google.com):',
     aiNoKey: 'Missing Gemini API key — paste it in SETTINGS',
-    touchUi: 'TOUCH CONTROLS', lefty: 'LEFT-HANDED', vib: 'HAPTICS', fps: 'FPS COUNTER', sens: 'STEER SENSITIVITY',
+    touchUi: 'TOUCH CONTROLS', lefty: 'LEFT-HANDED', hudWheel: 'ON-SCREEN STEERING WHEEL', vib: 'HAPTICS', fps: 'FPS COUNTER', sens: 'STEER SENSITIVITY',
     sensLow: 'LOW', sensMid: 'NORMAL', sensHigh: 'HIGH',
     lang: 'LANGUAGE', records: 'RECORDS', erase: 'ERASE', back: 'BACK',
     gateSub: 'PRIVATE ACCESS — enter your PIN', gateBtn: 'ENTER', gateErr: 'Wrong PIN',
@@ -15893,7 +15897,7 @@ function applyLang() {
   set('lbAbs', T('brakeAid')); set('lbSteer', T('steerAid')); set('lbCam', T('initView'));
   set('lbTire', T('tire')); set('lbRline', T('rline')); paintTire();
   set('lbAI', T('aiEng')); set('lbAIKey', T('aiKey')); paintAiKey();
-  set('lbTouch', T('touchUi')); set('lbLefty', T('lefty')); set('lbVib', T('vib')); set('lbFps', T('fps')); set('lbSens', T('sens'));
+  set('lbTouch', T('touchUi')); set('lbLefty', T('lefty')); set('lbHudWheel', T('hudWheel')); set('lbVib', T('vib')); set('lbFps', T('fps')); set('lbSens', T('sens'));
   paintSens(); paintRes();
   set('lbRec', T('records')); set('lbEndur', T('endur')); set('lbAch', T('achs'));
   set('recTit', '🏁 ' + T('records')); set('achTit', '🏆 ' + T('achs'));
