@@ -5166,16 +5166,16 @@ function buildWorld() {
         lgws.instanceColor.needsUpdate = true;
         window._edgeLeds = { lm: leds, gm: lgws, np: lpos.length / 2, step: 2.4 };
       }
-      // Lechos de césped en el EXTERIOR de las curvas: la escapatoria verde
+      // Lechos de GRAVA en el EXTERIOR de las curvas: la escapatoria de arena
       // que se ve desde el aire justo donde un coche lanzado se iría largo
       {
         if (!window._gravTex) {
           const gc = document.createElement('canvas'); gc.width = gc.height = 128;
           const gt = gc.getContext('2d');
-          gt.fillStyle = '#2e4d1c'; gt.fillRect(0, 0, 128, 128);
+          gt.fillStyle = '#9c8a64'; gt.fillRect(0, 0, 128, 128);
           for (let k = 0; k < 2600; k++) {
             const v = Math.random();
-            gt.fillStyle = `rgba(${34 + v * 34},${82 + v * 58},${26 + v * 26},${0.25 + v * 0.42})`;
+            gt.fillStyle = `rgba(${118 + v * 78},${102 + v * 70},${74 + v * 52},${0.25 + v * 0.42})`;
             gt.fillRect(Math.random() * 128, Math.random() * 128, 1 + Math.random() * 2.2, 1 + Math.random() * 1.6);
           }
           window._gravTex = tex3(gc);
@@ -10800,7 +10800,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 845;
+const BUILD_NO = 846;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
