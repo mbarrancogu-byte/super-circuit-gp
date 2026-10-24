@@ -362,10 +362,12 @@
   /* Vista cenital: bajo el botón de 1P */
   #cenBtn { right: 12px; top: 320px; width: 52px; }
   #cenBtn.on { background: rgba(120,255,160,0.38); border-color: #7dffa8; }
-  /* Acciones de carrera: PIT · HB · NITRO en la esquina derecha, bajo TOP */
-  #pitBtn   { right: 12px; top: 378px; width: 52px; height: 52px; }
-  #hbBtn    { right: 12px; top: 442px; width: 52px; height: 52px; }
-  #nitroBtn { right: 12px; top: 506px; width: 52px; height: 52px; }
+  /* Acciones de carrera: PIT · HB · NITRO en fila en la esquina inferior derecha */
+  #pitBtn   { right: 140px; bottom: 16px; width: 52px; height: 52px; }
+  #hbBtn    { right: 76px;  bottom: 16px; width: 52px; height: 52px; }
+  #nitroBtn { right: 12px;  bottom: 16px; width: 52px; height: 52px; }
+  /* En 2 jugadores la fila corre a la izquierda del GAS de J2 */
+  #hud.p2 #pitBtn { right: 252px; } #hud.p2 #hbBtn { right: 188px; } #hud.p2 #nitroBtn { right: 124px; }
   #pitBtn.on, #pitBtn.auto { background: rgba(255,200,80,0.38); border-color: #ffd060; }
   #hbBtn.on   { background: rgba(255,120,60,0.38); border-color: #ff9060; }
   #nitroBtn.on{ background: rgba(255,60,60,0.4); border-color: #ff7060;
@@ -426,7 +428,9 @@
   body.lefty #stPad { left: auto; right: 14px; }
   body.lefty #gasBtn { right: auto; left: 14px; }
   body.lefty #brkBtn { right: auto; left: 121px; }
-  body.lefty #pitBtn, body.lefty #hbBtn, body.lefty #nitroBtn { right: auto; left: 12px; }
+  body.lefty #pitBtn { right: auto; left: 140px; }
+  body.lefty #hbBtn { right: auto; left: 76px; }
+  body.lefty #nitroBtn { right: auto; left: 12px; }
   body.lefty #boxexBtn { left: 16px; top: 58%; }
   body.lefty #lightsBtn { right: auto; left: 16px; }
   /* ---------- Tres zonas de la pantalla de juego ---------- */
@@ -519,7 +523,7 @@
     border-color: rgba(255,210,90,0.55); color: #ffe9a0; }
 
   /* Contador FPS: chip verde pequeño en la esquina superior derecha */
-  #fpsBox { position: fixed; top: 10px; right: 12px; z-index: 96; padding: 4px 11px;
+  #fpsBox { position: fixed; top: 74px; right: 12px; z-index: 96; padding: 4px 11px;
     font: 800 14px/1 'Consolas', monospace; color: #8effb0; text-align: center;
     background: rgba(8,14,26,0.62); border: 1px solid rgba(120,255,170,0.3);
     border-radius: 9px; pointer-events: none; display: none; }
@@ -635,6 +639,39 @@
      fondo de la cabina — el volante se monta dentro de la bañera */
   #cockpitCar { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0;
     transition: opacity .2s; pointer-events: none; }
+  /* Telón negro degradado detrás del cockpit: cierra los lados y la parte baja;
+     la parte superior queda limpia para ver la pista por el parabrisas */
+  #wheelWrap::before { content: ''; position: absolute; left: -18vw; right: -18vw; top: 0; bottom: -16px;
+    z-index: -1; opacity: var(--wsh, 0); transition: opacity .2s; pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(4,7,13,0.42), rgba(4,7,13,0.55) 45%, transparent 78%),
+      linear-gradient(90deg, rgba(3,5,10,0.94), rgba(3,5,10,0.5) 24%, transparent 40%, transparent 60%, rgba(3,5,10,0.5) 76%, rgba(3,5,10,0.94)),
+      radial-gradient(130% 125% at 50% 116%, rgba(2,4,8,0.96) 50%, rgba(2,4,8,0.6) 72%, transparent 92%); }
+  /* Capa de efectos del volante: gira y funde junto a la imagen — pantalla del
+     radar, tira de marchas y botones vivos van montados sobre su caja */
+  #wheelFX { position: absolute; left: 29%; bottom: 1%; width: 42%; aspect-ratio: 448/291;
+    transform-origin: 50% 50%; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  /* Pantalla central del volante: radar del circuito en vivo */
+  #wheelScr { position: absolute; left: 35.6%; top: 22%; width: 29.7%; height: 26.8%;
+    border-radius: 5px; box-shadow: inset 0 0 9px #000, 0 0 3px rgba(0,0,0,0.8); }
+  /* Botones del volante: testigos que parpadean al azar (JS les da el pulso) */
+  .wbtn { position: absolute; width: 2.7%; aspect-ratio: 1; border-radius: 50%;
+    transform: translate(-50%, -50%); background: var(--c);
+    box-shadow: 0 0 6px var(--c), inset 0 0 2px rgba(255,255,255,0.7); opacity: 0.14; }
+  .wbtn.wbP { width: 6.2%; height: 4.6%; aspect-ratio: auto; border-radius: 999px; }
+  /* Tira de marchas sobre el aro superior del volante: 12 LEDs verde→ámbar→rojo→azul */
+  #gearLeds { position: absolute; left: 30.5%; top: -6.2%; width: 39%; height: 6.4%;
+    display: flex; align-items: center; gap: 2.4%; padding: 0 2%;
+    background: linear-gradient(180deg, #33383e, #171a1f 55%, #0a0c10);
+    border: 1px solid rgba(0,0,0,0.9); border-radius: 999px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.85), inset 0 1px 2px rgba(255,255,255,0.2); }
+  #gearLeds i { flex: 1; height: 56%; border-radius: 999px; background: #101318;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.9); }
+  #gearLeds i.on.g { background: #2fe060; box-shadow: 0 0 6px #2fe060, inset 0 1px 1px rgba(255,255,255,0.4); }
+  #gearLeds i.on.y { background: #ffb020; box-shadow: 0 0 6px #ffb020, inset 0 1px 1px rgba(255,255,255,0.4); }
+  #gearLeds i.on.r { background: #ff3020; box-shadow: 0 0 7px #ff3020, inset 0 1px 1px rgba(255,255,255,0.4); }
+  #gearLeds i.on.b { background: #3090ff; box-shadow: 0 0 7px #3090ff, inset 0 1px 1px rgba(255,255,255,0.4); }
+  #gearLeds.cut { animation: wheelBarCut .12s steps(2) infinite; }
   /* LEDs del volante: barra RPM progresiva + fijos con destello */
   .wled { position: absolute; width: 2.1%; height: 2.4%; border-radius: 2px; opacity: 0; }
   .wled.blink { animation: wLedBlink .34s steps(2) infinite; }
@@ -875,7 +912,9 @@
   @keyframes gpSheen { 0%, 45% { background-position: 140% 0; } 100% { background-position: -60% 0; } }
   .subtitle { color: #8898c0; letter-spacing: 6px; font-size: 13px; margin: 10px 0 38px; }
   .stripe { width: min(320px, 70vw); height: 8px; margin: 6px 0 0; border-radius: 4px;
-    background: repeating-linear-gradient(90deg, #ff3820 0 22px, #fff 22px 44px); transform: skewX(-24deg); }
+    background: repeating-linear-gradient(90deg, #ff3820 0 22px, #fff 22px 44px); transform: skewX(-24deg);
+    animation: stripeMove 1.1s linear infinite; }
+  @keyframes stripeMove { to { background-position-x: -44px; } }
   .mbtn { background: linear-gradient(180deg, rgba(72,40,24,0.98), rgba(34,18,11,0.98) 55%, rgba(15,8,6,0.98));
     border: 2px solid rgba(255,140,60,0.6); color: #ffd0a0;
     font-size: 20px; font-weight: 800; letter-spacing: 3px; padding: 14px 56px; border-radius: 999px;
@@ -2665,6 +2704,20 @@
   <div id="wheelWrap">
     <img id="cockpitCar" src="cockpit_car.webp" alt="">
     <img id="wheelGiro" src="volante_giro.webp" alt="">
+    <div id="wheelFX">
+      <canvas id="wheelScr" width="134" height="78"></canvas>
+      <div id="gearLeds"></div>
+      <i class="wbtn" style="left:31.3%;top:23.9%;--c:#ff4030"></i>
+      <i class="wbtn" style="left:31.2%;top:32.1%;--c:#30e060"></i>
+      <i class="wbtn" style="left:31.2%;top:40.6%;--c:#3090ff"></i>
+      <i class="wbtn" style="left:31.2%;top:48.9%;--c:#ffd040"></i>
+      <i class="wbtn" style="left:68.5%;top:23.9%;--c:#f4f4f4"></i>
+      <i class="wbtn" style="left:68.5%;top:32.3%;--c:#ff9030"></i>
+      <i class="wbtn" style="left:68.5%;top:40.6%;--c:#ff60d0"></i>
+      <i class="wbtn" style="left:68.4%;top:48.8%;--c:#50e0f0"></i>
+      <i class="wbtn wbP" style="left:43.4%;top:52.8%;--c:#ff4030"></i>
+      <i class="wbtn wbP" style="left:56.2%;top:52.8%;--c:#3090ff"></i>
+    </div>
     <div id="whDash"><b id="whSpd">0</b><span>km/h</span><i id="whGear">M1</i></div>
     <img id="wheelImg" src="volante_fijo.webp" alt="">
     <div id="wheelLayer" style="position:absolute;inset:0;transform-origin:50% 50%;opacity:0;transition:opacity .2s">
@@ -3560,7 +3613,7 @@ let pfCols = 0, pfSlowT = 0, pfGap = 0, pfFired = false, pfMark = -1;
 let pfShotT = 0, pfTopCam = null, pfTopURL = null;      // captura cenital del cruce de meta
 let trackSegM = 0;                            // metros por índice de trazado (para huecos en segundos)
 const PF_W = 760, PF_H = 240;
-let obstacles = [], offroad = 0, wrongWay = 0, wwBack = 0, wwAlarmT = 0, wheelDegS = 0, wheelLeds = null, wheelSegs = null;
+let obstacles = [], offroad = 0, wrongWay = 0, wwBack = 0, wwAlarmT = 0, wheelDegS = 0, wheelLeds = null, wheelSegs = null, gearLedSegs = null, wheelBtns = null, wheelBtnT = null;
 let lakeWaterTex = null, lakeSurf = null;   // agua del lago: textura y capa de oleaje
 let flags3 = [];                            // banderas ondeantes de la tribuna
 let crowdPpl = null, crowdBase = null, crowdMat = null;   // público animado (ola)
@@ -10691,7 +10744,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 843;
+const BUILD_NO = 844;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -14088,9 +14141,13 @@ function draw(now) {
   el('cockpitCar').style.opacity = wOp.toFixed(2);
   el('wheelImg').style.opacity = wOp.toFixed(2);
   el('whDash').style.opacity = wOp.toFixed(2);          // velocímetro: con la cabina
-  // Aro del volante: gira con la dirección
+  // Aro del volante: gira con la dirección — y su capa de efectos (pantalla,
+  // tira de marchas y testigos) gira y funde exactamente igual
   el('wheelGiro').style.opacity = wOp.toFixed(2);
   el('wheelGiro').style.transform = wTf;
+  el('wheelFX').style.opacity = wOp.toFixed(2);
+  el('wheelFX').style.transform = wTf;
+  el('wheelWrap').style.setProperty('--wsh', wOp.toFixed(2));   // telón negro: con la cabina
   // Capa de LEDs + pantalla + grados: gira y aparece junto al volante
   el('wheelLayer').style.opacity = wOp.toFixed(2);
   el('wheelLayer').style.transform = wTf;
@@ -14124,6 +14181,30 @@ function draw(now) {
   el('wheelBar').classList.toggle('cut', wCut);
   for (let i = 0; i < wheelSegs.length; i++)
     wheelSegs[i].classList.toggle('on', i / wheelSegs.length < wrpm);
+  // Tira de marchas sobre el aro del volante: 12 LEDs verde→ámbar→rojo→azul
+  if (!gearLedSegs) {
+    const gl = el('gearLeds');
+    for (let k = 0; k < 12; k++) {
+      const s = document.createElement('i');
+      s.className = k < 6 ? 'g' : k < 9 ? 'y' : k < 11 ? 'r' : 'b';
+      gl.appendChild(s);
+    }
+    gearLedSegs = gl.children;
+  }
+  el('gearLeds').classList.toggle('cut', wCut);
+  for (let i = 0; i < gearLedSegs.length; i++)
+    gearLedSegs[i].classList.toggle('on', i / gearLedSegs.length < wrpm);
+  // Botones del volante: destellos aleatorios — cada testigo lleva su propio reloj
+  if (wOp > 0.05) {
+    if (!wheelBtns) { wheelBtns = document.querySelectorAll('#wheelFX .wbtn'); wheelBtnT = new Array(wheelBtns.length).fill(0); }
+    for (let i = 0; i < wheelBtns.length; i++) {
+      if (now > wheelBtnT[i]) {
+        const on = Math.random() < 0.72;
+        wheelBtns[i].style.opacity = on ? 1 : 0.14;
+        wheelBtnT[i] = now + (on ? 60 + Math.random() * 340 : 140 + Math.random() * 1600);
+      }
+    }
+  }
   // Lago: deriva del agua — la textura se desplaza lento y la capa de oleaje rota
   if (lakeWaterTex) { lakeWaterTex.offset.x += dt * 0.011; lakeWaterTex.offset.y += dt * 0.007; }
   if (lakeSurf) lakeSurf.rotation.y += dt * 0.05;
@@ -14600,7 +14681,7 @@ function draw(now) {
       }
       trackSegM = tl / path.length;
     }
-    const rowH = 15, ty0 = my + mm + 22, tw = mm + 34;
+    const rowH = 15, ty0 = my + mm + 22, tw = mm - 26;
     g.fillStyle = 'rgba(6,10,20,0.78)';
     g.fillRect(mx, ty0, tw, board.length * rowH + 8);
     g.strokeStyle = 'rgba(255,200,80,0.4)'; g.lineWidth = 1;
@@ -14626,22 +14707,22 @@ function draw(now) {
     });
     g.textBaseline = 'alphabetic';
   }
-  // Radar del volante: ELIMINADO — el canvas queda oculto y no se dibuja
+  // Pantalla del volante: radar del circuito en vivo (trazado + coches) con
+  // marcha y velocidad en la fila inferior — solo se dibuja con la cabina visible
   {
-    const wrc = el('wheelRadar');
-    if (wrc) wrc.style.display = 'none';
-    if (false) {
+    const wrc = el('wheelScr');
+    if (wrc && parseFloat(el('wheelGiro').style.opacity || 0) > 0.04) {
       const wc = wrc.getContext('2d'), ww = wrc.width, wh = wrc.height;
       wc.clearRect(0, 0, ww, wh);
-      wc.fillStyle = '#060a10'; wc.fillRect(0, 0, ww, wh);          // cristal apagado
-      const ws = Math.min((ww - 6) / mmSpanX, (wh - 18) / mmSpanZ) * mmZoom; // mapa deja la fila de datos abajo
+      wc.fillStyle = '#05080e'; wc.fillRect(0, 0, ww, wh);          // cristal encendido
+      const ws = Math.min((ww - 6) / mmSpanX, (wh - 15) / mmSpanZ) * mmZoom; // mapa deja la fila de datos abajo
       const wCX = mmZoom > 1.001 ? car.x : mmMinX + mmSpanX / 2;    // con zoom también sigue al coche
       const wCZ = mmZoom > 1.001 ? car.z : mmMinZ + mmSpanZ / 2;
-      const wy0 = (wh - 14) / 2;
+      const wy0 = (wh - 12) / 2;
       const wx = p => ww / 2 + (p.x - wCX) * ws;
       const wy = p => wy0 + (p.z - wCZ) * ws;
       wc.save();
-      wc.beginPath(); wc.rect(0, 0, ww, wh - 14); wc.clip();       // el zoom no invade la fila de datos
+      wc.beginPath(); wc.rect(0, 0, ww, wh - 12); wc.clip();       // el zoom no invade la fila de datos
       wc.shadowColor = '#50c8ff'; wc.shadowBlur = 3;               // trazado con glow
       wc.strokeStyle = '#7fd8ff'; wc.lineWidth = 1.6;
       wc.beginPath();
@@ -14657,11 +14738,10 @@ function draw(now) {
       // Instrumentos de volante: marcha grande + velocidad, fila inferior
       wc.textBaseline = 'bottom';
       wc.font = '900 15px monospace'; wc.fillStyle = '#ffb020';
-      wc.textAlign = 'right'; wc.fillText(String(gear), ww - 4, wh - 2);
+      wc.textAlign = 'right'; wc.fillText(String(gear), ww - 4, wh - 1);
       wc.font = '700 8px monospace'; wc.fillStyle = '#9fd0f0';
-      wc.textAlign = 'left'; wc.fillText(Math.round(spd * 3.4) + ' km/h', 4, wh - 4);
+      wc.textAlign = 'left'; wc.fillText(Math.round(spd * 3.4) + ' km/h', 4, wh - 3);
       wc.textBaseline = 'alphabetic';
-      wrc.style.opacity = 1;                              // la capa wheelLayer ya rota y regula la opacidad
     }
   }
   // Líneas de velocidad: trazos radiales en los bordes — el aire "pasa volando"
