@@ -268,6 +268,7 @@
   /* Aviso de lluvia: banner azul pulsante mientras sigas con slicks bajo el agua */
   #rainMsg { position: absolute; z-index: 30; left: 50%; top: 148px; transform: translateX(-50%);
     display: none; text-align: center; padding: 9px 26px; border-radius: 14px;
+    max-width: min(560px, calc(100% - 250px)); box-sizing: border-box;   /* nunca se monta sobre el minimapa ni la columna de botones */
     background: rgba(6,14,30,0.85); border: 2px solid rgba(90,170,255,0.7);
     box-shadow: 0 0 26px rgba(60,150,255,0.35); pointer-events: none; }
   #rainMsg.show { display: block; animation: rainPulse 1.1s ease-in-out infinite; }
@@ -614,6 +615,9 @@
             drop-shadow(0 14px 26px rgba(0,0,0,0.6))
             brightness(0.96); transition: opacity .2s; }
   #wheelImg { transition: opacity .2s; }   /* capa fija: solo funde, no gira */
+  /* Sin volante dibujado en la cabina: fuera el aro giratorio y su capa de LEDs/
+     radar — queda solo la imagen del cockpit del coche (halo + bañera) */
+  #wheelGiro, #wheelLayer { display: none !important; }
   /* Nuestro volante (wheelGiro) va sobre el cockpitCar; los botones que iban
      sobre su cara quedan fuera — sus funciones viven en la columna derecha */
   #wheelUI, #wheelWrap #boxexBtn, #wheelWrap #lightsBtn { display: none !important; }
@@ -1289,6 +1293,7 @@
   #toast { position: fixed; top: 15%; left: 50%; transform: translateX(-50%); z-index: 45;
     background: rgba(8,14,30,0.85); border: 1px solid rgba(255,200,80,0.5); color: #ffe0a0;
     padding: 8px 22px; border-radius: 999px; font-size: 15px; font-weight: 700; letter-spacing: 1px;
+    max-width: calc(100% - 250px); box-sizing: border-box; text-align: center;
     opacity: 0; transition: opacity .3s; pointer-events: none; }
   #toast.show { opacity: 1; }
   #toast.low { top: 238px; }                             /* bajo el banner de lluvia/seco */
@@ -3072,7 +3077,7 @@
       <div class="optSec" id="secCtl">🎮 CONTROLES</div>
       <div class="optRow"><div class="lbl" id="lbTouch">CONTROLES TÁCTILES</div><button class="optT sw" id="optTouch">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbLefty">MODO ZURDO</div><button class="optT sw" id="optLefty">OFF</button></div>
-      <div class="optRow"><div class="lbl" id="lbHudWheel">VOLANTE VIRTUAL EN PANTALLA</div><button class="optT sw" id="optHudWheel">ON</button></div>
+      <div class="optRow"><div class="lbl" id="lbHudWheel">CABINA VIRTUAL EN PANTALLA</div><button class="optT sw" id="optHudWheel">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbVib">VIBRACIÓN</div><button class="optT sw" id="optVib">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbFps">CONTADOR FPS</div><button class="optT sw" id="optFps">ON</button></div>
       <div class="optRow"><div class="lbl" id="lbSens">SENSIBILIDAD GIRO</div><div class="segC" id="optSens"><button class="segB" data-v="0">BAJA</button><button class="segB on" data-v="1">NORMAL</button><button class="segB" data-v="2">ALTA</button></div></div>
@@ -10675,7 +10680,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 835;
+const BUILD_NO = 836;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -15603,7 +15608,7 @@ const I18N = {
     aiEng: 'INGENIERO IA', aiKey: 'API KEY GEMINI',
     aiKeyMsg: 'Pega tu API key de Gemini (Google AI Studio — gratis en aistudio.google.com):',
     aiNoKey: 'Falta la API key de Gemini — pégala en OPCIONES',
-    touchUi: 'CONTROLES TÁCTILES', lefty: 'MODO ZURDO', hudWheel: 'VOLANTE VIRTUAL EN PANTALLA', vib: 'VIBRACIÓN', fps: 'CONTADOR FPS', sens: 'SENSIBILIDAD GIRO',
+    touchUi: 'CONTROLES TÁCTILES', lefty: 'MODO ZURDO', hudWheel: 'CABINA VIRTUAL EN PANTALLA', vib: 'VIBRACIÓN', fps: 'CONTADOR FPS', sens: 'SENSIBILIDAD GIRO',
     sensLow: 'BAJA', sensMid: 'NORMAL', sensHigh: 'ALTA',
     lang: 'IDIOMA', records: 'RÉCORDS', erase: 'BORRAR', back: 'VOLVER',
     gateSub: 'ACCESO PRIVADO — introduce el PIN', gateBtn: 'ENTRAR', gateErr: 'PIN incorrecto',
@@ -15739,7 +15744,7 @@ const I18N = {
     aiEng: 'AI ENGINEER', aiKey: 'GEMINI API KEY',
     aiKeyMsg: 'Paste your Gemini API key (Google AI Studio — free at aistudio.google.com):',
     aiNoKey: 'Missing Gemini API key — paste it in SETTINGS',
-    touchUi: 'TOUCH CONTROLS', lefty: 'LEFT-HANDED', hudWheel: 'ON-SCREEN STEERING WHEEL', vib: 'HAPTICS', fps: 'FPS COUNTER', sens: 'STEER SENSITIVITY',
+    touchUi: 'TOUCH CONTROLS', lefty: 'LEFT-HANDED', hudWheel: 'ON-SCREEN COCKPIT', vib: 'HAPTICS', fps: 'FPS COUNTER', sens: 'STEER SENSITIVITY',
     sensLow: 'LOW', sensMid: 'NORMAL', sensHigh: 'HIGH',
     lang: 'LANGUAGE', records: 'RECORDS', erase: 'ERASE', back: 'BACK',
     gateSub: 'PRIVATE ACCESS — enter your PIN', gateBtn: 'ENTER', gateErr: 'Wrong PIN',
