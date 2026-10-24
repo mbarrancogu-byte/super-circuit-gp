@@ -360,7 +360,7 @@
   #pitBtn   { right: 12px; top: 378px; width: 52px; height: 52px; }
   #hbBtn    { right: 12px; top: 442px; width: 52px; height: 52px; }
   #nitroBtn { right: 12px; top: 506px; width: 52px; height: 52px; }
-  #pitBtn.on  { background: rgba(255,200,80,0.38); border-color: #ffd060; }
+  #pitBtn.on, #pitBtn.auto { background: rgba(255,200,80,0.38); border-color: #ffd060; }
   #hbBtn.on   { background: rgba(255,120,60,0.38); border-color: #ff9060; }
   #nitroBtn.on{ background: rgba(255,60,60,0.4); border-color: #ff7060;
     box-shadow: 0 0 16px rgba(255,80,60,0.6); }
@@ -6755,13 +6755,13 @@ function buildWorld() {
       // PÚBLICO: espectadores sentados a lo largo de TODA la tribuna curva —
       // figuras instanciadas con camisetas de colores variados y huecos vacíos
       {
-        const _bod = new THREE.CylinderGeometry(0.2, 0.24, 0.62, 7);
-        const _hed = new THREE.SphereGeometry(0.17, 7, 6);
+        const _bod = new THREE.CylinderGeometry(0.24, 0.29, 0.66, 7);
+        const _hed = new THREE.SphereGeometry(0.19, 7, 6);
         const pplGeo = mergeGeos([
           { geo: _bod, m: new THREE.Matrix4().makeTranslation(0, -0.05, 0) },
           { geo: _hed, m: new THREE.Matrix4().makeTranslation(0, 0.48, 0) }]);
         const pplMat = new THREE.MeshStandardMaterial({ roughness: 0.9 });
-        const ppl = new THREE.InstancedMesh(pplGeo, pplMat, segs.length * ROWS * 7);
+        const ppl = new THREE.InstancedMesh(pplGeo, pplMat, segs.length * ROWS * 11);
         const pc = new THREE.Color();
         let n2 = 0;
         for (const i of segs) {
@@ -6770,9 +6770,8 @@ function buildWorld() {
           for (let r = 0; r < ROWS; r++) {
             const off = D0 + 2.2 + r * STEP + STEP / 2 - 0.35;
             const y = by + 1.5 + r * RISE + RISE + 0.42;
-            for (let lx = -2.7; lx <= 2.7; lx += 0.9) {
-              if (rnd(0, 1) < 0.05) continue;                    // grada llena: solo ~5% de huecos
-              const w2 = gPos(i, lx + rnd(-0.15, 0.15), off);
+            for (let lx = -2.75; lx <= 2.75; lx += 0.55) {       // grada LLENA: hombro con hombro, sin huecos
+              const w2 = gPos(i, lx + rnd(-0.08, 0.08), off);
               pm2.makeRotationY(Math.atan2(-s.tz, s.tx) + rnd(-0.4, 0.4));
               pm2.setPosition(w2.x, y + rnd(-0.04, 0.06), w2.z);
               ppl.setMatrixAt(n2, pm2);
@@ -10347,7 +10346,9 @@ bindBtn('gas2Btn', () => inGas2 = 1, () => inGas2 = 0);
 bindBtn('brkBtn', () => inBrake = 1, () => inBrake = 0);
 bindBtn('hbBtn', () => inHB = true, () => inHB = false);
 bindBtn('nitroBtn', () => inNitro = true, () => inNitro = false);
-bindBtn('pitBtn', () => pitReq = true, () => pitReq = false);
+// PIT/BOXES (columna derecha): un toque activa el autopiloto a boxes (igual que
+// BOXEX); mantenerlo pulsado sigue permitiendo la entrada manual a más velocidad
+bindBtn('pitBtn', () => { pitReq = true; toggleBoxex(); }, () => pitReq = false);
 // Ventana de boxes: cada opción activa/dESactiva ese servicio de la parada
 for (const [id, key] of [['pmTire', 'tire'], ['pmBody', 'body'], ['pmFuel', 'fuel']]) {
   document.getElementById(id).addEventListener('pointerdown', e => {
@@ -10364,11 +10365,14 @@ document.getElementById('pmGo').addEventListener('pointerdown', e => {
   buzz(30);
 });
 // BOXEX: pulsar = el coche entra solo en boxes y para en la marca de su color
-document.getElementById('boxexBtn').addEventListener('pointerdown', (e) => {
-  e.preventDefault();
+function setBoxexUI(on) {
+  const bx = el('boxexBtn'); if (bx) bx.classList.toggle('on', on);
+  const pb = el('pitBtn'); if (pb) pb.classList.toggle('auto', on);   // 'on' lo gestiona bindBtn al pulsar
+}
+function toggleBoxex() {
   if (!playing || demoMode || dragMode) return;
   boxexReq = !boxexReq;
-  const bb = el('boxexBtn'); bb.classList.toggle('on', boxexReq);
+  setBoxexUI(boxexReq);
   if (boxexReq) {
     pitAuto = 0; pitWp = 0;
     const boxes = window._pitBoxes || [];
@@ -10379,7 +10383,8 @@ document.getElementById('boxexBtn').addEventListener('pointerdown', (e) => {
       (pitZone ? { x: pitZone.x, z: pitZone.z } : null); // circuitos sin box pintado: zona de boxes
     showToast('🔧 Boxes — ' + T('boxexIn')); buzz(30);
   }
-});
+}
+document.getElementById('boxexBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); toggleBoxex(); });
 
 /* ================== AYUDAS ================== */
 // Punto de pista más cercano (búsqueda en ventana alrededor del último índice)
@@ -10669,7 +10674,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 833;
+const BUILD_NO = 834;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -12170,7 +12175,7 @@ function update(dt) {
             const last = rt.pts[rt.pts.length - 1];
             if (Math.hypot(last.x - car.x, last.z - car.z) < 10) {
               boxexReq = false; boxexPt = null; pitAuto = 0; pitWp = 0; pitStuck = 0;
-              el('boxexBtn').classList.remove('on');
+              setBoxexUI(false);
             }
           }
           // En la marca: endereza el morro hacia el edificio mientras se para
@@ -12660,7 +12665,7 @@ function update(dt) {
         // Salida a pista MANUAL: al acabar la parada el coche vuelve a ser del
         // jugador — es él quien lo saca de la calle de boxes, no la IA
         boxexReq = false; boxexPt = null; pitAuto = 0; pitWp = 0;
-        el('boxexBtn').classList.remove('on');
+        setBoxexUI(false);
         showToast('✅ ' + (all ? T('pitDone') : done.join(' · ')) + ' — ' + T('boxexOut'));
         sfx.fin(); ach('pit');
       } else if (Math.floor(pitStop * 4) !== Math.floor((pitStop - dt) * 4)) {
@@ -14990,7 +14995,7 @@ function startStage(n, seed, mp, mode) {
   pitZone = null;
   if (pitCrew) for (const P of pitCrew) { P.st = 'home'; P.g.visible = false; }
   boxexReq = false; boxexPt = null; pitAuto = 0; pitWp = 0; pitStuck = 0;
-  const _bxb = el('boxexBtn'); if (_bxb) _bxb.classList.remove('on');
+  setBoxexUI(false);
   if (circAt(stage)) {                                // boxes junto a la salida (zona invisible, sin círculo)
     const pp = path[Math.floor(pathLen * 0.06)], pnx = -pp.tz, pnz = pp.tx;
     pitZone = { x: pp.x - pnx * (RW / 2 + 6), z: pp.z - pnz * (RW / 2 + 6), r: 13 };
