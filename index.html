@@ -10894,7 +10894,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 850;
+const BUILD_NO = 851;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -12398,9 +12398,10 @@ function update(dt) {
               setBoxexUI(false);
             }
           }
-          // En la marca: endereza el morro hacia el edificio mientras se para
+          // En la marca: endereza el morro PARALELO a la calle (hacia la
+          // salida) mientras se para — el coche queda alineado en su cajón
           if (pitAuto === 1 && bd < 9 && spd2 < 7) {
-            let df = rt.faceA - car.a;
+            let df = Math.atan2(rt.tz, rt.tx) - car.a;
             while (df > Math.PI) df -= 2 * Math.PI;
             while (df < -Math.PI) df += 2 * Math.PI;
             car.a += clamp(df, -2.4 * dt, 2.4 * dt);
@@ -12872,12 +12873,17 @@ function update(dt) {
       // Duración aleatoria por parada — nunca más de 3.50 s
       pitStop += dt;
       car.vx = car.vz = 0;
-      // Parada por autopiloto: el morro acaba apuntando al edificio de boxes
+      // Parada por autopiloto: el morro acaba PARALELO a la calle y el coche
+      // se centra suavemente sobre la marca de su box
       if (boxexReq && window._pitRoute) {
-        let df = window._pitRoute.faceA - car.a;
+        let df = Math.atan2(window._pitRoute.tz, window._pitRoute.tx) - car.a;
         while (df > Math.PI) df -= 2 * Math.PI;
         while (df < -Math.PI) df += 2 * Math.PI;
         car.a += clamp(df, -1.6 * dt, 1.6 * dt);
+      }
+      if (boxexPt) {
+        car.x += (boxexPt.x - car.x) * Math.min(1, dt * 3.2);
+        car.z += (boxexPt.z - car.z) * Math.min(1, dt * 3.2);
       }
       if (pitStop >= pitDur) {
         // Solo lo marcado en la ventana de boxes: neumáticos / carrocería / gasolina
