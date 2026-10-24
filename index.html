@@ -4920,9 +4920,13 @@ function buildWorld() {
         if (!window._arcenTex) {
           const sc2 = document.createElement('canvas'); sc2.width = 512; sc2.height = 16;
           const st = sc2.getContext('2d');
-          for (let x = 0; x < 512; x += 64) {                       // bandas gris/azul (4u = 64px)
-            st.fillStyle = (x / 64) % 2 ? '#7fc4f0' : '#6e7683';
-            st.fillRect(x, 0, 64, 16);
+          // Hierba moteada a juego con el terreno: fuera de la calzada va césped,
+          // no asfalto con bandas — la banda se funde con el verde del circuito
+          st.fillStyle = '#4f8a2e'; st.fillRect(0, 0, 512, 16);
+          for (let i = 0; i < 1100; i++) {
+            const g = 95 + Math.random() * 95 | 0;
+            st.fillStyle = `rgba(${(g * 0.42) | 0},${g},${(g * 0.3) | 0},0.42)`;
+            st.fillRect(Math.random() * 512, Math.random() * 16, 1 + Math.random() * 2, 1 + Math.random() * 2);
           }
           // La textura queda LIMPIA: las manchas de frenada son decals dinámicos
           // colocados por tramos (abajo), no dibujos repetidos cada 64u
@@ -6522,7 +6526,7 @@ function buildWorld() {
     // ==== Helipuerto: losa octogonal de hormigón sobre el césped del infield
     // junto a la calle — disco, H pintada, anillo y luces de borde ====
     {
-      const HX = 62, HZ = -14;                        // infield, a un paso de la calle
+      const HX = 50, HZ = -8;                         // infield, sobre el hormigón del apron
       const pad = new THREE.Mesh(new THREE.CylinderGeometry(10, 10.6, 0.14, 8),
         new THREE.MeshStandardMaterial({ map: makeConcreteTex(), color: 0x52565e, roughness: 0.95 }));
       pad.position.set(HX, 0.07, HZ); pad.rotation.y = Math.PI / 8;
@@ -6560,6 +6564,10 @@ function buildWorld() {
       }
       hl.frustumCulled = false;
       pit.add(hl);
+      // Posición mundo de la losa: "casa" del helicóptero de TV — aterriza aquí
+      { const pe2 = window._pitExcl;
+        window._heliPad = pe2 ? { x: pe2.x + pe2.tx * HX - pe2.tz * HZ,
+                                  z: pe2.z + pe2.tz * HX + pe2.tx * HZ } : null; }
     }
     // Persecución tipo pista de aterrizaje: cada lámpara guarda su orden x — el
     // pulso corre de un extremo a otro del pit lane (se anima en el loop)
@@ -10894,7 +10902,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 851;
+const BUILD_NO = 852;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -11239,18 +11247,31 @@ function scRescue(tgt) {
 function scToPit(force) {
   const sc = scCar, rt = window._pitRoute;
   if (!sc) return;
-  let pitS = -1;
+  let pitS = -1, pitIn = 'in';
   if (rt && rt.pts && rt.pts.length) {
-    let pitI = 0, bd = 1e9;
-    for (let i = 0; i < pathLen; i++) {
-      const d = Math.hypot(path[i].x - rt.pts[0].x, path[i].z - rt.pts[0].z);
-      if (d < bd) { bd = d; pitI = i; }
-    }
-    pitS = pitI + Math.ceil((sc.s - pitI) / pathLen) * pathLen;
-    if (pitS < sc.s + 6) pitS += pathLen;
-    if (!force && pitS - sc.s > pathLen * 0.8) pitS = -1;  // la entrada acaba de pasar: no da una vuelta entera
+    const nearI = pt => {                                 // índice de pista más cercano a un punto
+      let bi = 0, bd = 1e9;
+      for (let i = 0; i < pathLen; i++) {
+        const d = Math.hypot(path[i].x - pt.x, path[i].z - pt.z);
+        if (d < bd) { bd = d; bi = i; }
+      }
+      return bi;
+    };
+    const aheadS = i => {                                 // primera ocurrencia del índice por delante
+      let s = i + Math.ceil((sc.s - i) / pathLen) * pathLen;
+      if (s < sc.s + 6) s += pathLen;
+      return s;
+    };
+    // Se retira por la PRIMERA boca de calle al alcance — al salir de parrilla
+    // la que toca antes es la SALIDA: entra por ella y retrocede a su sitio
+    const inS = aheadS(nearI(rt.pts[0]));
+    const outS = aheadS(nearI(rt.pts[rt.pts.length - 1]));
+    if (force) { pitS = outS; pitIn = 'out'; }          // salida de parrilla: se aparta por la SALIDA
+    else if (outS < inS) { pitS = outS; pitIn = 'out'; }
+    else { pitS = inS; pitIn = 'in'; }
+    if (!force && pitS - sc.s > pathLen * 0.8) pitS = -1;  // boca lejana: no da una vuelta entera
   }
-  if (pitS > 0) { sc.phase = 'toPit'; sc.pitS = pitS; }
+  if (pitS > 0) { sc.phase = 'toPit'; sc.pitS = pitS; sc.pitIn = pitIn; }
   else sc.phase = 'exit';
 }
 function scTick(dt) {
@@ -11280,16 +11301,19 @@ function scTick(dt) {
 
   // PIT LANE (rescate): el SC entra PRIMERO a la calle de boxes (ya va unos
   // metros por delante) y aparca al fondo, PASADA la última marca de color y
-  // ladeado hacia el edificio — fuera de los espacios pintados y del carril
-  if (sc.phase === 'rPit') {
+  // ladeado hacia el edificio — fuera de los espacios pintados y del carril.
+  // 'rPitB': entró por la SALIDA — recorre la ruta marcha atrás (morro hacia
+  // adelante, como hace el SC real al aparcar junto al final del muro)
+  if (sc.phase === 'rPit' || sc.phase === 'rPitB') {
     const rt = window._pitRoute;
     if (!rt) { sc.phase = 'exit'; }
     else {
+      const back = sc.phase === 'rPitB', dir = back ? -1 : 1;
       const p = sc.grp.position;
       if (sc.lwp === undefined) {
-        sc.lwp = 0;
-        while (sc.lwp < rt.pts.length - 1 &&
-               Math.hypot(rt.pts[sc.lwp].x - p.x, rt.pts[sc.lwp].z - p.z) < 10) sc.lwp++;
+        sc.lwp = back ? rt.pts.length - 1 : 0;
+        while ((back ? sc.lwp > 0 : sc.lwp < rt.pts.length - 1) &&
+               Math.hypot(rt.pts[sc.lwp].x - p.x, rt.pts[sc.lwp].z - p.z) < 10) sc.lwp += dir;
         // Índice de aparcamiento: final de la recta de la calle (lx≈74) —
         // ~11 uds pasada la última marca de color, antes de la curva de salida
         sc.parkI = rt.pts.length - 1;
@@ -11300,15 +11324,17 @@ function scTick(dt) {
         sc.parkX = bp.x + (rt.tz / bl) * 2.4;
         sc.parkZ = bp.z + (-rt.tx / bl) * 2.4;
       }
-      while (sc.lwp < sc.parkI &&
-             Math.hypot(rt.pts[sc.lwp].x - p.x, rt.pts[sc.lwp].z - p.z) < 9) sc.lwp++;
-      const wpt = sc.lwp >= sc.parkI ? { x: sc.parkX, z: sc.parkZ } : rt.pts[sc.lwp];
+      while ((back ? sc.lwp > sc.parkI : sc.lwp < sc.parkI) &&
+             Math.hypot(rt.pts[sc.lwp].x - p.x, rt.pts[sc.lwp].z - p.z) < 9) sc.lwp += dir;
+      const done = back ? sc.lwp <= sc.parkI : sc.lwp >= sc.parkI;
+      const wpt = done ? { x: sc.parkX, z: sc.parkZ } : rt.pts[sc.lwp];
       const dx = wpt.x - p.x, dz = wpt.z - p.z, dd = Math.hypot(dx, dz) || 1;
       sc.v += clamp((dd > 16 ? 22 : 11) - sc.v, -90 * dt, 55 * dt);
       p.x += dx / dd * sc.v * dt; p.z += dz / dd * sc.v * dt; p.y = 0.05;
-      sc.grp.rotation.y = Math.PI / 2 - Math.atan2(dz, dx);
+      // En reversa el morro mira al frente de la calle (hacia la salida)
+      sc.grp.rotation.y = Math.PI / 2 - Math.atan2(dz * dir, dx * dir);
       // Aparca al fondo de la calle, fuera de las marcas de color
-      if (sc.lwp >= sc.parkI && dd < 4.5) { sc.phase = 'park'; sc.v = 0; }
+      if (done && dd < 4.5) { sc.phase = 'park'; sc.v = 0; }
       return;
     }
   }
@@ -11393,8 +11419,9 @@ function scTick(dt) {
   // como el safety car real, se retira entrando A BOXES por su boca
   if (sc.phase === 'lead' && (sc.s - sc.s0 > pathLen * 0.45 || gap < 3.5)) scToPit();
   if (sc.phase === 'exit' && sc.lat > hw + 6.5) { sc.phase = 'park'; sc.v = 0; }
-  // Llegada a la boca del pit lane: pasa a navegar la calle y aparca dentro
-  if (sc.phase === 'toPit' && sc.s >= sc.pitS) { sc.phase = 'rPit'; sc.lwp = undefined; }
+  // Llegada a la boca del pit lane: pasa a navegar la calle y aparca dentro —
+  // si entró por la SALIDA la recorre marcha atrás ('rPitB')
+  if (sc.phase === 'toPit' && sc.s >= sc.pitS) { sc.phase = sc.pitIn === 'out' ? 'rPitB' : 'rPit'; sc.lwp = undefined; }
 }
 
 // El rival CPU avanza sobre la spline con perfil de velocidad (no es kinematic jugable, es "slot car")
@@ -13956,10 +13983,13 @@ function draw(now) {
     // 1–2.5 min, cubre la acción 22–36 s y se marcha volando.
     // Aparece SIEMPRE en pantalla: un tramo por delante del jugador, en la
     // dirección que mira la cámara, a media altura — entra volando al encuadre
+    const pad = window._heliPad || null;              // helipuerto = casa del heli
     if (H.st === 'wait' && (H.waitT -= dt) <= 0) {
-      H.px = car.x + cax * 60; H.pz = car.z + caz * 60; H.py = 14;
-      H.vx = H.vy = H.vz = 0;
       H.st = 'in'; H.grp.visible = true;
+      if (!pad) {                                     // sin helipuerto: reaparece en plano
+        H.px = car.x + cax * 60; H.pz = car.z + caz * 60; H.py = 14;
+        H.vx = H.vy = H.vz = 0;
+      }
       H.stayT = 22 + Math.random() * 14;
       H.followT = 0; H.cd = 7 + Math.random() * 6;
     }
@@ -13996,10 +14026,12 @@ function draw(now) {
       const fz = lead.a !== undefined ? Math.sin(lead.a) : (lv > 1 ? lead.vz / lv : 0);
       tx = lead.x + fx * adv; tz = lead.z + fz * adv; ty = 15;
       if (H.leadT <= 0) { H.phase = null; H.stayT = 22 + Math.random() * 14; }
-    } else if (H.st === 'out') {                                      // salida: lejos y subiendo
-      tx = trackCX + Math.cos(H.outAng) * 420;
-      tz = trackCZ + Math.sin(H.outAng) * 420;
-      ty = 95;
+    } else if (H.st === 'out') {                                      // se marcha: a su helipuerto
+      if (pad) { tx = pad.x; tz = pad.z; ty = 1.05; }
+      else { tx = trackCX + Math.cos(H.outAng) * 420;
+             tz = trackCZ + Math.sin(H.outAng) * 420; ty = 95; }
+    } else if (H.st === 'wait' && pad) {                             // aparcado en la losa
+      tx = pad.x; tz = pad.z; ty = 1.05;
     } else if (w > 0.001 && car) {
       const sp2 = Math.hypot(car.vx, car.vz);
       const lead = 3 + sp2 * 0.14;                             // casi encima: hover sobre el coche
@@ -14016,8 +14048,16 @@ function draw(now) {
     const dd = Math.hypot(ddx, ddy, ddz);
     if (H.st === 'in' && dd < 45) H.st = 'on';
     else if (H.st === 'out' && (dd < 40 || dd > hr * 3.4)) {
-      H.st = 'wait'; H.waitT = 60 + Math.random() * 90;        // vuelve en 1–2.5 min
-      H.grp.visible = false;
+      if (pad) {                                                 // aterriza sobre la "H"
+        if (dd < 2.6) {
+          H.st = 'wait'; H.waitT = 60 + Math.random() * 90;      // repostaje de 1–2.5 min
+          H.px = pad.x; H.pz = pad.z; H.py = 1.05;
+          H.vx = H.vy = H.vz = 0;
+        }
+      } else {
+        H.st = 'wait'; H.waitT = 60 + Math.random() * 90;        // vuelve en 1–2.5 min
+        H.grp.visible = false;
+      }
     }
     const vdes = Math.min(vmax, dd * 0.9);
     if (dd > 1e-3) { ddx /= dd; ddy /= dd; ddz /= dd; }
