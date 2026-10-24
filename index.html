@@ -2730,8 +2730,8 @@
       <i class="wbtn" style="left:68.5%;top:32.3%;--c:#ff9030"></i>
       <i class="wbtn" style="left:68.5%;top:40.6%;--c:#ff60d0"></i>
       <i class="wbtn" style="left:68.4%;top:48.8%;--c:#50e0f0"></i>
-      <i class="wbtn wbP" style="left:43.4%;top:52.8%;--c:#ff4030"></i>
-      <i class="wbtn wbP" style="left:56.2%;top:52.8%;--c:#3090ff"></i>
+      <i class="wbtn wbP" id="wbDrs" style="left:43.4%;top:52.8%;--c:#ff4030"></i>
+      <i class="wbtn wbP" id="wbPit" style="left:56.2%;top:52.8%;--c:#3090ff"></i>
     </div>
     <div id="whDash"><b id="whSpd">0</b><span>km/h</span><i id="whGear">M1</i></div>
     <img id="wheelImg" src="volante_fijo.webp" alt="">
@@ -10894,7 +10894,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 849;
+const BUILD_NO = 850;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -14362,12 +14362,18 @@ function draw(now) {
   if (wOp > 0.05) {
     if (!wheelBtns) { wheelBtns = document.querySelectorAll('#wheelFX .wbtn'); wheelBtnT = new Array(wheelBtns.length).fill(0); }
     for (let i = 0; i < wheelBtns.length; i++) {
+      if (wheelBtns[i].id) continue;                        // DRS/PIT: parpadean por estado, no al azar
       if (now > wheelBtnT[i]) {
         const on = Math.random() < 0.68;
         wheelBtns[i].style.opacity = on ? 1 : 0.14;
         wheelBtnT[i] = now + (on ? 50 + Math.random() * 260 : 60 + Math.random() * 340);
       }
     }
+    // Botones funcionales del volante: parpadeo rápido mientras su función
+    // está activa — BOXES hasta parar en el cajón, DRS en zona habilitada
+    const blink = Math.floor(now / 160) % 2 === 0;
+    el('wbPit').style.opacity = ((pitReq || boxexReq) && !(pitDur > 0) && blink) ? 1 : 0.14;
+    el('wbDrs').style.opacity = (el('drsChip').style.display === 'block' && blink) ? 1 : 0.14;
   }
   // Lago: deriva del agua — la textura se desplaza lento y la capa de oleaje rota
   if (lakeWaterTex) { lakeWaterTex.offset.x += dt * 0.011; lakeWaterTex.offset.y += dt * 0.007; }
