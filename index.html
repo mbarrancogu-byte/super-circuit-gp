@@ -66,10 +66,10 @@
   #wwBig .ic { width: 1.7em; height: 1.7em; margin: 0;
     filter: drop-shadow(0 0 16px rgba(255,60,70,0.95)); }
   /* Señal STOP octogonal — se ve sobre el aviso de dirección contraria */
-  #wwStop { width: 1.9em; height: 1.9em; margin: 0; display: flex; align-items: center;
+  #wwStop { width: 3.1em; height: 3.1em; margin: 0; display: flex; align-items: center;
     justify-content: center; background: #d51b26; color: #fff;
     clip-path: polygon(29.3% 0%, 70.7% 0%, 100% 29.3%, 100% 70.7%, 70.7% 100%, 29.3% 100%, 0% 70.7%, 0% 29.3%);
-    font-size: 0.44em; font-weight: 900; font-style: normal; letter-spacing: 0.1em;
+    font-size: 0.34em; font-weight: 900; font-style: normal; letter-spacing: 0.08em;
     text-shadow: none; filter: drop-shadow(0 0 18px rgba(255,50,60,0.95)); }
   @keyframes wwBigBlink { 50% { opacity: 0.12; transform: translate(-50%,-50%) scale(0.96); } }
   /* Aviso de COCHE ROTO (daño 100%): llave + texto en el centro — persistente
@@ -6282,6 +6282,18 @@ function buildWorld() {
     // Curva cúbica: sale tangente de un lado por el hueco de muros y aterriza
     // tangente en el otro — la punta se mete 1u dentro del carril para que la
     // unión quede solapada por debajo, sin borde
+    // Punto del borde de la calzada más cercano a (x,z) — lo usan la cuña y la
+    // cinta de grava para cerrar el hueco contra la pista sin solapes
+    const trackEdge = (x, z) => {
+      let bi = 0, bd = 1e9;
+      for (let i = 0; i < pathLen; i++) {
+        const p = path[i], d = (x - p.x) * (x - p.x) + (z - p.z) * (z - p.z);
+        if (d < bd) { bd = d; bi = i; }
+      }
+      const p = path[bi], hw = (trackHW ? trackHW[bi] : RW / 2) + 0.08;
+      const sgn = ((x - p.x) * -p.tz + (z - p.z) * p.tx) >= 0 ? 1 : -1;
+      return [p.x - p.tz * sgn * hw, p.z + p.tx * sgn * hw];
+    };
     const mkPitCurve = (cvPts, tipAt1) => {
       const ev = t => {
         const u = 1 - t, [a, b, c, d] = cvPts;
@@ -6311,16 +6323,6 @@ function buildWorld() {
       // calzada: proyecta cada vértice sobre su punto de pista más cercano y
       // se clava en la arista exterior +8 cm — la unión sale como un filete
       // continuo, sin losa solapada por encima ni hueco por debajo
-      const trackEdge = (x, z) => {
-        let bi = 0, bd = 1e9;
-        for (let i = 0; i < pathLen; i++) {
-          const p = path[i], d = (x - p.x) * (x - p.x) + (z - p.z) * (z - p.z);
-          if (d < bd) { bd = d; bi = i; }
-        }
-        const p = path[bi], hw = (trackHW ? trackHW[bi] : RW / 2) + 0.08;
-        const sgn = ((x - p.x) * -p.tz + (z - p.z) * p.tx) >= 0 ? 1 : -1;
-        return [p.x - p.tz * sgn * hw, p.z + p.tx * sgn * hw];
-      };
       for (let k = 0; k <= N; k++) {
         const t = k / N, [x, z] = ev(t), [nx, nz] = evn(t);
         const tip = tipAt1 ? t : 1 - t;               // 1 en el extremo que toca la pista
@@ -6412,7 +6414,9 @@ function buildWorld() {
       }
       const gt = tex3(gc);
       gt.wrapS = gt.wrapT = THREE.RepeatWrapping;
-      const GRV_X0 = PIT_EN[0][0] - 4, GRV_X1 = LANE_X1 + 4, GRV_W = 14.5;
+      // La banda recta se corta donde arranca la cuña de salida — de ahí en
+      // adelante la grava sigue el arco como cinta (abajo)
+      const GRV_X0 = PIT_EN[0][0] - 4, GRV_X1 = PIT_EX[0][0] - 1, GRV_W = 14.5;
       gt.repeat.set((GRV_X1 - GRV_X0) / 5, GRV_W / 5);
       const gr = new THREE.Mesh(new THREE.PlaneGeometry(GRV_X1 - GRV_X0, GRV_W),
         new THREE.MeshStandardMaterial({ map: gt, roughness: 1 }));
@@ -6420,6 +6424,44 @@ function buildWorld() {
       gr.position.set((GRV_X0 + GRV_X1) / 2, 0.045, lmZ + 4.5 + GRV_W / 2 - 0.5);
       gr.receiveShadow = true;
       pit.add(gr);
+
+      // Cinta de grava siguiendo el arco de la cuña de SALIDA: desde su borde
+      // exterior hacia la barrera — se afina sola al fundirse la cuña con la
+      // pista, sin cortes ni solapes
+      {
+        const sN = exEv._flip ? 1 : -1;
+        const gp = [], guv = [], gidx = [];
+        let cum2 = 0, px0 = 0, pz0 = 0;
+        const NN = 24;
+        for (let k = 0; k <= NN; k++) {
+          const t = k / NN;
+          const [x, z] = exEv(t), [x2, z2] = exEv(Math.min(1, t + 0.01));
+          let dx = x2 - x, dz = z2 - z; const dl = Math.hypot(dx, dz) || 1;
+          const nx = -dz / dl * sN, nz = dx / dl * sN;         // normal hacia el lado exterior
+          const wO = Math.max(0.3, 6.6 * (1 - t * t * 1.04) + 0.4 * (1 - t)) + 0.2;
+          const ix = x + nx * wO, iz = z + nz * wO;            // borde exterior de la cuña
+          // se extiende hacia fuera (lado del corredor) hasta la barrera o el
+          // borde de pista — en la punta la distancia a la pista se cierra
+          const [ex2, ez2] = trackEdge(ix, iz);
+          const dd = Math.hypot(ex2 - ix, ez2 - iz);
+          let d = Math.min(GRV_W, Math.max(0, dd - 1.2));
+          if (nz > 0.05) d = Math.min(d, Math.max(0.4, (off - RW / 2 - 3.9 - iz) / nz));
+          const fx = ix + nx * d, fz = iz + nz * d;
+          if (k) cum2 += Math.hypot(ix - px0, iz - pz0);
+          px0 = ix; pz0 = iz;
+          gp.push(ix, 0.048, iz, fx, 0.048, fz);
+          guv.push(cum2 / 5, 0, cum2 / 5, 2.9);
+          if (k < NN) { const b2 = k * 2; gidx.push(b2, b2 + 1, b2 + 2, b2 + 1, b2 + 3, b2 + 2); }
+        }
+        const gg2 = new THREE.BufferGeometry();
+        gg2.setAttribute('position', new THREE.Float32BufferAttribute(gp, 3));
+        gg2.setAttribute('uv', new THREE.Float32BufferAttribute(guv, 2));
+        gg2.setIndex(gidx); gg2.computeVertexNormals();
+        const grm = new THREE.Mesh(gg2, new THREE.MeshStandardMaterial({ map: gt,
+          roughness: 1, side: THREE.DoubleSide }));
+        grm.receiveShadow = true;
+        pit.add(grm);
+      }
     }
 
     // ==== Puntos de luz VERDES (LED a ras de suelo) a lo largo del pit lane ====
@@ -10800,7 +10842,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 846;
+const BUILD_NO = 847;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
