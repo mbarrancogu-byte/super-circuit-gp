@@ -6419,10 +6419,12 @@ function buildWorld() {
     {
       const gc = document.createElement('canvas'); gc.width = 256; gc.height = 64;
       const gg = gc.getContext('2d');
-      gg.fillStyle = '#9c8c6c'; gg.fillRect(0, 0, 256, 64);
-      for (let i = 0; i < 2400; i++) {                        // guijarros sueltos
+      // Césped moteado a juego con el terreno — la franja entre la calle y la
+      // barrera de la pista va verde, no arena
+      gg.fillStyle = '#4f8a2e'; gg.fillRect(0, 0, 256, 64);
+      for (let i = 0; i < 2400; i++) {
         const v = rnd(0, 1);
-        gg.fillStyle = v < .3 ? '#6f604a' : v < .6 ? '#a89a78' : v < .85 ? '#7d6e52' : '#c4b494';
+        gg.fillStyle = v < .3 ? '#3a6b1c' : v < .6 ? '#57963a' : v < .85 ? '#45792a' : '#6aa64a';
         gg.fillRect(rnd(0, 252), rnd(0, 60), rnd(1, 4), rnd(1, 3));
       }
       const gt = tex3(gc);
@@ -10902,7 +10904,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 852;
+const BUILD_NO = 853;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
