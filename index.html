@@ -87,7 +87,8 @@
   @keyframes brokenPulse { 50% { opacity: 0.62; transform: translate(-50%,-50%) scale(0.97); } }
   #vsChip { top: 44px; right: 120px; display: none; border-color: rgba(120,160,255,0.6); color: #a0c8ff; }
   /* RADIO-IN: chip de comunicaciones, visible solo mientras suena RADIO.mp3 */
-  #radioChip { display: none; top: 44px; left: 10px;               // fuera del hudTop: no pisa el crono
+  #radioChip { display: none; top: 50px; left: 50%; transform: translateX(-50%);   /* bajo el crono, centrado:
+    no se monta sobre el minimapa ni los botones */ max-width: calc(100% - 520px); white-space: nowrap; text-overflow: ellipsis;
     border-color: rgba(90,220,255,0.65); color: #a0e8ff;
     background: rgba(8,26,44,0.78); letter-spacing: 1.5px; overflow: hidden; }
   #radioChip.on { display: inline-flex; align-items: center; gap: 5px;
@@ -170,6 +171,10 @@
   #wheelWrap #stPad { left: 4%; top: 26%; width: 92%; height: 62%; border-radius: 18px;
     flex-direction: row; padding: 0; overflow: hidden; }
   #wheelWrap #stPad .stAr, #wheelWrap #stPad .stKnob { display: none; }
+  /* Sin cabina en pantalla (vista 1P, dron lejos o ajuste apagado) la franja de
+     dirección sigue siendo táctil pero invisible: no pinta un rectángulo azul */
+  body.fpv #wheelWrap #stPad, #wheelWrap.bare #stPad { background: none !important;
+    border-color: transparent !important; box-shadow: none !important; }
   .stA { flex: 1; height: 100%; display: flex; align-items: center; justify-content: center;
     font-size: 0; transition: background .1s; z-index: 1; }
   .stA.on { background: rgba(140,180,255,0.10); }
@@ -10092,7 +10097,8 @@ function init3() {
   };
   moonLight.shadow.bias = -0.0002;
   moonLight.shadow.radius = 6;                     // penumbra suave: la sombra de la grada no corta en seco
-  moonLight.shadow.normalBias = 1.6;               // sin acné: el borde del mapa de sombras no se ve
+  moonLight.shadow.normalBias = 0.45;              // sin acné pero sin "peter-panning": con 1.6 la sombra
+                                                   // se despegaba ~1.5 m del coche y parecía que flotaba
   const sc = moonLight.shadow.camera;
   sc.left = sc.bottom = -150; sc.right = sc.top = 150; sc.near = 50; sc.far = 1200;
   sc.updateProjectionMatrix();
@@ -10680,7 +10686,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 837;
+const BUILD_NO = 839;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
