@@ -10454,7 +10454,7 @@ function init3() {
 
 /* ================== CONTROLES ================== */
 const keys = {};
-let inGas = 0, inBrake = 0, inSteer = 0, inHB = false, inShift = 0, shiftHeld = false;
+let steerSm = 0, inGas = 0, inBrake = 0, inSteer = 0, inHB = false, inShift = 0, shiftHeld = false;
 let stGas = 0, stBrk = 0;                             // stick 2D: arriba = gas, abajo = freno
 let inGas2 = 0;                                     // entradas del JUGADOR 2 (modo local)
 addEventListener('keydown', e => {
@@ -10904,7 +10904,7 @@ let pudT = 0, ripT = 0, pudSld = 0;                    // relojes de charcos, on
 const _els = {};
 const el = id => _els[id] || (_els[id] = document.getElementById(id));
 // Versión del build: +1 por cada cambio entregado
-const BUILD_NO = 853;
+const BUILD_NO = 854;
 el('verNum').textContent = 'Ver.1-' + String(BUILD_NO).padStart(4, '0');
 // Icono SVG premium: <svg class="ic"><use href="#i-..."/></svg>
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24"><use href="#i-${n}"/></svg>`;
@@ -12337,6 +12337,15 @@ function update(dt) {
     if (keys.KeyA || (!p2Mode && keys.ArrowLeft)) steer -= 1;
     if (keys.KeyD || (!p2Mode && keys.ArrowRight)) steer += 1;
     steer = clamp(steer, -1, 1);
+    // Volante con inercia: el F1 nunca gira de golpe — entra progresivo
+    // (más lento cuanto más rápido va) y vuelve al centro algo más rápido
+    {
+      const sp0 = Math.hypot(car.vx, car.vz);
+      const back = Math.abs(steer) < Math.abs(steerSm) || steer * steerSm < 0;
+      const rate = back ? 5.5 : 3.6 / (1 + sp0 * 0.018);
+      steerSm += clamp(steer - steerSm, -rate * dt, rate * dt);
+      steer = steerSm;
+    }
     gas = Math.max(inGas, pad.gas, stGas); brake = Math.max(inBrake, pad.brake, stBrk);
     hb = inHB || pad.hb || (keys.Space && !dragMode);
     if (keys.KeyW || (!p2Mode && keys.ArrowUp)) gas = 1;          // ↑ es de J2 en modo 2 jugadores
@@ -12531,7 +12540,10 @@ function update(dt) {
 
   // Dirección: más cerrada a baja velocidad; la asistencia compensa la pérdida a alta velocidad
   const steerRate = (2.1 / (1 + spd * 0.028)) * (hb ? 1.55 : 1) * (OPTS.steerAid ? 1 + spd * 0.017 : 1) * (SENS_MULT[OPTS.steerSens] || 1);
-  car.a += steer * steerRate * dt * Math.sign(vf >= -1 ? 1 : -1);
+  // Tope de guiñada por agarre: a alta velocidad el morro no puede girar más
+  // de lo que aguantan las gomas (algo más derrapando)
+  const yawMax = Math.min(2.2, (hb ? 120 : 95) / Math.max(spd, 1));
+  car.a += clamp(steer * steerRate, -yawMax, yawMax) * dt * Math.sign(vf >= -1 ? 1 : -1);
 
   // Fuerzas longitudinales (el gas no empuja hasta el "¡YA!" — nada de salida anticipada)
   const gasEff = go ? gas : 0;
